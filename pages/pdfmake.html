@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estudio PDFMake en Vivo</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/ace.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/ext-language_tools.min.js"></script>
+
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; }
+        
+        /* Ace Editor Container */
+        #editor { position: absolute; top: 0; right: 0; bottom: 0; left: 0; font-size: 14px;}
+        
+        iframe { border: none; width: 100%; height: 100%; }
+        
+        /* Custom Scrollbars */
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #fee2e2; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #ef4444; border-radius: 4px; }
+        
+        .modal-scrollbar::-webkit-scrollbar { width: 6px; }
+        .modal-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .modal-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+        /* Floating Button Setup */
+        #floating-add-btn {
+            position: absolute;
+            z-index: 40;
+            display: none;
+            transform: translate(5px, -120%);
+        }
+
+        .dict-item.active {
+            background-color: #dbeafe;
+            border-left: 3px solid #3b82f6;
+            color: #1e40af;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 flex flex-col h-screen w-screen relative">
+
+    <header class="bg-slate-900 text-white h-14 flex items-center justify-between px-6 shadow-md z-10 shrink-0">
+        <div class="flex items-center gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-400">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+            <h1 class="text-lg font-semibold tracking-wide">Estudio PDFMake en Vivo</h1>
+        </div>
+        <div class="flex items-center gap-4">
+            <button onclick="openDictionaryManager()" class="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 text-sm py-1.5 px-3 rounded-md transition border border-slate-600">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path></svg>
+                Gestor de Diccionario
+            </button>
+            <div class="text-xs text-slate-400 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                Renderizado en Vivo
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 flex flex-col md:flex-row w-full overflow-hidden relative">
+        <section class="w-full md:w-1/2 h-1/2 md:h-full relative border-b md:border-b-0 md:border-r border-slate-700 bg-slate-800 flex flex-col">
+            <div class="bg-slate-800 text-slate-400 text-xs px-4 py-2 border-b border-slate-700 flex justify-between">
+                <span>Define 'var dd' para construir el PDF</span>
+                <span>Presiona Ctrl+Espacio para Sugerencias</span>
+            </div>
+            <div class="flex-1 relative w-full">
+                <div id="editor"></div>
+            </div>
+        </section>
+
+        <section class="w-full md:w-1/2 h-1/2 md:h-full relative bg-gray-200 flex flex-col">
+            <div class="bg-white text-slate-600 text-xs px-4 py-2 border-b border-gray-300 flex justify-between items-center shadow-sm z-10">
+                <span class="font-medium">Vista Previa del PDF en Tiempo Real</span>
+            </div>
+            
+            <div class="flex-1 relative w-full h-full bg-gray-400">
+                <iframe id="pdf-preview" title="Vista Previa del PDF"></iframe>
+                
+                <!-- Overlay de Errores -->
+                <div id="error-overlay" class="hidden absolute inset-0 bg-red-50/95 p-6 z-20 flex flex-col justify-center">
+                    <div class="max-w-md mx-auto bg-white rounded-xl shadow-2xl border-l-4 border-red-500 p-5 w-full">
+                        <div class="flex items-center gap-2 text-red-600 mb-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                            <h3 class="font-bold">Error de Renderizado</h3>
+                        </div>
+                        <div class="bg-red-50 text-red-800 p-3 rounded font-mono text-xs max-h-48 overflow-y-auto custom-scrollbar break-words border border-red-100" id="error-message">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Botón Flotante -->
+    <button id="floating-add-btn" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded shadow-lg cursor-pointer flex items-center gap-1 transition">
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        Añadir '<span id="floating-word"></span>' al dicc.
+    </button>
+
+    <div id="dict-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden h-full">
+            
+            <!-- Cabecera del Modal -->
+            <div class="bg-slate-50 border-b border-slate-200 px-6 py-4 flex justify-between items-center shrink-0 flex-wrap gap-2">
+                <h2 class="text-lg font-bold text-slate-800">Gestor de Diccionario</h2>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <input type="file" id="import-json" class="hidden" accept=".json" onchange="importDictionary(event)">
+                    <button onclick="document.getElementById('import-json').click()" class="text-xs font-medium text-slate-600 bg-white border border-slate-300 rounded px-3 py-1.5 hover:bg-slate-100 transition flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        Importar JSON
+                    </button>
+                    <button onclick="exportDictionary()" class="text-xs font-medium text-slate-600 bg-white border border-slate-300 rounded px-3 py-1.5 hover:bg-slate-100 transition flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                        Exportar JSON
+                    </button>
+                    <button onclick="copyJsonForGitHub()" class="text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded px-3 py-1.5 transition flex items-center gap-1 shadow-sm" title="Copiar código JSON para actualizar diccionario.json en GitHub Pages">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                        Copiar para GitHub
+                    </button>
+                    <div class="w-px h-6 bg-slate-300 mx-1 hidden sm:block"></div>
+                    <button onclick="closeDictionaryManager()" class="text-slate-400 hover:text-slate-600 transition p-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Banner Informativo para GitHub Pages -->
+            <div class="bg-slate-100 border-b border-slate-200 px-6 py-2.5 text-xs text-slate-600 flex items-center justify-between gap-2 shrink-0">
+                <div class="flex items-center gap-2">
+                    <span class="bg-blue-600 text-white font-semibold text-[10px] px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0">GitHub Pages</span>
+                    <span>Para guardar permanentemente en GitHub Pages: haz clic en <strong>Copiar para GitHub</strong> y pégalo en tu archivo <code>diccionario.json</code> en tu repositorio.</span>
+                </div>
+                <div id="github-sync-status" class="text-[11px] text-slate-500 font-medium shrink-0">
+                    Estado: <span id="status-text" class="text-slate-600">Listo</span>
+                </div>
+            </div>
+
+            <!-- Cuerpo Dividido en 2 Columnas -->
+            <div class="flex-1 flex overflow-hidden">
+                <!-- Columna Izquierda: Buscador y Lista de Funciones -->
+                <div class="w-1/3 border-r border-slate-200 bg-slate-50 flex flex-col p-4 gap-3">
+                    <div class="flex items-center gap-2">
+                        <div class="relative flex-1">
+                            <input type="text" id="dict-search" oninput="renderDictList(this.value)" placeholder="Buscar función..." class="w-full bg-white border border-slate-300 rounded-lg pl-8 pr-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <svg class="absolute left-2.5 top-2 text-slate-400" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        </div>
+                        <button onclick="createNewEntry()" class="bg-blue-600 hover:bg-blue-700 text-white rounded-lg p-1.5 transition" title="Añadir Nueva Función">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        </button>
+                    </div>
+                    <ul id="dict-list" class="flex-1 overflow-y-auto modal-scrollbar space-y-1 pr-1 text-xs">
+                        <!-- Lista dinámica -->
+                    </ul>
+                </div>
+
+                <!-- Columna Derecha: Editor de Estructuras/Bloques -->
+                <div class="w-2/3 bg-white flex flex-col p-6 overflow-y-auto modal-scrollbar relative">
+                    <!-- Estado Vacío -->
+                    <div id="dict-empty-state" class="flex-1 flex flex-col items-center justify-center text-slate-400 gap-2 my-auto">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+                        <p class="text-sm font-medium">Selecciona una propiedad de la lista o crea una nueva</p>
+                    </div>
+
+                    <!-- Formulario de Edición -->
+                    <div id="dict-editor-form" class="hidden flex flex-col gap-4">
+                        <input type="hidden" id="dict-original-name" value="">
+                        <div>
+                            <label class="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1 block">Nombre de la Propiedad / Función</label>
+                            <input type="text" id="dict-prop-name" placeholder="Ej: defaultStyle, table, pageMargins" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono">
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="text-xs font-semibold text-slate-600 uppercase tracking-wider">Estructuras / Variantes</label>
+                                <button type="button" onclick="addSnippetRow()" class="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                    Añadir Variante
+                                </button>
+                            </div>
+                            <div id="snippets-container" class="space-y-3">
+                                <!-- Filas dinámicas de variantes -->
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-center pt-4 border-t border-slate-200 mt-2">
+                            <button type="button" id="btn-delete-entry" onclick="deleteCurrentEntry()" class="text-xs font-medium text-red-600 hover:text-red-800 hover:bg-red-50 px-3 py-2 rounded-lg transition flex items-center gap-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                Eliminar Propiedad
+                            </button>
+                            <div class="flex gap-2">
+                                <button type="button" onclick="closeDictionaryManager()" class="text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-lg transition">Cancelar</button>
+                                <button type="button" onclick="saveDictionaryEntry()" class="text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition shadow-sm">Guardar Cambios</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botón Flotante -->
+    <button id="floating-add-btn" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded shadow-lg cursor-pointer flex items-center gap-1 transition">
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        Añadir '<span id="floating-word"></span>' al dicc.
+    </button>
+
+    <!-- Toast de Notificaciones -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white text-xs px-4 py-3 rounded-lg shadow-xl z-50 transform translate-y-20 opacity-0 transition-all duration-300 flex items-center gap-2 pointer-events-none">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-green-400"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        <span id="toast-message">Notificación</span>
+    </div>
+
+    <script>
+        // Plantilla Inicial Vacía
+        const defaultCode = `var dd = {
+  content: [
+    
+  ]
+};`;
+
+        // Diccionario por defecto ampliado para PDFMake
+        const defaultDict = {
+            "content": [
+                { caption: "content (arreglo)", snippet: "content: [\n\t$1\n],\n" }
+            ],
+            "styles": [
+                { caption: "styles (objeto)", snippet: "styles: {\n\t${1:miEstilo}: {\n\t\t$2\n\t}\n},\n" }
+            ],
+            "defaultStyle": [
+                { caption: "defaultStyle (objeto)", snippet: "defaultStyle: {\n\tfontSize: ${1:12},\n\tbold: ${2:false}\n},\n" },
+                { caption: "defaultStyle (texto)", snippet: "defaultStyle: '${1:estilo}',\n" }
+            ],
+            "pageSize": [
+                { caption: "pageSize (A4/Letter)", snippet: "pageSize: '${1:A4}',\n" },
+                { caption: "pageSize (medidas)", snippet: "pageSize: { width: ${1:595.28}, height: ${2:841.89} },\n" }
+            ],
+            "pageOrientation": [
+                { caption: "pageOrientation (portrait)", snippet: "pageOrientation: 'portrait',\n" },
+                { caption: "pageOrientation (landscape)", snippet: "pageOrientation: 'landscape',\n" }
+            ],
+            "pageMargins": [
+                { caption: "pageMargins (4 lados)", snippet: "pageMargins: [ ${1:40}, ${2:60}, ${3:40}, ${4:60} ],\n" },
+                { caption: "pageMargins (H/V)", snippet: "pageMargins: [ ${1:40}, ${2:60} ],\n" }
+            ],
+            "header": [
+                { caption: "header (texto simple)", snippet: "header: '${1:Encabezado del documento}',\n" },
+                { caption: "header (función dinámica)", snippet: "header: function(currentPage, pageCount, pageSize) {\n\treturn { text: currentPage.toString() + ' de ' + pageCount, alignment: 'right', margin: [0, 20, 20, 0] };\n},\n" }
+            ],
+            "footer": [
+                { caption: "footer (función dinámica)", snippet: "footer: function(currentPage, pageCount) {\n\treturn { text: 'Página ' + currentPage.toString() + ' de ' + pageCount, alignment: 'center' };\n},\n" }
+            ],
+            "background": [
+                { caption: "background (función dinámicas)", snippet: "background: function(currentPage, pageSize) {\n\treturn [ { text: 'CONFIDENCIAL', color: '#f0f0f0', fontSize: 60, alignment: 'center', margin: [0, 200] } ];\n},\n" }
+            ],
+            "watermark": [
+                { caption: "watermark (texto)", snippet: "watermark: { text: '${1:BORRADOR}', color: '${2:blue}', opacity: ${3:0.3}, bold: true },\n" }
+            ],
+            "table": [
+                { caption: "table (estructura completa)", snippet: "table: {\n\theaderRows: ${1:1},\n\twidths: [ '${2:*}', '${3:auto}' ],\n\tbody: [\n\t\t[ '${4:Col 1}', '${5:Col 2}' ],\n\t\t[ '${6:Val 1}', '${7:Val 2}' ]\n\t]\n},\n" }
+            ],
+            "columns": [
+                { caption: "columns (arreglo de bloques)", snippet: "columns: [\n\t{\n\t\twidth: '${1:*}',\n\t\ttext: '${2:Columna 1}'\n\t},\n\t{\n\t\twidth: '${3:auto}',\n\t\ttext: '${4:Columna 2}'\n\t}\n],\ncolumnGap: 10,\n" }
+            ],
+            "bold": [
+                { caption: "bold (true)", snippet: "bold: true,\n" },
+                { caption: "bold (false)", snippet: "bold: false,\n" }
+            ],
+            "italics": [
+                { caption: "italics (true)", snippet: "italics: true,\n" },
+                { caption: "italics (false)", snippet: "italics: false,\n" }
+            ],
+            "fontSize": [
+                { caption: "fontSize (número)", snippet: "fontSize: ${1:12},\n" }
+            ],
+            "alignment": [
+                { caption: "alignment (left)", snippet: "alignment: 'left',\n" },
+                { caption: "alignment (center)", snippet: "alignment: 'center',\n" },
+                { caption: "alignment (right)", snippet: "alignment: 'right',\n" },
+                { caption: "alignment (justify)", snippet: "alignment: 'justify',\n" }
+            ],
+            "color": [
+                { caption: "color (hex/nombre)", snippet: "color: '${1:#333333}',\n" }
+            ],
+            "fillColor": [
+                { caption: "fillColor (hex/nombre)", snippet: "fillColor: '${1:#f3f4f6}',\n" }
+            ],
+            "margin": [
+                { caption: "margin (todos lados)", snippet: "margin: [${1:10}],\n" },
+                { caption: "margin (H/V)", snippet: "margin: [${1:10}, ${2:5}],\n" },
+                { caption: "margin (Izq, Arr, Der, Aba)", snippet: "margin: [${1:10}, ${2:5}, ${3:10}, ${4:5}],\n" }
+            ],
+            "canvas": [
+                { caption: "canvas (línea)", snippet: "canvas: [{ type: 'line', x1: 0, y1: 5, x2: 595, y2: 5, lineWidth: 1 }],\n" },
+                { caption: "canvas (rectángulo)", snippet: "canvas: [{ type: 'rect', x: 0, y: 0, w: 100, h: 50, r: 5, color: '#3b82f6' }],\n" }
+            ],
+            "pageBreak": [
+                { caption: "pageBreak (before)", snippet: "pageBreak: 'before',\n" },
+                { caption: "pageBreak (after)", snippet: "pageBreak: 'after',\n" }
+            ]
+        };
+
+        let customDictionary = {};
+        
+        // Elementos del DOM
+        const iframe = document.getElementById('pdf-preview');
+        const errorOverlay = document.getElementById('error-overlay');
+        const errorMessage = document.getElementById('error-message');
+        const floatingBtn = document.getElementById('floating-add-btn');
+        const floatingWordSpan = document.getElementById('floating-word');
+        const dictModal = document.getElementById('dict-modal');
+        const dictList = document.getElementById('dict-list');
+        const snippetsContainer = document.getElementById('snippets-container');
+        const editorForm = document.getElementById('dict-editor-form');
+        const emptyState = document.getElementById('dict-empty-state');
+        const btnDelete = document.getElementById('btn-delete-entry');
+        const statusText = document.getElementById('status-text');
+        
+        let currentFloatingWord = "";
+
+        async function initializeApp() {
+            // 1. Cargar diccionario base
+            customDictionary = { ...defaultDict };
+            
+            // 2. Intentar cargar desde 'diccionario.json' en el mismo repositorio/servidor (GitHub Pages)
+            try {
+                const response = await fetch('diccionario.json', { cache: 'no-store' });
+                if (response.ok) {
+                    const fileDict = await response.json();
+                    customDictionary = { ...customDictionary, ...fileDict };
+                    if (statusText) {
+                        statusText.textContent = "Sincronizado con diccionario.json";
+                        statusText.className = "text-emerald-600 font-semibold";
+                    }
+                }
+            } catch (e) {
+                console.log("Servidor/GitHub Pages: No se halló diccionario.json o fue bloqueado, se usa diccionario interno.");
+            }
+
+            // 3. Sobrescribir con cambios en localStorage (persistencia del usuario en el navegador)
+            const localDict = JSON.parse(localStorage.getItem('pdfmakeDict'));
+            if (localDict) {
+                customDictionary = { ...customDictionary, ...localDict };
+            }
+
+            setupAceEditor();
+            renderPDF();
+        }
+
+        function copyJsonForGitHub() {
+            const jsonStr = JSON.stringify(customDictionary, null, 2);
+            
+            const textarea = document.createElement('textarea');
+            textarea.value = jsonStr;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+
+            showToast("¡JSON copiado al portapapeles! Pégalo en diccionario.json en GitHub.");
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            toastMessage.textContent = message;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3500);
+        }
+
+        let editor;
+
+        function setupAceEditor() {
+            ace.require("ace/ext/language_tools");
+            editor = ace.edit("editor");
+            
+            editor.setTheme("ace/theme/tomorrow_night_eighties");
+            editor.session.setMode("ace/mode/javascript");
+            editor.setOptions({
+                enableBasicAutocompletion: true,
+                enableSnippets: true,
+                enableLiveAutocompletion: true,
+                showPrintMargin: false,
+                fontSize: "14px",
+                tabSize: 2,
+                useWorker: false 
+            });
+
+            editor.setValue(defaultCode, 1);
+
+            // Completador personalizado
+            const pdfMakeCompleter = {
+                getCompletions: function(editor, session, pos, prefix, callback) {
+                    if (prefix.length === 0) { callback(null, []); return; }
+                    let completions = [];
+                    for (const prop in customDictionary) {
+                        if (prop.toLowerCase().includes(prefix.toLowerCase())) {
+                            customDictionary[prop].forEach(entry => {
+                                completions.push({
+                                    caption: entry.caption,
+                                    snippet: entry.snippet,
+                                    meta: "función",
+                                    score: 1000
+                                });
+                            });
+                        }
+                    }
+                    callback(null, completions);
+                }
+            };
+            editor.completers.push(pdfMakeCompleter);
+
+            // Botón flotante al escribir palabras nuevas
+            editor.selection.on('changeCursor', debounce(() => {
+                const pos = editor.getCursorPosition();
+                const range = editor.session.getWordRange(pos.row, pos.column);
+                const word = editor.session.getTextRange(range).trim();
+
+                if (word && /^[a-zA-Z_]\w*$/.test(word)) {
+                    const ignoreWords = ['var', 'let', 'const', 'function', 'return', 'if', 'else', 'dd', 'true', 'false'];
+                    if (!customDictionary[word] && !ignoreWords.includes(word)) {
+                        const screenPos = editor.renderer.textToScreenCoordinates(pos.row, pos.column);
+                        currentFloatingWord = word;
+                        floatingWordSpan.textContent = word;
+                        
+                        floatingBtn.style.left = `${screenPos.pageX}px`;
+                        floatingBtn.style.top = `${screenPos.pageY - 10}px`;
+                        floatingBtn.style.display = 'flex';
+                    } else {
+                        floatingBtn.style.display = 'none';
+                    }
+                } else {
+                    floatingBtn.style.display = 'none';
+                }
+            }, 200));
+
+            const debouncedRender = debounce(renderPDF, 800);
+            editor.session.on('change', debouncedRender);
+        }
+
+        function openDictionaryManager(propName = "") {
+            dictModal.classList.remove('hidden');
+            renderDictList();
+            
+            if (propName) {
+                // Viene desde el botón flotante
+                createNewEntry(propName);
+            } else {
+                // Estado vacío por defecto
+                emptyState.classList.remove('hidden');
+                editorForm.classList.add('hidden');
+            }
+        }
+
+        function closeDictionaryManager() {
+            dictModal.classList.add('hidden');
+            document.getElementById('dict-search').value = '';
+            if (editor) editor.focus();
+        }
+
+        function renderDictList(searchTerm = "") {
+            dictList.innerHTML = '';
+            const keys = Object.keys(customDictionary).sort();
+            
+            const currentEditing = document.getElementById('dict-original-name').value;
+
+            keys.forEach(key => {
+                if (key.toLowerCase().includes(searchTerm.toLowerCase())) {
+                    const li = document.createElement('li');
+                    li.className = `dict-item px-3 py-2 rounded-md cursor-pointer hover:bg-slate-100 transition truncate text-slate-700 ${currentEditing === key && !editorForm.classList.contains('hidden') ? 'active' : ''}`;
+                    li.textContent = key;
+                    li.onclick = () => selectDictEntry(key);
+                    dictList.appendChild(li);
+                }
+            });
+        }
+
+        function selectDictEntry(propName) {
+            emptyState.classList.add('hidden');
+            editorForm.classList.remove('hidden');
+            btnDelete.classList.remove('hidden');
+
+            document.getElementById('dict-prop-name').value = propName;
+            document.getElementById('dict-original-name').value = propName;
+            
+            snippetsContainer.innerHTML = '';
+            
+            if (customDictionary[propName]) {
+                customDictionary[propName].forEach(entry => {
+                    addSnippetRow(entry.caption, entry.snippet);
+                });
+            }
+            
+            // Actualizar estilo visual de la lista
+            renderDictList(document.getElementById('dict-search').value);
+        }
+
+        function createNewEntry(initialName = "") {
+            emptyState.classList.add('hidden');
+            editorForm.classList.remove('hidden');
+            btnDelete.classList.add('hidden'); // Ocultar eliminar si es nuevo
+            
+            document.getElementById('dict-prop-name').value = initialName;
+            document.getElementById('dict-original-name').value = ""; // No original name
+            
+            snippetsContainer.innerHTML = '';
+            
+            // Añadir fila por defecto
+            let defaultCaption = initialName ? `${initialName} (defecto)` : "";
+            let defaultSnippet = initialName ? `${initialName}: $1,` : "";
+            addSnippetRow(defaultCaption, defaultSnippet);
+
+            // Quitar clase activa de la lista
+            document.getElementById('dict-original-name').value = "__new__";
+            renderDictList(document.getElementById('dict-search').value);
+        }
+
+        function addSnippetRow(caption = "", snippet = "") {
+            const row = document.createElement('div');
+            row.className = "flex gap-3 items-start bg-slate-50 p-3 rounded-lg border border-slate-200 snippet-row group hover:border-blue-300 transition relative";
+            
+            row.innerHTML = `
+                <div class="flex-1 flex flex-col gap-2">
+                    <div>
+                        <label class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1 block">Etiqueta (Se muestra en la lista)</label>
+                        <input type="text" placeholder="Ej. defaultStyle (objeto)" value="${caption.replace(/"/g, '&quot;')}" class="snippet-caption w-full border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1 block">Bloque de Código</label>
+                        <textarea placeholder="Ej. defaultStyle: {\\n\\t$1\\n}," class="snippet-code w-full border border-slate-300 rounded px-3 py-2 text-sm font-mono h-20 focus:outline-none focus:ring-2 focus:ring-blue-500 custom-scrollbar bg-slate-900 text-green-400">${snippet}</textarea>
+                    </div>
+                </div>
+                <button type="button" onclick="this.parentElement.remove()" class="text-slate-400 hover:text-red-500 bg-white border border-slate-200 hover:bg-red-50 p-2 rounded transition shadow-sm" title="Eliminar Variante">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            `;
+            snippetsContainer.appendChild(row);
+        }
+
+        function saveDictionaryEntry() {
+            const propName = document.getElementById('dict-prop-name').value.trim();
+            const originalName = document.getElementById('dict-original-name').value;
+            
+            if (!propName) return;
+
+            const rows = document.querySelectorAll('.snippet-row');
+            const entries = [];
+
+            rows.forEach(row => {
+                const caption = row.querySelector('.snippet-caption').value.trim();
+                let snippet = row.querySelector('.snippet-code').value; 
+                
+                if (caption && snippet) {
+                    // Asegurar que termine en coma o nueva línea si es necesario, 
+                    // pero confiamos en lo que escribe el usuario.
+                    if(!snippet.endsWith('\n')) snippet += '\n';
+                    entries.push({ caption, snippet });
+                }
+            });
+
+            if (entries.length > 0) {
+                // Si cambiaron el nombre, eliminar el original
+                if (originalName && originalName !== propName && originalName !== "__new__") {
+                    delete customDictionary[originalName];
+                }
+                customDictionary[propName] = entries;
+                localStorage.setItem('pdfmakeDict', JSON.stringify(customDictionary));
+            } else {
+                // Si lo guardan vacío, lo eliminamos
+                delete customDictionary[propName];
+                if (originalName && originalName !== propName && originalName !== "__new__") {
+                     delete customDictionary[originalName];
+                }
+                localStorage.setItem('pdfmakeDict', JSON.stringify(customDictionary));
+            }
+            
+            // Refrescar y mostrar
+            document.getElementById('dict-original-name').value = propName;
+            renderDictList(document.getElementById('dict-search').value);
+            selectDictEntry(propName); 
+            
+            // Opcional: mostrar notificación de guardado
+        }
+
+        function deleteCurrentEntry() {
+            const originalName = document.getElementById('dict-original-name').value;
+            if (originalName && originalName !== "__new__" && customDictionary[originalName]) {
+                delete customDictionary[originalName];
+                localStorage.setItem('pdfmakeDict', JSON.stringify(customDictionary));
+                renderDictList(document.getElementById('dict-search').value);
+                
+                emptyState.classList.remove('hidden');
+                editorForm.classList.add('hidden');
+            }
+        }
+
+        function exportDictionary() {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(customDictionary, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "diccionario.json");
+            document.body.appendChild(downloadAnchorNode); 
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+            showToast("Archivo diccionario.json descargado.");
+        }
+
+        function importDictionary(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const newDict = JSON.parse(e.target.result);
+                        customDictionary = { ...customDictionary, ...newDict }; 
+                        localStorage.setItem('pdfmakeDict', JSON.stringify(customDictionary));
+                        renderDictList(document.getElementById('dict-search').value);
+                        showToast("Diccionario importado con éxito.");
+                    } catch(err) {
+                        console.error("Error al analizar JSON", err);
+                        alert("Error: El archivo no tiene un formato JSON válido.");
+                    }
+                }
+                reader.readAsText(file);
+            }
+            event.target.value = ""; 
+        }
+
+        function importDictionary(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const newDict = JSON.parse(e.target.result);
+                        customDictionary = { ...customDictionary, ...newDict }; // Combinar
+                        localStorage.setItem('pdfmakeDict', JSON.stringify(customDictionary));
+                        renderDictList(document.getElementById('dict-search').value);
+                        alert("Diccionario importado correctamente.");
+                    } catch(err) {
+                        console.error("Error al analizar JSON", err);
+                        alert("Error: El archivo no tiene un formato JSON válido.");
+                    }
+                }
+                reader.readAsText(file);
+            }
+            event.target.value = ""; // Reset input
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func(...args), wait);
+            };
+        }
+
+        floatingBtn.addEventListener('click', () => {
+            openDictionaryManager(currentFloatingWord);
+            floatingBtn.style.display = 'none';
+        });
+
+        function renderPDF() {
+            if(!editor) return;
+            const code = editor.getValue();
+            
+            try {
+                errorOverlay.classList.add('hidden');
+                
+                const wrapper = `
+                    ${code}
+                    return (typeof dd !== 'undefined') ? dd : null;
+                `;
+                
+                const buildDocDef = new Function(wrapper);
+                const docDefinition = buildDocDef();
+                
+                if (!docDefinition || typeof docDefinition !== 'object') {
+                    throw new Error("No se pudo encontrar un objeto 'dd' válido. Asegúrate de definir: var dd = { ... };");
+                }
+
+                const pdfDocGenerator = pdfMake.createPdf(docDefinition);
+                pdfDocGenerator.getDataUrl((dataUrl) => {
+                    iframe.src = dataUrl;
+                });
+                
+            } catch (error) {
+                console.error("Error en generación de PDF:", error);
+                errorMessage.textContent = error.toString();
+                errorOverlay.classList.remove('hidden');
+            }
+        }
+
+        // Iniciar
+        window.onload = initializeApp;
+    </script>
+</body>
+</html>

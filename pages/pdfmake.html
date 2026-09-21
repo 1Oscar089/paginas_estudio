@@ -98,11 +98,15 @@ body.view-pdf .pv{display:flex}
 #ed{background:transparent;color:transparent;caret-color:var(--ink);resize:none;-webkit-text-fill-color:transparent}
 #hl{background:var(--card);pointer-events:none;scrollbar-width:none;color:var(--ink)}
 #hl::-webkit-scrollbar{display:none}
+/* Paleta de código: elementos azul · propiedades terracota · cadenas verde ·
+   números dorado · literales morado · llaves pizarra · comentarios gris cálido */
+#hl .e{color:#0F6FA8;font-weight:700}
 #hl .p{color:#A63A0A}
-#hl .s{color:#3F6B33}
-#hl .n{color:#8A6D2F}
-#hl .k{color:var(--acc);font-weight:700}
-#hl .c{color:var(--mut);font-style:italic}
+#hl .s{color:#2F7D2F}
+#hl .n{color:#B07D10}
+#hl .k{color:#8E44AD;font-weight:700}
+#hl .b{color:#6E7B8B}
+#hl .c{color:#9A927F;font-style:italic}
 
 .sug{position:absolute;z-index:8;min-width:230px;max-width:330px;max-height:262px;overflow:auto;
   background:var(--card);border:1.5px solid var(--ink);box-shadow:5px 5px 0 rgba(28,25,21,.18);
@@ -207,7 +211,7 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
       <span class="r">
         <span class="saved" id="draftInfo">—</span>
         <button class="iconbtn sm" id="btnFmt" title="Formatear código · Shift+Alt+F"><i data-lucide="wand-2"></i></button>
-        <button class="iconbtn sm" id="btnReset" title="Restablecer ejemplo"><i data-lucide="rotate-ccw"></i></button>
+        <button class="iconbtn sm danger" id="btnReset" title="Borrar todo · empezar desde content"><i data-lucide="trash-2"></i></button>
       </span>
     </div>
     <div class="ed-wrap" id="edWrap">
@@ -319,6 +323,10 @@ const LS_SEEDED = 'blocklab.pdfmake.seeds.v1';
 const DRAFT_ID   = '__draft__';
 const DRAFT_NAME = 'BORRADOR · editor';
 
+/* Arranque limpio: solo el esqueleto content */
+const STARTER = 'content: [\n  \n]';
+const caretHome = () => STARTER.indexOf('\n') + 3;   // dentro de los corchetes, tras la sangría
+
 const SEED = [
   { id:'d-text',      name:'text',      tag:'propiedad', code:`text: '$0'` },
   { id:'d-bold',      name:'bold',      tag:'propiedad', code:`bold: true` },
@@ -356,27 +364,6 @@ const SEED = [
   '$0'
 ]` }
 ];
-
-const STARTER = `content: [
-  { text: 'Hola, BLOCKLAB', fontSize: 24, bold: true, margin: [0, 0, 0, 14] },
-  { text: 'Escribe a la izquierda: el PDF nace aquí, en vivo.', italics: true, color: '#666666' },
-  { text: 'Una tabla de prueba', fontSize: 15, bold: true, margin: [0, 18, 0, 6] },
-  {
-    table: {
-      headerRows: 1,
-      widths: ['*', 'auto'],
-      body: [
-        [{ text: 'Columna A', bold: true }, { text: 'Columna B', bold: true }],
-        ['01', 'pdfmake en vivo'],
-        ['02', 'funciona en el celular']
-      ]
-    }
-  }
-],
-defaultStyle: {
-  fontSize: 11,
-  lineHeight: 1.35
-}`;
 
 /* ═══ 2 · ESTADO ═══════════════════════════════════════════ */
 let MODULES = [], BLOCKS = {}, queue = [], syncing = false;
@@ -447,12 +434,7 @@ function toast(msg, kind){
   setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity .25s'; setTimeout(()=>t.remove(),260); }, 4200);
 }
 
-/* ═══ 6 · RED SIN CORS — a prueba de arranques fríos ════════
-   · El callback vive 45 s DESPUÉS de resolverse: si Apps
-     Script responde tarde, ya no revienta con ReferenceError.
-   · Una petición JSONP a la vez (los arranques fríos en
-     paralelo saturan el servidor y alargan la espera).
-   · Timeout de 25 s (el cold start típico son 5–20 s).      ══ */
+/* ═══ 6 · RED SIN CORS — a prueba de arranques fríos ════════ */
 let jsonpSeq = 0, jsonpChain = Promise.resolve();
 
 function jsonpRaw(action, params, ms){
@@ -463,7 +445,7 @@ function jsonpRaw(action, params, ms){
     const finish = (ok, val) => {
       if(settled) return;
       settled = true;
-      setTimeout(()=>{ try{ delete window[cb]; }catch(e){} s.remove(); }, 45000); // ← el callback sobrevive 45 s
+      setTimeout(()=>{ try{ delete window[cb]; }catch(e){} s.remove(); }, 45000);
       ok ? res(val) : rej(val);
     };
     window[cb] = d => finish(true, d);
@@ -476,7 +458,7 @@ function jsonpRaw(action, params, ms){
 }
 function jsonpGet(action, params={}){
   const run = () => jsonpRaw(action, params, 25000);
-  const p = jsonpChain.then(run, run);   // en cola: una a la vez
+  const p = jsonpChain.then(run, run);
   jsonpChain = p.then(()=>{}, ()=>{});
   return p;
 }
@@ -507,7 +489,7 @@ function isConfirmed(op, data){
   if(op.action==='saveBlock'){
     const arr = B[op.sheet]; if(!arr) return false;
     const r = arr.find(b=>b.id===(op.block&&op.block.id));
-    return !!r && r.code === op.block.code;            // confirma por CONTENIDO
+    return !!r && r.code === op.block.code;
   }
   if(op.action==='deleteBlock'){
     const arr = B[op.sheet];
@@ -684,13 +666,10 @@ function seedDict(){
   localStorage.setItem(LS_SEEDED,'1');
 }
 
-/* ═══ 11 · FORMATEO tipo Prettier ══════════════════════════
-   Reindenta el documento completo a 2 espacios, SIN tocar
-   cadenas, template literals ni comentarios. Normaliza
-   espacios tras «,» y «:», colapsa blancos y recorta.       ══ */
+/* ═══ 11 · FORMATEO tipo Prettier ══════════════════════════ */
 function logicalLines(src){
   const out = []; let cur = '';
-  let st = 'norm';                       // norm | sq | dq | tpl | lc
+  let st = 'norm';
   for(let i=0; i<src.length; i++){
     const c = src[i], n = src[i+1];
     if(st === 'norm'){
@@ -707,9 +686,9 @@ function logicalLines(src){
       cur+=c;
       if(c==='\\'){ if(n!=null){ cur+=n; i++; } } else if(c==='"') st='norm';
     } else if(st === 'tpl'){
-      cur+=c;                             // los saltos del template se conservan dentro
+      cur+=c;
       if(c==='\\'){ if(n!=null){ cur+=n; i++; } } else if(c==='`') st='norm';
-    } else {                              // lc: comentario de línea
+    } else {
       if(c === '\n'){ out.push(cur); cur=''; st='norm'; }
       else cur+=c;
     }
@@ -726,7 +705,7 @@ function formatLine(t){
       if(c === '\''){ st='sq'; out+=c; }
       else if(c === '"'){ st='dq'; out+=c; }
       else if(c === '`'){ st='tpl'; out+=c; }
-      else if(c === '/' && n === '/'){ out += t.slice(i); break; }   // comentario intacto
+      else if(c === '/' && n === '/'){ out += t.slice(i); break; }
       else if(c === ' ' || c === '\t'){
         let j = i; while(j < t.length && (t[j]===' '||t[j]==='\t')) j++;
         const nc = t[j];
@@ -754,7 +733,7 @@ function formatLine(t){
     } else if(st === 'dq'){
       out+=c;
       if(c==='\\'){ if(n!=null){ out+=n; i++; } } else if(c==='"') st='norm';
-    } else {                               // tpl: pasa todo, incluidos saltos
+    } else {
       out+=c;
       if(c==='\\'){ if(n!=null){ out+=n; i++; } } else if(c==='`') st='norm';
     }
@@ -789,7 +768,7 @@ function reindent(src){
     let t = formatLine(raw.trim());
     if(!t){ out.push(''); continue; }
     let disp = depth, j = 0;
-    while(j < t.length){                   // cierres al inicio de línea («} », «}],»)
+    while(j < t.length){
       const c = t[j];
       if(c === '}' || c === ']' || c === ')'){ disp--; j++; }
       else if(c === ',' || c === ' ' || c === '\t'){ j++; }
@@ -813,23 +792,30 @@ function formatDoc(){
   if(out === src){ toast('El código ya está formateado'); return; }
   const cp = ed.selectionStart;
   let k = 0; const max = Math.min(cp, out.length, src.length);
-  while(k < max && out[k] === src[k]) k++;          // ancla el cursor al prefijo común
+  while(k < max && out[k] === src[k]) k++;
   ed.value = out;
   ed.selectionStart = ed.selectionEnd = Math.min(k, out.length);
   onEdInput();
   toast('Código formateado');
 }
 
-/* ═══ 12 · EDITOR: resaltado ═══════════════════════════════ */
+/* ═══ 12 · RESALTADO COLORIDO ══════════════════════════════
+   .e elementos pdfmake (azul) · .p propiedades (terracota)
+   .s cadenas (verde) · .n números (dorado) · .k literales
+   (morado) · .b llaves/corchetes (pizarra) · .c comentarios  ══ */
+const NODE_KEYS = new Set(['text','table','columns','ul','ol','image','qr','svg','canvas','stack',
+  'content','styles','defaultStyle','pageSize','pageOrientation','pageMargins','header','footer',
+  'background','watermark','info','toc','widths','body']);
 function hled(src){
   return esc(src).replace(
-    /(\/\/[^\n]*)|('(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*")|\b(true|false|null)\b|([A-Za-z_$\u00C0-\u024F][\w$\u00C0-\u024F]*)(?=\s*:)|\b(\d+(?:\.\d+)?)\b/g,
-    (m,com,str,kw,key,num)=>{
+    /(\/\/[^\n]*)|('(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*")|\b(true|false|null)\b|([A-Za-z_$\u00C0-\u024F][\w$\u00C0-\u024F]*)(?=\s*:)|\b(\d+(?:\.\d+)?)\b|([{}\[\]()])/g,
+    (m,com,str,kw,key,num,brk)=>{
       if(com) return `<span class="c">${com}</span>`;
       if(str) return `<span class="s">${str}</span>`;
       if(kw)  return `<span class="k">${kw}</span>`;
-      if(key) return `<span class="p">${key}</span>`;
+      if(key) return NODE_KEYS.has(key) ? `<span class="e">${key}</span>` : `<span class="p">${key}</span>`;
       if(num) return `<span class="n">${num}</span>`;
+      if(brk) return `<span class="b">${brk}</span>`;
       return m;
     });
 }
@@ -904,7 +890,6 @@ function insertSnippet(sn){
   const before = ed.value.slice(0, pos);
   const m = before.match(/[A-Za-z0-9_$\u00C0-\u024F-]+$/);
   const start = m ? pos - m[0].length : pos;
-  // indentación base de la línea actual → el snippet se alinea con tu código
   const lineStart = ed.value.lastIndexOf('\n', start - 1) + 1;
   const baseIndent = (ed.value.slice(lineStart, start).match(/^[ \t]*/) || [''])[0];
   let code = String(sn.code || '');
@@ -933,7 +918,56 @@ document.addEventListener('pointerdown', e=>{
   if(!e.target.closest('#sug') && e.target!==ed) hideSug();
 });
 
-/* ═══ 14 · COMPILACIÓN + RENDER ════════════════════════════ */
+/* ═══ 14 · ENTER INTELIGENTE (sangría automática) ═══════════
+   · Línea termina en { [ (  → nueva línea un nivel adentro;
+     si el carácter siguiente es su cierre, abre y cierra el
+     bloque en dos líneas y deja el cursor en medio (VS Code).
+   · Línea vacía y al frente hay } ] )  → se alinea con él.
+   · En cualquier otro caso, se conserva la sangría actual.  ══ */
+function smartEnter(){
+  const val  = ed.value;
+  const s    = ed.selectionStart, epos = ed.selectionEnd;
+  const lineStart = val.lastIndexOf('\n', s - 1) + 1;
+  const lineBefore = val.slice(lineStart, s);
+  const indent = (lineBefore.match(/^[ \t]*/) || [''])[0];
+  const prev = val.slice(0, s).slice(-1);
+  const next = val.slice(epos).charAt(0);
+  const closeFor = {'{':'}','[':']','(':')'};
+  let ins, caret;
+  if(closeFor[prev] && next === closeFor[prev]){
+    ins = '\n' + indent + '  ' + '\n' + indent;
+    caret = 1 + indent.length + 2;
+  } else if(closeFor[prev]){
+    ins = '\n' + indent + '  ';
+    caret = ins.length;
+  } else if((next === '}' || next === ']' || next === ')') && lineBefore.trim() === ''){
+    ins = '\n' + indent.replace(/ {1,2}$/, '').replace(/\t$/, '');
+    caret = ins.length;
+  } else {
+    ins = '\n' + indent;
+    caret = ins.length;
+  }
+  ed.setSelectionRange(s, epos);
+  let ok = false;
+  try{ ok = document.execCommand && document.execCommand('insertText', false, ins); }catch(e){ ok = false; }
+  if(!ok) ed.setRangeText(ins, s, epos, 'end');
+  ed.selectionStart = ed.selectionEnd = s + caret;
+  onEdInput();
+}
+/* Tab / Shift+Tab sobre líneas seleccionadas */
+const indentOne = l => l.trim() ? '  ' + l : l;
+const dedentOne = l => /^ {1,2}/.test(l) ? l.replace(/^ {1,2}/,'') : (l.charAt(0)==='\t' ? l.slice(1) : l);
+function mapSelectedLines(fn){
+  const s = ed.selectionStart, epos = ed.selectionEnd;
+  const start = ed.value.lastIndexOf('\n', s - 1) + 1;
+  let end = ed.value.indexOf('\n', epos); if(end < 0) end = ed.value.length;
+  const nb = ed.value.slice(start, end).split('\n').map(fn).join('\n');
+  ed.setRangeText(nb, start, end, 'end');
+  ed.setSelectionRange(start, start + nb.length);
+  onEdInput();
+}
+
+/* ═══ 15 · COMPILACIÓN + RENDER ════════════════════════════ */
 function failNow(msg){
   cset('error','err'); tabDot('err');
   const box = $('#errBox'); box.hidden = false; box.textContent = msg;
@@ -1002,7 +1036,7 @@ function saveDraftSoon(){
 }
 function onEdInput(){ syncHL(); saveDraftSoon(); pushDraftSoon(); scheduleCompile(); showSug(); }
 
-/* ═══ 15 · VISTAS ══════════════════════════════════════════ */
+/* ═══ 16 · VISTAS ══════════════════════════════════════════ */
 function setView(v){
   document.body.classList.toggle('view-pdf', v==='pdf');
   document.body.classList.toggle('view-code', v==='code');
@@ -1013,7 +1047,7 @@ function setView(v){
   const b = e.target.closest('button[data-view]'); if(b) setView(b.dataset.view);
 });
 
-/* ═══ 16 · DICCIONARIO (diálogo) ═══════════════════════════ */
+/* ═══ 17 · DICCIONARIO (diálogo) ═══════════════════════════ */
 function renderDict(){
   const q = ($('#q2').value||'').trim().toLowerCase();
   let arr = dict().slice().sort((a,b)=>a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
@@ -1051,7 +1085,7 @@ function renderDict(){
   else if(a==='del') armConfirm(btn, ()=>deleteSnip(b.id));
 });
 
-/* ═══ 17 · DIÁLOGO entrada ═════════════════════════════════ */
+/* ═══ 18 · DIÁLOGO entrada ═════════════════════════════════ */
 function openSnip(entry, opts={}){
   snipReturn = opts.ret || 'dict';
   $('#snipTitle').textContent = entry ? 'Editar entrada' : 'Nueva entrada';
@@ -1078,7 +1112,7 @@ function openSnip(entry, opts={}){
   if(snipReturn==='insert' && !f.id.value) insertSnippet(b);
 });
 
-/* ═══ 18 · Confirmación en dos clicks ══════════════════════ */
+/* ═══ 19 · Confirmación en dos clicks ══════════════════════ */
 function armConfirm(btn, fn){
   if(btn.dataset.armed){ delete btn.dataset.armed; fn(); return; }
   btn.dataset.armed='1'; btn.dataset.html = btn.innerHTML;
@@ -1090,7 +1124,7 @@ function armConfirm(btn, fn){
   }, 2600);
 }
 
-/* ═══ 19 · TECLADO ═════════════════════════════════════════ */
+/* ═══ 20 · TECLADO ═════════════════════════════════════════ */
 ed.addEventListener('keydown', e=>{
   if(e.shiftKey && e.altKey && e.code === 'KeyF'){ e.preventDefault(); formatDoc(); return; }
   if(!sug.hidden){
@@ -1099,10 +1133,14 @@ ed.addEventListener('keydown', e=>{
     if(e.key==='Enter' || e.key==='Tab'){ e.preventDefault(); acceptActive(); return; }
     if(e.key==='Escape'){  e.preventDefault(); hideSug(); return; }
   }
+  if(e.key==='Enter'){ e.preventDefault(); smartEnter(); return; }
   if(e.key==='Tab'){
     e.preventDefault();
-    ed.setRangeText('  ', ed.selectionStart, ed.selectionEnd, 'end');
-    onEdInput();
+    const multi = ed.selectionStart !== ed.selectionEnd &&
+                  ed.value.slice(ed.selectionStart, ed.selectionEnd).includes('\n');
+    if(e.shiftKey)      mapSelectedLines(dedentOne);
+    else if(multi)      mapSelectedLines(indentOne);
+    else { ed.setRangeText('  ', ed.selectionStart, ed.selectionEnd, 'end'); onEdInput(); }
   }
 });
 ed.addEventListener('input', onEdInput);
@@ -1112,7 +1150,7 @@ ed.addEventListener('scroll', ()=>{ hl.scrollTop = ed.scrollTop; hl.scrollLeft =
   if(e.key==='Tab'){ e.preventDefault(); e.target.setRangeText('  ', e.target.selectionStart, e.target.selectionEnd, 'end'); }
 });
 
-/* ═══ 20 · BOTONES ═════════════════════════════════════════ */
+/* ═══ 21 · BOTONES ═════════════════════════════════════════ */
  $('#btnFmt').addEventListener('click', formatDoc);
  $('#btnDict').addEventListener('click', ()=>{ renderDict(); $('#dlgDict').showModal(); refreshIcons(); });
  $('#btnJson').addEventListener('click', ()=>{
@@ -1133,10 +1171,17 @@ function manualSync(){
  $('#btnSync').addEventListener('click', manualSync);
  $('#stPill').addEventListener('click', ()=>{ connected ? openConnDlg(false) : manualSync(); });
  $('#btnRetry').addEventListener('click', ()=>{ $('#dlgConn').close(); diagDone=false; sync(); });
+/* Borrar todo: vuelve a content vacío y sincroniza el borrado en Sheets */
  $('#btnReset').addEventListener('click', e=>{
   armConfirm(e.currentTarget, ()=>{
-    ed.value = STARTER; onEdInput();
-    toast('Código restablecido al ejemplo');
+    ed.value = STARTER;
+    ed.selectionStart = ed.selectionEnd = caretHome();
+    saveDraftLocal(STARTER);
+    lastPushedDraft = '';
+    pushDraftNow();               // el borrado también viaja a Sheets
+    onEdInput();
+    scheduleCompile(150);
+    toast('Editor limpio — empieza desde content');
   });
 });
  $('#btnJsonCopy').addEventListener('click', ()=>copyText($('#jcode').textContent, 'JSON copiado'));
@@ -1161,13 +1206,15 @@ window.addEventListener('resize', ()=>{
   rT = setTimeout(()=>{ if(lastBuf){ const s=++seq; renderFromBuf(lastBuf, s); } }, 300);
 });
 
-/* ═══ 21 · ARRANQUE ════════════════════════════════════════ */
+/* ═══ 22 · ARRANQUE ════════════════════════════════════════ */
 (function init(){
   loadQueue();
   loadCache();
   seedDict();
   const draft = localStorage.getItem(LS_DRAFT);
-  ed.value = (draft && draft.trim()) ? draft : STARTER;
+  const fresh = !(draft && draft.trim());
+  ed.value = fresh ? STARTER : draft;
+  if(fresh) ed.selectionStart = ed.selectionEnd = caretHome();  // cursor dentro de content
   lastPushedDraft = '';
   syncHL(); refreshIcons(); renderConn();
   reconcileDraft();

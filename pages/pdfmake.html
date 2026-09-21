@@ -1,763 +1,878 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Estudio PDFMake en Vivo</title>
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/ace.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.7/ext-language_tools.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#F4F1E9">
+<title>BLOCKLAB · pdfmake</title>
 
-    <style>
-        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: 'Inter', system-ui, sans-serif; }
-        
-        #editor { position: absolute; top: 0; right: 0; bottom: 0; left: 0; font-size: 14px;}
-        iframe { border: none; width: 100%; height: 100%; background: #525659; } /* Fondo típico de lector PDF */
-        
-        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #fee2e2; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #ef4444; border-radius: 4px; }
-        
-        .modal-scrollbar::-webkit-scrollbar { width: 6px; }
-        .modal-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .modal-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500..700;1,9..144,400..600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 
-        #floating-add-btn {
-            position: absolute;
-            z-index: 40;
-            display: none;
-            transform: translate(5px, -120%);
-        }
+<!-- pdfmake (genera el PDF) + pdf.js (lo pinta en canvas: funciona en móvil) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
 
-        .dict-item.active {
-            background-color: #dbeafe;
-            border-left: 3px solid #3b82f6;
-            color: #1e40af;
-            font-weight: 600;
-        }
-    </style>
+<style>
+/* ═══ Base ═════════════════════════════════════════════════ */
+:root{
+  --bg:#F4F1E9; --card:#FDFBF4; --ink:#1C1915; --mut:#6F675A;
+  --line:#DED6C5; --acc:#D6481C; --ok:#3F6B33; --warn:#9A7B1F;
+  --mono:'JetBrains Mono',monospace; --serif:'Fraunces',serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden;
+  background:var(--bg);color:var(--ink);font:400 14px/1.6 var(--mono)}
+::selection{background:rgba(214,72,28,.25)}
+button,a{font-family:var(--mono)}
+svg{flex:none}
+i[data-lucide]{display:inline-flex}
+.wrap-x{max-width:1400px;width:100%;margin:0 auto}
+
+/* ═══ Botones ══════════════════════════════════════════════ */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:38px;padding:8px 12px;
+  font:600 10.5px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;
+  border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;
+  transition:background .15s,color .15s,border-color .15s}
+.btn:hover{background:var(--ink);color:var(--bg)}
+.btn svg{width:14px;height:14px}
+.iconbtn{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;flex:none;
+  border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;transition:all .15s}
+.iconbtn:hover{background:var(--ink);color:var(--bg)}
+.iconbtn.danger:hover{background:var(--acc);border-color:var(--acc);color:var(--bg)}
+.iconbtn.sm{width:28px;height:28px;border-width:1px}
+.iconbtn.sm svg{width:13px;height:13px}
+.iconbtn.armed{width:auto;padding:0 9px;font:700 10px/1 var(--mono);border-color:var(--acc);color:var(--acc)}
+.iconbtn svg{width:15px;height:15px}
+.spin svg{animation:rot 1s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+/* ═══ Cabecera ═════════════════════════════════════════════ */
+header{flex:none;border-bottom:1.5px solid var(--ink);background:var(--bg)}
+.h-in{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px}
+.brand{font:700 14px/1 var(--mono);letter-spacing:.12em;white-space:nowrap}
+.brand .star{color:var(--acc)}
+.bsub{color:var(--mut);font-weight:500;letter-spacing:.06em}
+.h-right{display:flex;align-items:center;gap:8px}
+.status{display:inline-flex;align-items:center;gap:7px;font:500 10px/1 var(--mono);letter-spacing:.06em;color:var(--mut);text-transform:uppercase;margin-right:4px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--mut);flex:none}
+.dot.ok{background:var(--ok)} .dot.err{background:var(--acc)}
+.dot.busy{background:var(--warn);animation:pulse 1.2s infinite} .dot.warn{background:var(--warn)}
+@keyframes pulse{50%{opacity:.3}}
+.qb{font:700 10px/1 var(--mono);color:var(--acc);border:1.5px solid var(--acc);padding:4px 6px}
+@media(max-width:640px){#stTxt{display:none}.btn .lbl{display:none}}
+
+/* ═══ Pestañas (solo < 1024px) ═════════════════════════════ */
+.tabs{flex:none;display:flex;border-bottom:1.5px solid var(--ink)}
+.tabs button{flex:1;display:flex;justify-content:center;align-items:center;gap:8px;min-height:46px;
+  font:600 11px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;
+  background:none;border:none;color:var(--mut);cursor:pointer}
+.tabs button + button{border-left:1.5px solid var(--ink)}
+.tabs button.on{background:var(--ink);color:var(--bg)}
+.tabs button svg{width:14px;height:14px}
+.tdot{width:7px;height:7px;border-radius:50%;background:var(--mut)}
+.tdot.ok{background:#7FCB6A}.tdot.err{background:#FF8A5C}
+.tabs button.on .tdot.ok{background:#8FE07A}.tabs button.on .tdot.err{background:#FFB08A}
+
+/* ═══ Paneles ══════════════════════════════════════════════ */
+.panes{flex:1;min-height:0;display:grid;grid-template-columns:1fr}
+.pane{display:flex;flex-direction:column;min-height:0;min-width:0}
+.pv{display:none}
+body.view-pdf .ed{display:none}
+body.view-pdf .pv{display:flex}
+@media(min-width:1024px){
+  .tabs{display:none}
+  .panes{grid-template-columns:minmax(0,44%) minmax(0,56%)}
+  .ed,.pv{display:flex!important}
+  .ed{border-right:1.5px solid var(--ink)}
+}
+.pane-head{flex:none;display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:8px 14px;border-bottom:1px solid var(--line);
+  font:600 10px/1 var(--mono);letter-spacing:.12em;color:var(--mut);text-transform:uppercase}
+.pane-head .r{display:flex;align-items:center;gap:8px}
+.saved{font:500 9.5px/1 var(--mono);letter-spacing:.06em;color:var(--mut);text-transform:none}
+
+/* ═══ Editor con resaltado (textarea transparente + pre) ═══ */
+.ed-wrap{flex:1;min-height:0;position:relative;margin:12px;border:1.5px solid var(--ink);background:var(--card)}
+#hl,#ed{position:absolute;inset:0;margin:0;padding:14px;border:none;outline:none;
+  font:400 13px/1.7 var(--mono);tab-size:2;
+  white-space:pre-wrap;word-wrap:break-word;overflow-wrap:break-word;overflow-y:scroll;overflow-x:hidden}
+#ed{background:transparent;color:transparent;caret-color:var(--ink);resize:none;-webkit-text-fill-color:transparent}
+#hl{background:var(--card);pointer-events:none;scrollbar-width:none;color:var(--ink)}
+#hl::-webkit-scrollbar{display:none}
+#hl .p{color:#A63A0A}          /* claves */
+#hl .s{color:#3F6B33}          /* cadenas */
+#hl .n{color:#8A6D2F}          /* números */
+#hl .k{color:var(--acc);font-weight:700}
+#hl .c{color:var(--mut);font-style:italic}
+
+/* Autocompletado */
+.sug{position:absolute;z-index:8;min-width:230px;max-width:330px;max-height:262px;overflow:auto;
+  background:var(--card);border:1.5px solid var(--ink);box-shadow:5px 5px 0 rgba(28,25,21,.18);
+  font:400 12px/1.4 var(--mono)}
+.sug button{display:flex;width:100%;align-items:center;gap:8px;padding:9px 11px;border:0;
+  background:none;text-align:left;cursor:pointer;font:inherit;color:var(--ink)}
+.sug button b{font-weight:700}
+.sug button.on,.sug button:hover{background:var(--ink);color:var(--bg)}
+.sug button.on .tag,.sug button:hover .tag{background:var(--bg);color:var(--ink)}
+.tag{font:700 8.5px/1 var(--mono);letter-spacing:.07em;text-transform:uppercase;padding:3px 6px;background:var(--ink);color:var(--bg)}
+.sug .newrow{color:var(--acc);font-weight:700;border-top:1px solid var(--line)}
+.sug .newrow:hover{background:var(--acc);color:var(--bg)}
+
+/* ═══ Vista previa ═════════════════════════════════════════ */
+.err{flex:none;margin:10px 12px 0;padding:10px 12px;border:1.5px solid var(--acc);color:var(--acc);
+  background:#FBEFE9;font:500 11px/1.55 var(--mono);max-height:90px;overflow:auto;white-space:pre-wrap}
+.pages{flex:1;min-height:0;overflow:auto;padding:16px;background:var(--paper2,#E9E4D6);background:var(--bg);background:#E9E4D6}
+.pg{display:block;width:100%;height:auto;margin:0 auto 14px;background:#fff;
+  box-shadow:0 1px 3px rgba(28,25,21,.28),0 4px 14px rgba(28,25,21,.10)}
+.pv-hint{color:var(--mut);font-size:11.5px;text-align:center;padding:40px 20px}
+
+/* ═══ Diálogos ═════════════════════════════════════════════ */
+dialog{border:2px solid var(--ink);background:var(--card);color:var(--ink);
+  box-shadow:7px 7px 0 var(--ink);padding:0;width:min(560px,94vw);margin:auto}
+dialog::backdrop{background:rgba(28,25,21,.55)}
+.dlg-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:15px 18px;border-bottom:1.5px solid var(--ink)}
+.dlg-head h3{font:600 20px/1.15 var(--serif)}
+.dlg-head small{display:block;font:500 10px/1.5 var(--mono);letter-spacing:.06em;color:var(--mut);margin-top:4px}
+.dlg-body{padding:16px 18px}
+.dlg-foot{display:flex;justify-content:flex-end;gap:10px;padding:0 18px 18px}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:13px}
+.field label{font:700 9px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+.field input,.field textarea{font:400 13px/1.6 var(--mono);padding:10px 12px;min-height:42px;
+  border:1.5px solid var(--ink);background:var(--bg);color:var(--ink);outline:none;width:100%}
+.field input:focus,.field textarea:focus{border-color:var(--acc)}
+.field textarea{min-height:150px;resize:vertical}
+.hint{font:400 10px/1.5 var(--mono);color:var(--mut)}
+.hint code{color:var(--acc);font-weight:700}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:560px){.field-row{grid-template-columns:1fr}}
+
+/* Diccionario */
+.d-tools{display:flex;gap:8px;margin-bottom:12px}
+#q2{flex:1;min-width:0;font:500 13px/1 var(--mono);padding:0 4px;min-height:38px;
+  border:none;border-bottom:1.5px solid var(--ink);background:transparent;outline:none}
+#q2:focus{border-color:var(--acc)}
+.d-list{max-height:56vh;overflow:auto;border-top:1.5px solid var(--ink)}
+.dl-l{font:600 11px/1 var(--serif);padding:10px 4px 6px;color:var(--acc);letter-spacing:.1em;position:sticky;top:0;background:var(--card)}
+.drow{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid var(--line)}
+.d-main{flex:1;min-width:0}
+.d-main .t{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.d-main strong{font:700 12.5px/1.3 var(--mono)}
+.d-c{display:block;font:400 10.5px/1.4 var(--mono);color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}
+.d-acts{display:flex;gap:5px}
+.d-empty{padding:24px 8px;text-align:center;color:var(--mut);font-size:12px}
+
+/* JSON */
+#jcode{font:400 11.5px/1.65 var(--mono);background:var(--ink);color:#EDE7D8;padding:14px;
+  white-space:pre-wrap;word-break:break-word;max-height:56vh;overflow:auto}
+
+/* ═══ Toasts ═══════════════════════════════════════════════ */
+#toasts{position:fixed;left:16px;right:16px;bottom:16px;display:flex;flex-direction:column;align-items:center;gap:8px;z-index:99;pointer-events:none}
+.toast{display:flex;gap:9px;align-items:center;background:var(--ink);color:var(--bg);padding:11px 15px;
+  font:500 12px/1.4 var(--mono);max-width:100%;animation:tin .2s ease}
+.toast.err{background:var(--acc)}
+.toast svg{width:14px;height:14px}
+@keyframes tin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media(min-width:640px){#toasts{left:auto;right:20px;align-items:flex-end}}
+</style>
 </head>
-<body class="bg-gray-50 flex flex-col h-screen w-screen relative">
+<body class="view-code">
 
-    <header class="bg-slate-900 text-white h-14 flex items-center justify-between px-6 shadow-md z-10 shrink-0">
-        <div class="flex items-center gap-3">
-            <a href="../index.html" class="hover:bg-slate-800 p-1.5 rounded-md transition mr-2 text-slate-400 hover:text-white" title="Volver al Inicio">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-            </a>
-            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-400">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-                <line x1="16" y1="13" x2="8" y2="13"></line>
-                <line x1="16" y1="17" x2="8" y2="17"></line>
-                <polyline points="10 9 9 9 8 9"></polyline>
-            </svg>
-            <h1 class="text-lg font-semibold tracking-wide hidden sm:block">Estudio PDFMake en Vivo</h1>
-        </div>
-        <div class="flex items-center gap-4">
-            <button onclick="openDictionaryManager()" class="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 text-sm py-1.5 px-3 rounded-md transition border border-slate-600">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path></svg>
-                Gestor de Diccionario
-            </button>
-            <div class="text-xs text-slate-400 flex items-center gap-1.5 hidden sm:flex">
-                <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                Renderizado en Vivo
-            </div>
-        </div>
-    </header>
-
-    <main class="flex-1 flex flex-col md:flex-row w-full overflow-hidden relative">
-        <!-- Panel Izquierdo: Editor -->
-        <section class="w-full md:w-1/2 h-1/2 md:h-full relative border-b md:border-b-0 md:border-r border-slate-700 bg-slate-800 flex flex-col">
-            <div class="bg-slate-800 text-slate-400 text-xs px-4 py-2 border-b border-slate-700 flex justify-between">
-                <span>Define 'var dd' para construir el PDF</span>
-                <span>Presiona Ctrl+Espacio para Sugerencias</span>
-            </div>
-            <div class="flex-1 relative w-full">
-                <div id="editor"></div>
-            </div>
-        </section>
-
-        <!-- Panel Derecho: Preview -->
-        <section class="w-full md:w-1/2 h-1/2 md:h-full relative bg-gray-200 flex flex-col">
-            <div class="bg-white text-slate-600 text-xs px-4 py-2 border-b border-gray-300 flex justify-between items-center shadow-sm z-10">
-                <span class="font-medium">Vista Previa del PDF</span>
-            </div>
-            
-            <div class="flex-1 relative w-full h-full bg-gray-300 flex items-center justify-center">
-                <!-- Indicador de carga -->
-                <div id="pdf-loading" class="absolute text-slate-500 flex flex-col items-center gap-2">
-                    <svg class="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                    <span class="text-sm font-medium">Generando PDF...</span>
-                </div>
-                <!-- Iframe para Blob del PDF -->
-                <iframe id="pdf-preview" title="Vista Previa del PDF" class="relative z-10 hidden"></iframe>
-                
-                <!-- Overlay de Error -->
-                <div id="error-overlay" class="hidden absolute inset-0 bg-red-50/95 p-6 z-20 flex flex-col justify-center">
-                    <div class="max-w-md mx-auto bg-white rounded-xl shadow-2xl border-l-4 border-red-500 p-5 w-full">
-                        <div class="flex items-center gap-2 text-red-600 mb-3">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                            <h3 class="font-bold">Error de Código</h3>
-                        </div>
-                        <div class="bg-red-50 text-red-800 p-3 rounded font-mono text-xs max-h-48 overflow-y-auto custom-scrollbar break-words border border-red-100" id="error-message">
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <div id="dict-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden h-full">
-            
-            <div class="bg-slate-50 border-b border-slate-200 px-6 py-4 flex justify-between items-center shrink-0 flex-wrap gap-2">
-                <h2 class="text-lg font-bold text-slate-800">Gestor de Diccionario</h2>
-                <div class="flex items-center gap-2 flex-wrap">
-                    
-                    <input type="file" id="import-json" class="hidden" accept=".json" onchange="importDictionary(event)">
-                    <button onclick="document.getElementById('import-json').click()" class="text-xs font-medium text-slate-600 bg-white border border-slate-300 rounded px-3 py-1.5 hover:bg-slate-100 transition flex items-center gap-1">
-                        Importar JSON
-                    </button>
-                    <button onclick="exportDictionary()" class="text-xs font-medium text-slate-600 bg-white border border-slate-300 rounded px-3 py-1.5 hover:bg-slate-100 transition flex items-center gap-1">
-                        Descargar JSON
-                    </button>
-                    
-                    <button onclick="closeDictionaryManager()" class="text-slate-400 hover:text-slate-600 transition p-1 ml-2 bg-slate-200 rounded-full">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                    </button>
-                </div>
-            </div>
-            
-            <div class="bg-slate-100 border-b border-slate-200 px-6 py-2.5 text-xs text-slate-600 flex items-center justify-between gap-2 shrink-0">
-                <div class="flex items-center gap-2">
-                    <span id="save-mode-badge" class="bg-blue-600 text-white font-semibold text-[10px] px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0">Sincronización Web</span>
-                    <span id="save-mode-text">Conectado a <strong>Google Sheets</strong>. Guardando en tiempo real.</span>
-                </div>
-                <div id="github-sync-status" class="text-[11px] text-slate-500 font-medium shrink-0">
-                    Base: <span id="status-text" class="text-slate-600">Conectando...</span>
-                </div>
-            </div>
-
-            <div class="flex-1 flex overflow-hidden">
-                <div class="w-1/3 border-r border-slate-200 bg-slate-50 flex flex-col p-4 gap-3 min-w-[250px]">
-                    <div class="flex items-center gap-2">
-                        <div class="relative flex-1">
-                            <input type="text" id="dict-search" oninput="renderDictList(this.value)" placeholder="Buscar función..." class="w-full bg-white border border-slate-300 rounded-lg pl-8 pr-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
-                            <svg class="absolute left-2.5 top-2 text-slate-400" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                        </div>
-                        <button onclick="createNewEntry()" class="bg-blue-600 hover:bg-blue-700 text-white rounded-lg p-1.5 transition" title="Añadir Nueva Función">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                        </button>
-                    </div>
-                    <ul id="dict-list" class="flex-1 overflow-y-auto modal-scrollbar space-y-1 pr-1 text-xs">
-                        <!-- Lista generada por JS -->
-                    </ul>
-                </div>
-
-                <div class="w-2/3 bg-white flex flex-col p-6 overflow-y-auto modal-scrollbar relative">
-                    <div id="dict-empty-state" class="flex-1 flex flex-col items-center justify-center text-slate-400 gap-2 my-auto">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
-                        <p class="text-sm font-medium">Selecciona una propiedad o crea una nueva</p>
-                    </div>
-
-                    <div id="dict-editor-form" class="hidden flex flex-col gap-4">
-                        <input type="hidden" id="dict-original-name" value="">
-                        <div>
-                            <label class="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1 block">Nombre de la Propiedad / Función</label>
-                            <input type="text" id="dict-prop-name" placeholder="Ej: miNuevaFuncion" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono">
-                        </div>
-
-                        <div>
-                            <div class="flex justify-between items-center mb-2">
-                                <label class="text-xs font-semibold text-slate-600 uppercase tracking-wider">Estructuras / Variantes</label>
-                                <button type="button" onclick="addSnippetRow()" class="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 bg-blue-50 px-2 py-1 rounded">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                                    Añadir Variante
-                                </button>
-                            </div>
-                            <div id="snippets-container" class="space-y-3">
-                                <!-- Filas de variantes por JS -->
-                            </div>
-                        </div>
-
-                        <div class="flex justify-between items-center pt-4 border-t border-slate-200 mt-2">
-                            <button type="button" id="btn-delete-entry" onclick="deleteCurrentEntry()" class="text-xs font-medium text-red-600 hover:text-red-800 hover:bg-red-50 px-3 py-2 rounded-lg transition flex items-center gap-1">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                                Eliminar Propiedad
-                            </button>
-                            <div class="flex gap-2 ml-auto">
-                                <button type="button" onclick="closeDictionaryManager()" class="text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-lg transition">Cancelar</button>
-                                <button type="button" onclick="saveDictionaryEntry()" class="text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg transition shadow-sm font-bold flex items-center gap-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-                                    Guardar Cambios
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+<header>
+  <div class="wrap-x h-in">
+    <div class="brand">BLOCKLAB<span class="star">*</span><span class="bsub"> / pdfmake</span></div>
+    <div class="h-right">
+      <span class="qb" id="qb" hidden>↑0</span>
+      <span class="status"><span class="dot" id="stDot"></span><span id="stTxt">—</span></span>
+      <button class="iconbtn" id="btnDict" title="Diccionario de funciones"><i data-lucide="book-open"></i></button>
+      <button class="iconbtn" id="btnJson" title="Ver docDefinition como JSON"><i data-lucide="braces"></i></button>
+      <button class="btn" id="btnDl" title="Descargar PDF"><i data-lucide="download"></i><span class="lbl">PDF</span></button>
+      <button class="iconbtn" id="btnSync" title="Sincronizar con Sheets"><i data-lucide="refresh-cw"></i></button>
     </div>
+  </div>
+</header>
 
-    <button id="floating-add-btn" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded shadow-lg cursor-pointer flex items-center gap-1 transition">
-        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-        Añadir '<span id="floating-word"></span>' al dicc.
-    </button>
+<nav class="tabs" id="tabs">
+  <button type="button" data-view="code" class="on"><i data-lucide="code-2"></i>Código</button>
+  <button type="button" data-view="pdf"><i data-lucide="file-text"></i>PDF<span class="tdot" id="tabDot"></span></button>
+</nav>
 
-    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white text-sm px-5 py-4 rounded-lg shadow-xl z-50 transform translate-y-20 opacity-0 transition-all duration-300 flex items-center gap-3 pointer-events-none">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-green-400"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-        <span id="toast-message" class="font-medium">Notificación</span>
+<main class="panes">
+
+  <!-- ══ Editor ══ -->
+  <section class="pane ed">
+    <div class="pane-head">
+      <span>Editor · docDefinition</span>
+      <span class="r">
+        <span class="saved" id="draftInfo">—</span>
+        <button class="iconbtn sm" id="btnReset" title="Restablecer ejemplo"><i data-lucide="rotate-ccw"></i></button>
+      </span>
     </div>
+    <div class="ed-wrap" id="edWrap">
+      <pre id="hl" aria-hidden="true"></pre>
+      <textarea id="ed" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" aria-label="Código pdfmake"></textarea>
+      <div class="sug" id="sug" hidden></div>
+    </div>
+  </section>
 
-    <script>
-        const defaultCode = `var dd = {
-  content: [
-    '¡El renderizado en vivo está funcionando!',
-    { text: 'Comienza a escribir aquí...', style: 'header' }
-  ],
-  styles: {
-    header: {
-      fontSize: 18,
-      bold: true,
-      margin: [0, 0, 0, 10]
+  <!-- ══ Vista previa ══ -->
+  <section class="pane pv">
+    <div class="pane-head">
+      <span>Vista previa</span>
+      <span class="r status"><span class="dot" id="cDot"></span><span id="cTxt">—</span></span>
+    </div>
+    <div class="err" id="errBox" hidden></div>
+    <div class="pages" id="pages"><div class="pv-hint">Escribe código a la izquierda —<br>el PDF nace aquí, en vivo.</div></div>
+  </section>
+
+</main>
+
+<!-- ══ Diálogo: diccionario ══ -->
+<dialog id="dlgDict">
+  <div class="dlg-head">
+    <div><h3>Diccionario</h3><small id="dictCount">—</small></div>
+    <button type="button" class="iconbtn" data-close><i data-lucide="x"></i></button>
+  </div>
+  <div class="dlg-body">
+    <div class="d-tools">
+      <input id="q2" type="text" placeholder="Buscar en el diccionario…" autocomplete="off">
+      <button class="btn btn-solid" id="btnNewSnip"><i data-lucide="plus"></i>Nueva</button>
+    </div>
+    <div class="d-list" id="dictList"></div>
+  </div>
+</dialog>
+
+<!-- ══ Diálogo: guardar/editar entrada ══ -->
+<dialog id="dlgSnip">
+  <form id="fmSnip" method="dialog">
+    <div class="dlg-head">
+      <div><h3 id="snipTitle">Nueva entrada</h3><small>hoja «pdfmake» en Sheets</small></div>
+      <button type="button" class="iconbtn" data-close><i data-lucide="x"></i></button>
+    </div>
+    <div class="dlg-body">
+      <input type="hidden" name="id">
+      <div class="field-row">
+        <div class="field"><label>Título (la opción)</label><input name="name" required placeholder="text"></div>
+        <div class="field"><label>Tipo</label><input name="tag" list="kinds" placeholder="propiedad">
+          <datalist id="kinds">
+            <option>propiedad</option><option>elemento</option><option>objeto</option>
+            <option>bloque</option><option>función</option><option>valor</option>
+          </datalist>
+        </div>
+      </div>
+      <div class="field"><label>Lo que insertará (código)</label>
+        <textarea name="code" id="snipTA" required spellcheck="false" placeholder="text: '$0'"></textarea>
+        <span class="hint"><code>$0</code> = dónde quedará el cursor al insertar · Tab = sangría</span>
+      </div>
+    </div>
+    <div class="dlg-foot">
+      <button type="button" class="btn" data-close>Cancelar</button>
+      <button type="submit" class="btn btn-solid">Guardar</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- ══ Diálogo: JSON resuelto ══ -->
+<dialog id="dlgJson">
+  <div class="dlg-head">
+    <div><h3>docDefinition</h3><small>el objeto que recibe pdfMake</small></div>
+    <button type="button" class="iconbtn" data-close><i data-lucide="x"></i></button>
+  </div>
+  <div class="dlg-body" style="padding:14px"><pre id="jcode"></pre></div>
+  <div class="dlg-foot"><button type="button" class="btn btn-solid" id="btnJsonCopy"><i data-lucide="copy"></i>Copiar</button></div>
+</dialog>
+
+<div id="toasts"></div>
+
+<script>
+/* ═══ 1 · CONFIG ═══════════════════════════════════════════ */
+const API_URL   = 'PEGA_AQUI_TU_URL_DE_APPS_SCRIPT_exec'; // la misma del index
+const SHEET     = 'pdfmake';              // hoja = diccionario de este playground
+const LS_DB     = 'blocklab.db.v1';       // caché compartida con el index
+const LS_Q      = 'blocklab.queue.v1';
+const LS_DRAFT  = 'blocklab.draft.pdfmake.v1';
+const LS_SEEDED = 'blocklab.pdfmake.seeds.v1';
+
+/* Semillas del diccionario (IDs estables → se suben una vez a la hoja) */
+const SEED = [
+  { id:'d-text',      name:'text',      tag:'propiedad', code:`text: '$0'` },
+  { id:'d-bold',      name:'bold',      tag:'propiedad', code:`bold: true` },
+  { id:'d-italics',   name:'italics',   tag:'propiedad', code:`italics: true` },
+  { id:'d-fontsize',  name:'fontSize',  tag:'propiedad', code:`fontSize: $0` },
+  { id:'d-lineheight',name:'lineHeight',tag:'propiedad', code:`lineHeight: $0` },
+  { id:'d-color',     name:'color',     tag:'propiedad', code:`color: '$0'` },
+  { id:'d-fillcolor', name:'fillColor', tag:'propiedad', code:`fillColor: '$0'` },
+  { id:'d-alignment', name:'alignment', tag:'propiedad', code:`alignment: '$0'` },
+  { id:'d-margin',    name:'margin',    tag:'propiedad', code:`margin: [$0]` },
+  { id:'d-width',     name:'width',     tag:'propiedad', code:`width: $0` },
+  { id:'d-pagebreak', name:'pageBreak', tag:'propiedad', code:`pageBreak: '$0'` },
+  { id:'d-texto',     name:'texto',     tag:'elemento',  code:`{ text: '$0' }` },
+  { id:'d-tabla',     name:'tabla',     tag:'elemento',  code:`{
+  table: {
+    headerRows: 1,
+    widths: ['*', 'auto'],
+    body: [
+      ['Columna A', 'Columna B'],
+      ['dato 1', '$0']
+    ]
+  }
+}` },
+  { id:'d-columnas',  name:'columnas',  tag:'elemento',  code:`{
+  columns: [
+    { width: '*', text: 'Izquierda' },
+    { width: '*', text: '$0' }
+  ]
+}` },
+  { id:'d-lista',     name:'lista',     tag:'elemento',  code:`{ ul: ['$0'] }` },
+  { id:'d-imagen',    name:'imagen',    tag:'elemento',  code:`{ image: '$0', width: 150 }` },
+  { id:'d-qr',        name:'qr',        tag:'elemento',  code:`{ qr: '$0' }` },
+  { id:'d-content',   name:'content',   tag:'bloque',    code:`content: [
+  { text: 'Título', fontSize: 22, bold: true, margin: [0, 0, 0, 12] },
+  '$0'
+]` }
+];
+
+/* Código inicial (borrador) */
+const STARTER = `content: [
+  { text: 'Hola, BLOCKLAB', fontSize: 24, bold: true, margin: [0, 0, 0, 14] },
+  { text: 'Escribe a la izquierda: el PDF nace aquí, en vivo.', italics: true, color: '#666666' },
+  { text: 'Una tabla de prueba', fontSize: 15, bold: true, margin: [0, 18, 0, 6] },
+  {
+    table: {
+      headerRows: 1,
+      widths: ['*', 'auto'],
+      body: [
+        [{ text: 'Columna A', bold: true }, { text: 'Columna B', bold: true }],
+        ['01', 'pdfmake en vivo'],
+        ['02', 'funciona en el celular']
+      ]
     }
   }
-};`;
+],
+defaultStyle: {
+  fontSize: 11,
+  lineHeight: 1.35
+}`;
 
-        // === CONFIGURACIÓN DE GOOGLE SHEETS ===
-        const GAS_URL = "https://script.google.com/macros/s/AKfycbzSLoucR2yC7X7kKpbeDnQUCNd94-WuVuGyR55CMIrP4hq5f1tgynDDdHumc8iBj8gI9g/exec"; 
-        const SHEET_NAME = "PDFMakeDict";
+/* ═══ 2 · ESTADO ═══════════════════════════════════════════ */
+let MODULES = [], BLOCKS = {}, queue = [], syncing = false;
+let seq = 0, lastBuf = null, currentDD = null, libTries = 0;
+let sugItems = [], sugNew = null, sugActive = 0;
+let editSnipId = null, snipReturn = 'dict';
 
-        // Diccionario base robusto, garantizado aunque no haya base de datos.
-        const defaultDictionary = {
-            "content": [{ "caption": "content (arreglo)", "snippet": "content: [\n\t$1\n],\n" }],
-            "styles": [{ "caption": "styles (objeto)", "snippet": "styles: {\n\t${1:miEstilo}: {\n\t\t$2\n\t}\n},\n" }],
-            "defaultStyle": [
-                { "caption": "defaultStyle (objeto)", "snippet": "defaultStyle: {\n\tfontSize: ${1:12},\n\tbold:${2:false}\n},\n" },
-                { "caption": "defaultStyle (texto)", "snippet": "defaultStyle: '${1:estilo}',\n" }
-            ],
-            "pageSize": [
-                { "caption": "pageSize (A4/Letter)", "snippet": "pageSize: '${1:A4}',\n" },
-                { "caption": "pageSize (medidas)", "snippet": "pageSize: { width: ${1:595.28}, height:${2:841.89} },\n" }
-            ],
-            "pageOrientation": [
-                { "caption": "pageOrientation (portrait)", "snippet": "pageOrientation: 'portrait',\n" },
-                { "caption": "pageOrientation (landscape)", "snippet": "pageOrientation: 'landscape',\n" }
-            ],
-            "pageMargins": [
-                { "caption": "pageMargins (4 lados)", "snippet": "pageMargins: [ ${1:40},${2:60}, ${3:40},${4:60} ],\n" },
-                { "caption": "pageMargins (H/V)", "snippet": "pageMargins: [ ${1:40},${2:60} ],\n" }
-            ],
-            "header": [
-                { "caption": "header (texto simple)", "snippet": "header: '${1:Encabezado del documento}',\n" },
-                { "caption": "header (función dinámica)", "snippet": "header: function(currentPage, pageCount, pageSize) {\n\treturn { text: currentPage.toString() + ' de ' + pageCount, alignment: 'right', margin: [0, 20, 20, 0] };\n},\n" }
-            ],
-            "footer": [
-                { "caption": "footer (función dinámica)", "snippet": "footer: function(currentPage, pageCount) {\n\treturn { text: 'Página ' + currentPage.toString() + ' de ' + pageCount, alignment: 'center' };\n},\n" }
-            ],
-            "background": [
-                { "caption": "background (función dinámica)", "snippet": "background: function(currentPage, pageSize) {\n\treturn [ { text: 'CONFIDENCIAL', color: '#f0f0f0', fontSize: 60, alignment: 'center', margin: [0, 200] } ];\n},\n" }
-            ],
-            "watermark": [
-                { "caption": "watermark (texto)", "snippet": "watermark: { text: '${1:BORRADOR}', color: '${2:blue}', opacity:${3:0.3}, bold: true },\n" }
-            ],
-            "table": [
-                { "caption": "table (estructura completa)", "snippet": "table: {\n\theaderRows: ${1:1},\n\twidths: [ '${2:*}', '${3:auto}' ],\n\tbody: [\n\t\t[ '${4:Col 1}', '${5:Col 2}' ],\n\t\t[ '${6:Val 1}', '${7:Val 2}' ]\n\t]\n},\n" }
-            ],
-            "columns": [
-                { "caption": "columns (arreglo de bloques)", "snippet": "columns: [\n\t{\n\t\twidth: '${1:*}',\n\t\ttext: '${2:Columna 1}'\n\t},\n\t{\n\t\twidth: '${3:auto}',\n\t\ttext: '${4:Columna 2}'\n\t}\n],\ncolumnGap: 10,\n" }
-            ],
-            "bold": [
-                { "caption": "bold (true)", "snippet": "bold: true,\n" },
-                { "caption": "bold (false)", "snippet": "bold: false,\n" }
-            ],
-            "italics": [
-                { "caption": "italics (true)", "snippet": "italics: true,\n" },
-                { "caption": "italics (false)", "snippet": "italics: false,\n" }
-            ],
-            "fontSize": [
-                { "caption": "fontSize (número)", "snippet": "fontSize: ${1:12},\n" }
-            ],
-            "alignment": [
-                { "caption": "alignment (left)", "snippet": "alignment: 'left',\n" },
-                { "caption": "alignment (center)", "snippet": "alignment: 'center',\n" },
-                { "caption": "alignment (right)", "snippet": "alignment: 'right',\n" },
-                { "caption": "alignment (justify)", "snippet": "alignment: 'justify',\n" }
-            ],
-            "color": [
-                { "caption": "color (hex/nombre)", "snippet": "color: '${1:#333333}',\n" }
-            ],
-            "fillColor": [
-                { "caption": "fillColor (hex/nombre)", "snippet": "fillColor: '${1:#f3f4f6}',\n" }
-            ],
-            "margin": [
-                { "caption": "margin (todos lados)", "snippet": "margin: [${1:10}],\n" },
-                { "caption": "margin (H/V)", "snippet": "margin: [${1:10},${2:5}],\n" },
-                { "caption": "margin (Izq, Arr, Der, Aba)", "snippet": "margin: [${1:10},${2:5}, ${3:10},${4:5}],\n" }
-            ]
-        };
+const $   = s => document.querySelector(s);
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const nowISO = () => new Date().toISOString();
+const hora = iso => new Date(iso).toLocaleTimeString('es',{hour12:false});
+const apiOK = () => !!API_URL && !API_URL.includes('PEGA_AQUI');
+const refreshIcons = () => { if(window.lucide) lucide.createIcons(); };
+const dict = () => BLOCKS[SHEET] || (BLOCKS[SHEET] = []);
+const ed = $('#ed'), hl = $('#hl'), sug = $('#sug'), edWrap = $('#edWrap');
 
-        let customDictionary = {};
-        let currentPdfUrl = null;
-        
-        const iframe = document.getElementById('pdf-preview');
-        const pdfLoading = document.getElementById('pdf-loading');
-        const errorOverlay = document.getElementById('error-overlay');
-        const errorMessage = document.getElementById('error-message');
-        const floatingBtn = document.getElementById('floating-add-btn');
-        const floatingWordSpan = document.getElementById('floating-word');
-        const dictModal = document.getElementById('dict-modal');
-        const dictList = document.getElementById('dict-list');
-        const snippetsContainer = document.getElementById('snippets-container');
-        const editorForm = document.getElementById('dict-editor-form');
-        const emptyState = document.getElementById('dict-empty-state');
-        const btnDelete = document.getElementById('btn-delete-entry');
-        const statusText = document.getElementById('status-text');
-        
-        let currentFloatingWord = "";
-        let editor;
+/* ═══ 3 · FUENTES: alias Helvetica/Courier → Roboto (la vfs del navegador solo trae Roboto) ══ */
+(function aliasFonts(){
+  try{
+    const vfs = pdfMake.vfs || {};
+    const pick = re => Object.keys(vfs).find(k => re.test(k));
+    const reg = pick(/Roboto-Regular/i) || pick(/Roboto/i);
+    if(!reg) return;
+    const bold = pick(/Roboto-Medium|Roboto-Bold/i) || reg;
+    const it   = pick(/Roboto-Italic/i) || reg;
+    const bi   = pick(/Roboto-MediumItalic|Roboto-BoldItalic/i) || it;
+    const face = { normal:reg, bold:bold, italics:it, bolditalics:bi };
+    pdfMake.fonts = Object.assign({}, pdfMake.fonts, {
+      Roboto: face, Helvetica: face, Courier: face, Times: face, 'Times-Roman': face
+    });
+  }catch(e){}
+})();
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-        async function initializeApp() {
-            statusText.textContent = "Cargando desde Google Sheets...";
-            statusText.className = "text-blue-600 font-semibold animate-pulse";
-            
-            try {
-                if (GAS_URL === "" || GAS_URL === "URL_DE_TU_WEB_APP_AQUI") {
-                    throw "NOT_CONFIGURED";
-                }
+/* ═══ 4 · CACHÉ / COLA ═════════════════════════════════════ */
+function saveCache(){ try{ localStorage.setItem(LS_DB, JSON.stringify({modules:MODULES, blocks:BLOCKS, ts:nowISO()})); }catch(e){} }
+function loadCache(){
+  try{
+    const d = JSON.parse(localStorage.getItem(LS_DB)||'null');
+    if(d){ MODULES = d.modules||[]; BLOCKS = d.blocks||{}; return true; }
+  }catch(e){}
+  return false;
+}
+const saveQueue = () => { try{ localStorage.setItem(LS_Q, JSON.stringify(queue)); }catch(e){} };
+const loadQueue = () => { try{ queue = JSON.parse(localStorage.getItem(LS_Q)||'[]'); }catch(e){ queue=[]; } };
 
-                const response = await fetch(`${GAS_URL}?sheetName=${SHEET_NAME}`);
-                if (!response.ok) throw new Error("Error HTTP: " + response.status);
-                
-                const result = await response.json();
-                
-                if (result.error && result.error === "Hoja no encontrada") {
-                    // Si es la primera vez que se conecta y la pestaña en Sheets aún no existe:
-                    customDictionary = JSON.parse(JSON.stringify(defaultDictionary));
-                    statusText.textContent = "Conectado (Hoja Nueva)";
-                    statusText.className = "text-emerald-600 font-semibold";
-                    showToast("Conectado a Google Sheets. La pestaña se creará al guardar tu primer dato.");
-                } else if (result.error) {
-                    throw new Error(result.error);
-                } else {
-                    // Éxito: Mezclamos el diccionario base con lo que venga de Google Sheets
-                    customDictionary = JSON.parse(JSON.stringify(defaultDictionary));
-                    for (let key in result) {
-                        customDictionary[key] = result[key];
-                    }
-                    
-                    statusText.textContent = "Sincronizado con Sheets";
-                    statusText.className = "text-emerald-600 font-semibold";
-                    localStorage.setItem('pdfmakeDict_backup', JSON.stringify(customDictionary)); 
-                }
-            } catch (e) {
-                if (e !== "NOT_CONFIGURED") {
-                    console.error("Fallo de red o servidor:", e);
-                    showToast("No se pudo contactar Sheets. Usando modo de respaldo.", true);
-                } else {
-                    showToast("Modo sin nube activo. Configura tu URL.", true);
-                }
-                
-                statusText.textContent = "Modo Respaldo Local";
-                statusText.className = "text-amber-500 font-semibold";
-                
-                const localDict = JSON.parse(localStorage.getItem('pdfmakeDict_backup'));
-                if (localDict && Object.keys(localDict).length > 0) {
-                    customDictionary = localDict;
-                } else {
-                    customDictionary = JSON.parse(JSON.stringify(defaultDictionary));
-                }
-            }
+/* ═══ 5 · ESTADO VISIBLE ═══════════════════════════════════ */
+function setStatus(txt, cls){
+  $('#stTxt').textContent = txt;
+  $('#stDot').className = 'dot ' + (cls||'');
+  const qb = $('#qb');
+  qb.hidden = !queue.length; qb.textContent = '↑' + queue.length;
+}
+function cset(txt, cls){ $('#cTxt').textContent = txt; $('#cDot').className = 'dot ' + (cls||''); }
+function tabDot(cls){ $('#tabDot').className = 'tdot ' + (cls||''); }
+function toast(msg, kind){
+  const t = document.createElement('div');
+  t.className = 'toast' + (kind==='err'?' err':'');
+  t.innerHTML = `<i data-lucide="${kind==='err'?'alert-triangle':'check'}"></i><span>${esc(msg)}</span>`;
+  $('#toasts').appendChild(t); refreshIcons();
+  setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity .25s'; setTimeout(()=>t.remove(),260); }, 3000);
+}
 
-            setupAceEditor();
-            setTimeout(renderPDF, 1000); 
-        }
+/* ═══ 6 · RED — igual que el index (POST text/plain + JSONP fallback) ══ */
+function jsonpGet(action, params={}){
+  return new Promise((res,rej)=>{
+    const cb = '__bl_'+Date.now();
+    const s  = document.createElement('script');
+    const to = setTimeout(()=>{ clean(); rej(new Error('timeout')); }, 12000);
+    function clean(){ clearTimeout(to); delete window[cb]; s.remove(); }
+    window[cb] = d => { clean(); res(d); };
+    s.onerror  = () => { clean(); rej(new Error('error')); };
+    s.src = `${API_URL}?${new URLSearchParams({action, callback:cb, ...params})}`;
+    document.head.appendChild(s);
+  });
+}
+function apiGet(action, params={}){
+  return fetch(`${API_URL}?${new URLSearchParams({action,...params})}`)
+    .then(r => { if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+    .catch(() => jsonpGet(action, params));
+}
+async function apiPost(payload){
+  const r = await fetch(API_URL, { method:'POST', body: JSON.stringify(payload) });
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  return r.json();
+}
+function pushOp(op){
+  if(!apiOK()) return;
+  apiPost(op)
+    .then(r => { if(!(r&&r.ok)) throw new Error((r&&r.error)||'nok'); })
+    .catch(() => { queue.push(op); saveQueue(); setStatus('Pendientes ↑'+queue.length,'warn'); });
+}
+async function flushQueue(){
+  if(!queue.length || !apiOK()) return;
+  const rest = [];
+  for(const op of queue){
+    try{ const r = await apiPost(op); if(!(r&&r.ok)) throw new Error('nok'); }
+    catch(e){ rest.push(op); }
+  }
+  const ok = queue.length - rest.length;
+  queue = rest; saveQueue();
+  if(ok) toast(ok + ' operación(es) sincronizada(s)');
+}
 
-        async function syncToGoogleSheets(action, key, value) {
-            if (GAS_URL === "" || GAS_URL === "URL_DE_TU_WEB_APP_AQUI") {
-                showToast("Aviso: Configura la URL de Apps Script para guardar en la nube.", true);
-                return;
-            }
+/* ═══ 7 · SYNC — la hoja «pdfmake» es el diccionario ═══════ */
+const normBlock = o => ({ id:String(o.id||''), name:String(o.name||''), tag:String(o.tag||''),
+  code:(o.code==null?'':String(o.code)), createdAt:String(o.createdAt||''), updatedAt:String(o.updatedAt||'') });
 
-            statusText.textContent = "Guardando en la nube...";
-            statusText.className = "text-blue-600 font-semibold animate-pulse";
+async function sync(){
+  if(syncing) return;
+  if(!apiOK()){ setStatus('Local · sin backend','warn'); return; }
+  syncing = true; $('#btnSync').classList.add('spin'); setStatus('Sincronizando…','busy');
+  try{
+    const data = await apiGet('bootstrap', { m: SHEET });
+    if(!data.ok) throw new Error(data.error||'nok');
+    if(data.modules) MODULES = data.modules;   // mantener la caché al día para el index
 
-            try {
-                const response = await fetch(GAS_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'text/plain;charset=utf-8',
-                    },
-                    body: JSON.stringify({
-                        sheetName: SHEET_NAME,
-                        action: action,
-                        key: key,
-                        value: value
-                    })
-                });
+    const remote = ((data.blocks||{})[SHEET] || []).map(normBlock);
+    BLOCKS[SHEET] = remote;
+    // entradas creadas offline cuya subida quedó en cola: no perderlas
+    for(const op of queue){
+      if(op.action==='saveBlock' && op.sheet===SHEET && op.block && !remote.some(r=>r.id===op.block.id))
+        BLOCKS[SHEET].push(normBlock(op.block));
+    }
+    BLOCKS[SHEET].sort((a,b)=>a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+    saveCache(); renderDict();
+    setStatus('Sync ' + hora(data.ts), 'ok');
+    await flushQueue();
+  }catch(err){
+    setStatus('Offline · caché','err');
+  }finally{
+    syncing = false; $('#btnSync').classList.remove('spin');
+  }
+}
 
-                const result = await response.json();
-                if (result.status === 'success') {
-                    statusText.textContent = "Sincronizado con Sheets";
-                    statusText.className = "text-emerald-600 font-semibold";
-                    localStorage.setItem('pdfmakeDict_backup', JSON.stringify(customDictionary));
-                } else {
-                     throw new Error(result.message || "Error en el servidor de Apps Script");
-                }
-            } catch (err) {
-                console.error("Fallo al sincronizar con Sheets:", err);
-                showToast("Error al guardar en Google Sheets.", true);
-                statusText.textContent = "Error de sincronización";
-                statusText.className = "text-red-500 font-semibold";
-            }
-        }
+/* ═══ 8 · MUTACIONES del diccionario (optimistas) ══════════ */
+function upsertSnipLocal(b){
+  b.updatedAt = nowISO();
+  const i = dict().findIndex(x=>x.id===b.id);
+  if(i<0){ b.createdAt = b.createdAt||nowISO(); dict().push(b); }
+  else dict()[i] = Object.assign({}, dict()[i], b);
+  dict().sort((a,b)=>a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+  saveCache(); renderDict();
+  pushOp({action:'saveBlock', sheet:SHEET, block:b});
+}
+function deleteSnip(id){
+  const b = dict().find(x=>x.id===id); if(!b) return;
+  BLOCKS[SHEET] = dict().filter(x=>x.id!==id);
+  saveCache(); renderDict();
+  toast('Entrada "'+b.name+'" eliminada');
+  pushOp({action:'deleteBlock', sheet:SHEET, id});
+}
 
-        function showToast(message, isError = false) {
-            const toast = document.getElementById('toast');
-            const toastMessage = document.getElementById('toast-message');
-            const svg = toast.querySelector('svg');
-            
-            toastMessage.textContent = message;
-            
-            if(isError) {
-                svg.innerHTML = '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>';
-                svg.classList.replace('text-green-400', 'text-red-400');
-            } else {
-                svg.innerHTML = '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>';
-                svg.classList.replace('text-red-400', 'text-green-400');
-            }
+/* ═══ 9 · SEMILLAS (una sola vez; sin backend se reintentan) ══ */
+function seedDict(){
+  if(localStorage.getItem(LS_SEEDED)) return;
+  const have = new Set(dict().map(b=>b.id));
+  const t = nowISO();
+  SEED.forEach(s=>{
+    if(!have.has(s.id)) dict().push(Object.assign({createdAt:t, updatedAt:t}, s));
+  });
+  dict().sort((a,b)=>a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+  saveCache();
+  if(apiOK()){
+    SEED.forEach(s=>pushOp({action:'saveBlock', sheet:SHEET,
+      block:{id:s.id, name:s.name, tag:s.tag, code:s.code, createdAt:t, updatedAt:t}}));
+    localStorage.setItem(LS_SEEDED,'1');
+  }
+}
 
-            toast.classList.remove('translate-y-20', 'opacity-0');
-            setTimeout(() => { toast.classList.add('translate-y-20', 'opacity-0'); }, 3500);
-        }
+/* ═══ 10 · EDITOR: resaltado ═══════════════════════════════ */
+function hled(src){
+  return esc(src).replace(
+    /(\/\/[^\n]*)|('(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*")|\b(true|false|null)\b|([A-Za-z_$\u00C0-\u024F][\w$\u00C0-\u024F]*)(?=\s*:)|\b(\d+(?:\.\d+)?)\b/g,
+    (m,com,str,kw,key,num)=>{
+      if(com) return `<span class="c">${com}</span>`;
+      if(str) return `<span class="s">${str}</span>`;
+      if(kw)  return `<span class="k">${kw}</span>`;
+      if(key) return `<span class="p">${key}</span>`;
+      if(num) return `<span class="n">${num}</span>`;
+      return m;
+    });
+}
+function syncHL(){
+  hl.innerHTML = hled(ed.value) + '\u200b';
+  hl.scrollTop = ed.scrollTop; hl.scrollLeft = ed.scrollLeft;
+}
 
-        function setupAceEditor() {
-            ace.require("ace/ext/language_tools");
-            editor = ace.edit("editor");
-            
-            editor.setTheme("ace/theme/tomorrow_night_eighties");
-            editor.session.setMode("ace/mode/javascript");
-            editor.setOptions({
-                enableBasicAutocompletion: true,
-                enableSnippets: true,
-                enableLiveAutocompletion: true,
-                showPrintMargin: false,
-                fontSize: "14px",
-                tabSize: 2,
-                useWorker: false 
-            });
+/* ═══ 11 · AUTOCOMPLETADO ══════════════════════════════════ */
+function currentWord(){
+  const before = ed.value.slice(0, ed.selectionStart);
+  const m = before.match(/[A-Za-z0-9_$\u00C0-\u024F-]+$/);
+  return m ? m[0] : '';
+}
+function matches(w){
+  const lw = w.toLowerCase();
+  const hit = e => e.name.toLowerCase().startsWith(lw) ||
+                   e.name.toLowerCase().split(/\s+/).some(t=>t.startsWith(lw));
+  return dict().filter(hit).sort((a,b)=>{
+    const sa = a.name.toLowerCase().startsWith(lw)?0:1, sb = b.name.toLowerCase().startsWith(lw)?0:1;
+    return sa-sb || a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+  }).slice(0,8);
+}
+function caretXY(){
+  const div = document.createElement('div');
+  const cs = getComputedStyle(ed);
+  ['fontFamily','fontSize','fontWeight','lineHeight','letterSpacing','tabSize',
+   'paddingTop','paddingRight','paddingBottom','paddingLeft','boxSizing'].forEach(p=>div.style[p]=cs[p]);
+  div.style.cssText += ';position:absolute;visibility:hidden;white-space:pre-wrap;word-wrap:break-word;width:'+ed.clientWidth+'px';
+  div.textContent = ed.value.slice(0, ed.selectionStart);
+  const sp = document.createElement('span'); sp.textContent='\u200b'; div.appendChild(sp);
+  document.body.appendChild(div);
+  const r = { x:sp.offsetLeft, y:sp.offsetTop, lh:parseFloat(cs.lineHeight)||22 };
+  div.remove(); return r;
+}
+function showSug(){
+  const w = currentWord();
+  if(!w || w.length < 1){ hideSug(); return; }
+  const list = matches(w);
+  const exact = list.some(e=>e.name.toLowerCase()===w.toLowerCase());
+  const canNew = w.length>=2 && !exact;
+  if(!list.length && !canNew){ hideSug(); return; }
+  sugItems = list; sugNew = canNew ? w : null; sugActive = 0;
+  sug.innerHTML = list.map((e,i)=>
+      `<button type="button" data-i="${i}" class="${i===0?'on':''}"><b>${esc(e.name)}</b>${e.tag?`<span class="tag">${esc(e.tag)}</span>`:''}</button>`
+    ).join('') + (canNew ? `<button type="button" data-new="1" class="newrow">＋ guardar «${esc(w)}»…</button>` : '');
+  sug.hidden = false;
+  const c = caretXY();
+  let left = c.x - ed.scrollLeft + 2;
+  let top  = c.y - ed.scrollTop + c.lh + 3;
+  sug.style.left = left+'px'; sug.style.top = top+'px';
+  const maxX = edWrap.clientWidth  - sug.offsetWidth  - 8;
+  const maxY = edWrap.clientHeight - sug.offsetHeight - 8;
+  if(left > maxX) left = Math.max(8, maxX);
+  if(top  > maxY) top  = Math.max(8, c.y - ed.scrollTop - sug.offsetHeight - c.lh - 6);
+  sug.style.left = left+'px'; sug.style.top = top+'px';
+}
+function hideSug(){ sug.hidden = true; sugItems=[]; sugNew=null; sugActive=0; }
+function markActive(){
+  sug.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('on', i===sugActive));
+  const el = sug.querySelectorAll('button')[sugActive];
+  if(el) el.scrollIntoView({block:'nearest'});
+}
+function moveActive(d){
+  const n = sug.querySelectorAll('button').length;
+  if(!n) return;
+  sugActive = (sugActive + d + n) % n;
+  markActive();
+}
+function insertSnippet(sn){
+  const pos = ed.selectionStart, selEnd = ed.selectionEnd;
+  const before = ed.value.slice(0, pos);
+  const m = before.match(/[A-Za-z0-9_$\u00C0-\u024F-]+$/);
+  const start = m ? pos - m[0].length : pos;
+  let code = String(sn.code||''), off = code.length;
+  const i = code.indexOf('$0');
+  if(i>=0){ code = code.slice(0,i) + code.slice(i+2); off = i; }
+  ed.setRangeText(code, start, selEnd, 'end');
+  ed.selectionStart = ed.selectionEnd = start + off;
+  hideSug(); ed.focus(); onEdInput();
+}
+function acceptActive(){
+  const btns = sug.querySelectorAll('button');
+  const el = btns[sugActive];
+  if(!el) return;
+  if(el.dataset.new) openSnip(null, {name:sugNew, ret:'insert'});
+  else insertSnippet(sugItems[sugActive]);
+}
+sug.addEventListener('pointerdown', e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  e.preventDefault();
+  if(b.dataset.new) openSnip(null, {name:sugNew, ret:'insert'});
+  else insertSnippet(sugItems[+b.dataset.i]);
+});
+document.addEventListener('pointerdown', e=>{
+  if(!e.target.closest('#sug') && e.target!==ed) hideSug();
+});
 
-            editor.setValue(defaultCode, 1);
+/* ═══ 12 · COMPILACIÓN + RENDER (pdfmake → blob → pdf.js → canvas) ══ */
+function failNow(msg){
+  cset('error','err'); tabDot('err');
+  const box = $('#errBox'); box.hidden = false; box.textContent = msg;
+}
+function okNow(n){
+  $('#errBox').hidden = true;
+  cset(n + (n===1?' pág.':' págs.') + ' · ' + hora(nowISO()), 'ok');
+  tabDot('ok');
+}
+async function renderFromBuf(buf, mySeq){
+  const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(buf.slice(0)) }).promise;
+  if(mySeq!==seq){ pdf.destroy(); return; }
+  const dpr = Math.min(window.devicePixelRatio||1, 2);
+  const W = Math.max(300, (pagesEl.clientWidth||480) - 32);
+  const frag = document.createDocumentFragment();
+  for(let i=1; i<=pdf.numPages; i++){
+    const page = await pdf.getPage(i);
+    const vp1 = page.getViewport({scale:1});
+    const vp  = page.getViewport({scale: (W/vp1.width)*dpr});
+    const c = document.createElement('canvas');
+    c.width = Math.floor(vp.width); c.height = Math.floor(vp.height);
+    c.className = 'pg';
+    await page.render({canvasContext:c.getContext('2d'), viewport:vp}).promise;
+    if(mySeq!==seq){ pdf.destroy(); return; }
+    frag.appendChild(c);
+  }
+  pagesEl.innerHTML = ''; pagesEl.appendChild(frag);
+  okNow(pdf.numPages);
+  pdf.destroy();
+}
+async function compile(){
+  if(!window.pdfMake || !window.pdfjsLib){
+    if(++libTries < 25){ cset('cargando librerías…','busy'); setTimeout(compile, 800); }
+    else failNow('No se pudieron cargar pdfmake/pdf.js (¿sin conexión?).');
+    return;
+  }
+  const mySeq = ++seq;
+  cset('compilando…','busy'); tabDot('');
+  let dd;
+  try{ dd = (new Function('return ({\n' + ed.value + '\n})'))(); }
+  catch(e){ return failNow('Sintaxis: ' + e.message); }
+  if(!dd || typeof dd!=='object' || Array.isArray(dd)) return failNow('docDefinition debe ser un objeto { ... }.');
+  if(!Array.isArray(dd.content)) return failNow('Falta content: [ ... ].');
+  currentDD = dd;
+  try{
+    const blob = await new Promise((res, rej)=>{
+      try{ pdfMake.createPdf(dd).getBlob(b=>res(b)); }catch(err){ rej(err); }
+    });
+    if(mySeq!==seq) return;
+    lastBuf = await blob.arrayBuffer();
+    cset('renderizando…','busy');
+    await renderFromBuf(lastBuf, mySeq);
+  }catch(err){
+    if(mySeq===seq) failNow('pdfmake: ' + (err && err.message ? err.message : 'no se pudo generar el PDF.'));
+  }
+}
+const pagesEl = $('#pages');
+let cT=null, dT=null, rT=null;
+function scheduleCompile(ms=550){ clearTimeout(cT); cT = setTimeout(compile, ms); }
+function saveDraftSoon(){
+  clearTimeout(dT);
+  dT = setTimeout(()=>{
+    try{ localStorage.setItem(LS_DRAFT, ed.value); }catch(e){}
+    $('#draftInfo').textContent = 'guardado ' + hora(nowISO());
+  }, 700);
+}
+function onEdInput(){ syncHL(); saveDraftSoon(); scheduleCompile(); showSug(); }
 
-            const pdfMakeCompleter = {
-                getCompletions: function(editor, session, pos, prefix, callback) {
-                    if (prefix.length === 0) { callback(null, []); return; }
-                    let completions = [];
-                    for (const prop in customDictionary) {
-                        if (prop.toLowerCase().includes(prefix.toLowerCase())) {
-                            customDictionary[prop].forEach(entry => {
-                                completions.push({
-                                    caption: entry.caption,
-                                    snippet: entry.snippet,
-                                    meta: "función",
-                                    score: 1000
-                                });
-                            });
-                        }
-                    }
-                    callback(null, completions);
-                }
-            };
-            editor.completers.push(pdfMakeCompleter);
+/* ═══ 13 · VISTAS (móvil: pestañas; PC: split) ═════════════ */
+function setView(v){
+  document.body.classList.toggle('view-pdf', v==='pdf');
+  document.body.classList.toggle('view-code', v==='code');
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on', b.dataset.view===v));
+  if(v==='pdf' && lastBuf){ const s=++seq; renderFromBuf(lastBuf, s); }
+}
+ $('#tabs').addEventListener('click', e=>{
+  const b = e.target.closest('button[data-view]'); if(b) setView(b.dataset.view);
+});
 
-            editor.selection.on('changeCursor', debounce(() => {
-                const pos = editor.getCursorPosition();
-                const range = editor.session.getWordRange(pos.row, pos.column);
-                const word = editor.session.getTextRange(range).trim();
+/* ═══ 14 · DICCIONARIO (diálogo) ═══════════════════════════ */
+function renderDict(){
+  const q = ($('#q2').value||'').trim().toLowerCase();
+  let arr = dict().slice().sort((a,b)=>a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+  if(q) arr = arr.filter(e => (e.name+' '+(e.tag||'')).toLowerCase().includes(q));
+  $('#dictCount').textContent = dict().length + ' entradas · hoja ' + SHEET;
+  let html = '', letter = null;
+  for(const e of arr){
+    const L = (e.name.charAt(0)||'#').toUpperCase();
+    if(L!==letter){ letter = L; html += `<div class="dl-l">${esc(L)}</div>`; }
+    const one = String(e.code||'').replace(/\s+/g,' ').slice(0,52);
+    html += `<div class="drow" data-id="${esc(e.id)}">
+      <div class="d-main">
+        <div class="t"><strong>${esc(e.name)}</strong>${e.tag?`<span class="tag">${esc(e.tag)}</span>`:''}</div>
+        <code class="d-c">${esc(one)}${String(e.code||'').length>52?'…':''}</code>
+      </div>
+      <div class="d-acts">
+        <button class="iconbtn sm" data-a="ins" title="Insertar en el editor"><i data-lucide="corner-down-left"></i></button>
+        <button class="iconbtn sm" data-a="edit" title="Editar"><i data-lucide="pencil"></i></button>
+        <button class="iconbtn sm danger" data-a="del" title="Eliminar"><i data-lucide="trash-2"></i></button>
+      </div>
+    </div>`;
+  }
+  $('#dictList').innerHTML = html || '<div class="d-empty">Nada coincide con la búsqueda.</div>';
+  refreshIcons();
+}
+ $('#dictList').addEventListener('click', e=>{
+  const btn = e.target.closest('[data-a]'); if(!btn) return;
+  const row = btn.closest('.drow'); const b = dict().find(x=>x.id===row.dataset.id);
+  if(!b) return;
+  const a = btn.dataset.a;
+  if(a==='ins'){ setView('code'); $('#dlgDict').close(); insertSnippet(b); }
+  else if(a==='edit') openSnip(b, {ret:'dict'});
+  else if(a==='del') armConfirm(btn, ()=>deleteSnip(b.id));
+});
 
-                if (word && /^[a-zA-Z_]\w*$/.test(word)) {
-                    const ignoreWords = ['var', 'let', 'const', 'function', 'return', 'if', 'else', 'dd', 'true', 'false'];
-                    if (!customDictionary[word] && !ignoreWords.includes(word)) {
-                        const screenPos = editor.renderer.textToScreenCoordinates(pos.row, pos.column);
-                        currentFloatingWord = word;
-                        floatingWordSpan.textContent = word;
-                        
-                        floatingBtn.style.left = `${screenPos.pageX}px`;
-                        floatingBtn.style.top = `${screenPos.pageY - 10}px`;
-                        floatingBtn.style.display = 'flex';
-                    } else {
-                        floatingBtn.style.display = 'none';
-                    }
-                } else {
-                    floatingBtn.style.display = 'none';
-                }
-            }, 200));
+/* ═══ 15 · DIÁLOGO entrada (crear/editar) ══════════════════ */
+function openSnip(entry, opts={}){
+  editSnipId = entry ? entry.id : null;
+  snipReturn = opts.ret || 'dict';
+  $('#snipTitle').textContent = entry ? 'Editar entrada' : 'Nueva entrada';
+  const f = $('#fmSnip');
+  f.id.value   = entry ? entry.id : '';
+  f.name.value = entry ? entry.name : (opts.name || '');
+  f.tag.value  = entry ? (entry.tag||'') : '';
+  f.code.value = entry ? (entry.code||'') : '';
+  $('#dlgDict').close();
+  $('#dlgSnip').showModal(); refreshIcons();
+  setTimeout(()=>f.name.focus(), 60);
+}
+ $('#btnNewSnip').addEventListener('click', ()=>openSnip(null, {ret:'dict'}));
+ $('#fmSnip').addEventListener('submit', e=>{
+  e.preventDefault();
+  const f = e.target;
+  const b = {
+    id:   f.id.value || 'd-'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),
+    name: f.name.value.trim(), tag: f.tag.value.trim(), code: f.code.value
+  };
+  upsertSnipLocal(b);
+  toast('Entrada "'+b.name+'" guardada en hoja "'+SHEET+'"');
+  f.closest('dialog').close();
+  if(snipReturn==='insert' && !f.id.value) insertSnippet(b); // creada desde el autocompletado → insertar ya
+});
 
-            const debouncedRender = debounce(renderPDF, 600);
-            editor.session.on('change', debouncedRender);
-        }
+/* ═══ 16 · Confirmación en dos clicks ══════════════════════ */
+function armConfirm(btn, fn){
+  if(btn.dataset.armed){ delete btn.dataset.armed; fn(); return; }
+  btn.dataset.armed='1'; btn.dataset.html = btn.innerHTML;
+  btn.classList.add('armed'); btn.textContent='¿Seguro?';
+  setTimeout(()=>{
+    if(!btn.isConnected || !btn.dataset.armed) return;
+    delete btn.dataset.armed; btn.classList.remove('armed');
+    btn.innerHTML = btn.dataset.html; refreshIcons();
+  }, 2600);
+}
 
-        function openDictionaryManager(propName = "") {
-            dictModal.classList.remove('hidden');
-            renderDictList();
-            
-            if (propName) {
-                createNewEntry(propName);
-            } else {
-                emptyState.classList.remove('hidden');
-                editorForm.classList.add('hidden');
-            }
-        }
+/* ═══ 17 · TECLADO del editor ══════════════════════════════ */
+ed.addEventListener('keydown', e=>{
+  if(!sug.hidden){
+    if(e.key==='ArrowDown'){ e.preventDefault(); moveActive(1); return; }
+    if(e.key==='ArrowUp'){   e.preventDefault(); moveActive(-1); return; }
+    if(e.key==='Enter' || e.key==='Tab'){ e.preventDefault(); acceptActive(); return; }
+    if(e.key==='Escape'){  e.preventDefault(); hideSug(); return; }
+  }
+  if(e.key==='Tab'){
+    e.preventDefault();
+    ed.setRangeText('  ', ed.selectionStart, ed.selectionEnd, 'end');
+    onEdInput();
+  }
+});
+ed.addEventListener('input', onEdInput);
+ed.addEventListener('click', hideSug);
+ed.addEventListener('scroll', ()=>{ hl.scrollTop = ed.scrollTop; hl.scrollLeft = ed.scrollLeft; hideSug(); });
+ $('#snipTA').addEventListener('keydown', e=>{
+  if(e.key==='Tab'){ e.preventDefault(); e.target.setRangeText('  ', e.target.selectionStart, e.target.selectionEnd, 'end'); }
+});
 
-        function closeDictionaryManager() {
-            dictModal.classList.add('hidden');
-            document.getElementById('dict-search').value = '';
-            if (editor) editor.focus();
-        }
+/* ═══ 18 · BOTONES de cabecera ═════════════════════════════ */
+ $('#btnDict').addEventListener('click', ()=>{ renderDict(); $('#dlgDict').showModal(); refreshIcons(); });
+ $('#btnJson').addEventListener('click', ()=>{
+  if(!currentDD){ toast('Aún no hay un docDefinition válido','err'); return; }
+  $('#jcode').textContent = JSON.stringify(currentDD, null, 2);
+  $('#dlgJson').showModal(); refreshIcons();
+});
+ $('#btnDl').addEventListener('click', ()=>{
+  if(!currentDD){ toast('Corrige los errores antes de descargar','err'); return; }
+  pdfMake.createPdf(currentDD).download('blocklab.pdfmake.pdf');
+});
+ $('#btnSync').addEventListener('click', sync);
+ $('#btnReset').addEventListener('click', e=>{
+  armConfirm(e.currentTarget, ()=>{
+    ed.value = STARTER; onEdInput();
+    toast('Código restablecido al ejemplo');
+  });
+});
+ $('#btnJsonCopy').addEventListener('click', ()=>{
+  copyText($('#jcode').textContent, 'JSON copiado');
+});
+function copyText(txt, msg){
+  const done = ()=>toast(msg||'Copiado');
+  const fb = () => {
+    const ta = document.createElement('textarea');
+    ta.value = txt; ta.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); done(); }catch(e){ toast('No se pudo copiar','err'); }
+    ta.remove();
+  };
+  navigator.clipboard?.writeText ? navigator.clipboard.writeText(txt).then(done).catch(fb) : fb();
+}
 
-        function renderDictList(searchTerm = "") {
-            dictList.innerHTML = '';
-            const keys = Object.keys(customDictionary).sort();
-            const currentEditing = document.getElementById('dict-original-name').value;
+/* Diálogos: cerrar con click fuera y botones data-close */
+document.querySelectorAll('dialog').forEach(d=>{
+  d.addEventListener('click', e => { if(e.target===d) d.close(); });
+  d.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', ()=>d.close()));
+});
+ $('#q2').addEventListener('input', renderDict);
 
-            keys.forEach(key => {
-                if (key.toLowerCase().includes(searchTerm.toLowerCase())) {
-                    const li = document.createElement('li');
-                    li.className = `dict-item px-3 py-2 rounded-md cursor-pointer hover:bg-slate-100 transition truncate text-slate-700 ${currentEditing === key && !editorForm.classList.contains('hidden') ? 'active' : ''}`;
-                    li.textContent = key;
-                    li.onclick = () => selectDictEntry(key);
-                    dictList.appendChild(li);
-                }
-            });
-        }
+/* Re-render al cambiar tamaño (el ancho de página depende del contenedor) */
+window.addEventListener('resize', ()=>{
+  clearTimeout(rT);
+  rT = setTimeout(()=>{ if(lastBuf){ const s=++seq; renderFromBuf(lastBuf, s); } }, 300);
+});
 
-        function selectDictEntry(propName) {
-            emptyState.classList.add('hidden');
-            editorForm.classList.remove('hidden');
-            btnDelete.classList.remove('hidden');
-
-            document.getElementById('dict-prop-name').value = propName;
-            document.getElementById('dict-original-name').value = propName;
-            
-            snippetsContainer.innerHTML = '';
-            
-            if (customDictionary[propName]) {
-                customDictionary[propName].forEach(entry => {
-                    addSnippetRow(entry.caption, entry.snippet);
-                });
-            }
-            renderDictList(document.getElementById('dict-search').value);
-        }
-
-        function createNewEntry(initialName = "") {
-            emptyState.classList.add('hidden');
-            editorForm.classList.remove('hidden');
-            btnDelete.classList.add('hidden');
-            
-            document.getElementById('dict-prop-name').value = initialName;
-            document.getElementById('dict-original-name').value = "__new__";
-            
-            snippetsContainer.innerHTML = '';
-            
-            let defaultCaption = initialName ? `${initialName} (defecto)` : "";
-            let defaultSnippet = initialName ? `${initialName}: $1,` : "";
-            addSnippetRow(defaultCaption, defaultSnippet);
-
-            renderDictList(document.getElementById('dict-search').value);
-        }
-
-        function addSnippetRow(caption = "", snippet = "") {
-            const row = document.createElement('div');
-            row.className = "flex gap-3 items-start bg-slate-50 p-3 rounded-lg border border-slate-200 snippet-row group hover:border-blue-300 transition relative";
-            
-            row.innerHTML = `
-                <div class="flex-1 flex flex-col gap-2">
-                    <div>
-                        <label class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1 block">Etiqueta (Se muestra en la lista)</label>
-                        <input type="text" placeholder="Ej. defaultStyle (objeto)" value="${caption.replace(/"/g, '&quot;')}" class="snippet-caption w-full border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1 block">Bloque de Código (Usa $1 para cursor)</label>
-                        <textarea placeholder="Ej. defaultStyle: {\\n\\t$1\\n}," class="snippet-code w-full border border-slate-300 rounded px-3 py-2 text-sm font-mono h-24 focus:outline-none focus:ring-2 focus:ring-blue-500 custom-scrollbar bg-slate-900 text-green-400">${snippet}</textarea>
-                    </div>
-                </div>
-                <button type="button" onclick="this.parentElement.remove()" class="text-slate-400 hover:text-red-500 bg-white border border-slate-200 hover:bg-red-50 p-2 rounded transition shadow-sm mt-5" title="Eliminar Variante">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                </button>
-            `;
-            snippetsContainer.appendChild(row);
-        }
-
-        function saveDictionaryEntry() {
-            const propName = document.getElementById('dict-prop-name').value.trim();
-            const originalName = document.getElementById('dict-original-name').value;
-            
-            if (!propName) {
-                showToast("Error: La propiedad debe tener un nombre.", true);
-                return;
-            }
-
-            const rows = document.querySelectorAll('.snippet-row');
-            const entries = [];
-
-            let hasEmptyFields = false;
-
-            rows.forEach(row => {
-                const caption = row.querySelector('.snippet-caption').value.trim();
-                let snippet = row.querySelector('.snippet-code').value.trim(); 
-                
-                if (!caption || !snippet) {
-                    hasEmptyFields = true;
-                } else {
-                    if(!snippet.endsWith('\n')) snippet += '\n';
-                    entries.push({ caption, snippet });
-                }
-            });
-
-            if (hasEmptyFields) {
-                showToast("Aviso: Ignorando variantes con campos vacíos.", true);
-            }
-
-            if (entries.length > 0) {
-                if (originalName && originalName !== propName && originalName !== "__new__") {
-                    delete customDictionary[originalName];
-                    syncToGoogleSheets('delete', originalName, null);
-                }
-                
-                customDictionary[propName] = entries;
-                syncToGoogleSheets('save', propName, entries);
-                
-                showToast(`'${propName}' guardado en la nube.`);
-                
-            } else {
-                showToast("Error: Añade al menos una variante con contenido.", true);
-                return; 
-            }
-            
-            document.getElementById('dict-original-name').value = propName;
-            renderDictList(document.getElementById('dict-search').value);
-            selectDictEntry(propName); 
-            
-            if(document.getElementById('dict-original-name').value === "__new__") {
-                closeDictionaryManager();
-            }
-        }
-
-        function deleteCurrentEntry() {
-            const originalName = document.getElementById('dict-original-name').value;
-            if (originalName && originalName !== "__new__" && customDictionary[originalName]) {
-                delete customDictionary[originalName];
-                
-                syncToGoogleSheets('delete', originalName, null);
-                
-                renderDictList(document.getElementById('dict-search').value);
-                emptyState.classList.remove('hidden');
-                editorForm.classList.add('hidden');
-                showToast(`Función '${originalName}' eliminada.`);
-            }
-        }
-
-        function exportDictionary() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(customDictionary, null, 2));
-            const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", dataStr);
-            downloadAnchorNode.setAttribute("download", "diccionario.json");
-            document.body.appendChild(downloadAnchorNode); 
-            downloadAnchorNode.click();
-            downloadAnchorNode.remove();
-            showToast("Archivo descargado.");
-        }
-
-        function importDictionary(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = async function(e) {
-                    try {
-                        const newDict = JSON.parse(e.target.result);
-                        
-                        statusText.textContent = "Importando a Sheets...";
-                        statusText.className = "text-blue-600 font-semibold animate-pulse";
-                        
-                        for (const prop in newDict) {
-                             customDictionary[prop] = newDict[prop];
-                             await syncToGoogleSheets('save', prop, newDict[prop]);
-                        }
-                        
-                        renderDictList(document.getElementById('dict-search').value);
-                        showToast("Diccionario importado y sincronizado con éxito.");
-                    } catch(err) {
-                        console.error(err);
-                        showToast("Error al importar. Verifica el JSON.", true);
-                        statusText.textContent = "Error de importación";
-                        statusText.className = "text-red-500 font-semibold";
-                    }
-                }
-                reader.readAsText(file);
-            }
-            event.target.value = ""; 
-        }
-
-        function renderPDF() {
-            if(!editor) return;
-            const code = editor.getValue();
-            
-            try {
-                errorOverlay.classList.add('hidden');
-                pdfLoading.classList.remove('hidden');
-                iframe.classList.add('hidden');
-                
-                const wrapper = `
-                    ${code}
-                    return (typeof dd !== 'undefined') ? dd : null;
-                `;
-                const buildDocDef = new Function(wrapper);
-                const docDefinition = buildDocDef();
-                
-                if (!docDefinition || typeof docDefinition !== 'object') {
-                    throw new Error("No se definió el objeto principal 'dd'. Escribe: var dd = { content: [...] };");
-                }
-
-                const pdfDocGenerator = pdfMake.createPdf(docDefinition);
-                pdfDocGenerator.getBlob((blob) => {
-                    const url = URL.createObjectURL(blob);
-                    
-                    iframe.src = url;
-                    
-                    iframe.onload = () => {
-                        pdfLoading.classList.add('hidden');
-                        iframe.classList.remove('hidden');
-                        if (currentPdfUrl) URL.revokeObjectURL(currentPdfUrl);
-                        currentPdfUrl = url;
-                    };
-                });
-                
-            } catch (error) {
-                console.error(error);
-                errorMessage.textContent = error.toString();
-                errorOverlay.classList.remove('hidden');
-                pdfLoading.classList.add('hidden');
-            }
-        }
-
-        function debounce(func, wait) {
-            let timeout;
-            return function(...args) {
-                clearTimeout(timeout);
-                timeout = setTimeout(() => func(...args), wait);
-            };
-        }
-
-        floatingBtn.addEventListener('click', () => {
-            openDictionaryManager(currentFloatingWord);
-            floatingBtn.style.display = 'none';
-        });
-
-        // Iniciar
-        window.onload = initializeApp;
-    </script>
+/* ═══ 19 · ARRANQUE ════════════════════════════════════════ */
+(function init(){
+  loadQueue();
+  loadCache();
+  seedDict();
+  const draft = localStorage.getItem(LS_DRAFT);
+  ed.value = (draft && draft.trim()) ? draft : STARTER;
+  syncHL(); refreshIcons();
+  setStatus(apiOK() ? 'Cacheado' : 'Local · sin backend', apiOK() ? 'busy' : 'warn');
+  compile();                       // primer render inmediato
+  sync();
+  setInterval(sync, 5*60*1000);
+  window.addEventListener('online', sync);
+})();
+</script>
 </body>
 </html>

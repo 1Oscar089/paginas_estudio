@@ -160,7 +160,6 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
 #jcode{font:400 11.5px/1.65 var(--mono);background:var(--ink);color:#EDE7D8;padding:14px;
   white-space:pre-wrap;word-break:break-word;max-height:56vh;overflow:auto}
 
-/* Panel de conexión */
 .conn-status{display:flex;align-items:center;gap:10px;padding:12px 14px;border:1.5px solid var(--ink);background:var(--bg);margin-bottom:14px;font:600 12px/1.4 var(--mono)}
 .conn-cause{font:400 11.5px/1.65 var(--mono);color:var(--mut);margin-bottom:14px;white-space:pre-wrap}
 .steps-c{counter-reset:st;font:400 12px/1.7 var(--mono)}
@@ -207,6 +206,7 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
       <span>Editor · docDefinition</span>
       <span class="r">
         <span class="saved" id="draftInfo">—</span>
+        <button class="iconbtn sm" id="btnFmt" title="Formatear código · Shift+Alt+F"><i data-lucide="wand-2"></i></button>
         <button class="iconbtn sm" id="btnReset" title="Restablecer ejemplo"><i data-lucide="rotate-ccw"></i></button>
       </span>
     </div>
@@ -297,7 +297,7 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
       <li><span><b>Implementar → Gestionar implementaciones</b> → ✏️ editar → Versión: <b>Nueva versión</b> → Ejecutar como <b>Yo</b> → Acceso: <b>Cualquiera</b> (sin “con cuenta de Google”) → Implementar.</span></li>
       <li><span>Prueba: <b>abre la URL /exec en una pestaña</b>. Debe verse texto <code>{"ok":true…}</code> sin pedir login. Vuelve aquí y pulsa <b>Probar de nuevo</b>.</span></li>
     </ol>
-    <p class="conn-note"><b>Nota:</b> los bloques CORB de la consola son la señal de que la URL devuelve una página de login o de error, no JavaScript. Los <b>↑N</b> pendientes no se pierden: se suben solos en cuanto haya conexión.</p>
+    <p class="conn-note"><b>Nota:</b> si Apps Script tarda en responder (arranque frío) la página espera hasta 25 s — no es un cuelgue. Los <b>↑N</b> pendientes se suben solos en cuanto haya conexión.</p>
   </div>
   <div class="dlg-foot">
     <a class="btn" id="btnOpenExec" target="_blank" rel="noopener"><i data-lucide="external-link"></i>Abrir /exec</a>
@@ -432,7 +432,7 @@ function renderConn(){
   qb.hidden = !pend; qb.textContent = '↑' + pend;
   const dot = $('#stDot'), txt = $('#stTxt');
   $('#stPill').title = connDetail || '';
-  if(connected){ txt.textContent='Conectado'; dot.className='dot ok'; return; }   // ← queda fijo
+  if(connected){ txt.textContent='Conectado'; dot.className='dot ok'; return; }
   if(syncing){ txt.textContent='Conectando…'; dot.className='dot busy'; return; }
   txt.textContent = connLabel || 'En espera';
   dot.className = 'dot ' + (connLabel ? 'err' : '');
@@ -447,19 +447,38 @@ function toast(msg, kind){
   setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity .25s'; setTimeout(()=>t.remove(),260); }, 4200);
 }
 
-/* ═══ 6 · RED SIN CORS ═════════════════════════════════════ */
-function jsonpGet(action, params={}){
-  return new Promise((res,rej)=>{
-    const cb = '__bl_'+Date.now()+Math.floor(Math.random()*1e4);
+/* ═══ 6 · RED SIN CORS — a prueba de arranques fríos ════════
+   · El callback vive 45 s DESPUÉS de resolverse: si Apps
+     Script responde tarde, ya no revienta con ReferenceError.
+   · Una petición JSONP a la vez (los arranques fríos en
+     paralelo saturan el servidor y alargan la espera).
+   · Timeout de 25 s (el cold start típico son 5–20 s).      ══ */
+let jsonpSeq = 0, jsonpChain = Promise.resolve();
+
+function jsonpRaw(action, params, ms){
+  return new Promise((res, rej)=>{
+    const cb = '__bl_' + (++jsonpSeq) + '_' + Date.now();
     const s  = document.createElement('script');
-    const to = setTimeout(()=>{ clean(); rej(new Error('timeout')); }, 9000);
-    function clean(){ clearTimeout(to); delete window[cb]; s.remove(); }
-    window[cb] = d => { clean(); res(d); };
-    s.onerror  = () => { clean(); rej(new Error('corb-o-red')); };
-    const q = new URLSearchParams({ action, callback:cb, _:Date.now(), ...params });
-    s.src = `${API_URL}?${q}`;
+    let settled = false;
+    const finish = (ok, val) => {
+      if(settled) return;
+      settled = true;
+      setTimeout(()=>{ try{ delete window[cb]; }catch(e){} s.remove(); }, 45000); // ← el callback sobrevive 45 s
+      ok ? res(val) : rej(val);
+    };
+    window[cb] = d => finish(true, d);
+    const to = setTimeout(()=>finish(false, new Error('timeout')), ms);
+    s.onerror = () => finish(false, new Error('corb-o-red'));
+    const q = new URLSearchParams(Object.assign({ action, callback:cb, _:Date.now() }, params));
+    s.src = API_URL + '?' + q.toString();
     document.head.appendChild(s);
   });
+}
+function jsonpGet(action, params={}){
+  const run = () => jsonpRaw(action, params, 25000);
+  const p = jsonpChain.then(run, run);   // en cola: una a la vez
+  jsonpChain = p.then(()=>{}, ()=>{});
+  return p;
 }
 async function sendNoCors(op){
   op.lastTry = Date.now(); op.tries = (op.tries||0) + 1;
@@ -488,7 +507,7 @@ function isConfirmed(op, data){
   if(op.action==='saveBlock'){
     const arr = B[op.sheet]; if(!arr) return false;
     const r = arr.find(b=>b.id===(op.block&&op.block.id));
-    return !!r && r.code === op.block.code;            // confirma por CONTENIDO (a prueba de fechas)
+    return !!r && r.code === op.block.code;            // confirma por CONTENIDO
   }
   if(op.action==='deleteBlock'){
     const arr = B[op.sheet];
@@ -569,7 +588,7 @@ async function diagnose(){
   }catch(e){
     connLabel = 'Login o versión vieja';
     connDetail = 'La URL no devuelve JavaScript: el despliegue pide inicio de sesión, el script no está autorizado, o apunta a una versión anterior del código. Sigue los 4 pasos.';
-    openConnDlg(true);   // abrir automáticamente una sola vez
+    openConnDlg(true);
   }
   diagRunning = false; renderConn();
 }
@@ -638,7 +657,7 @@ function upsertSnipLocal(b){
   else arr[i] = Object.assign({}, arr[i], b);
   arr.sort((a,c)=>a.name.toLowerCase().localeCompare(c.name.toLowerCase()));
   saveCache(); renderDict();
-  pushOp({action:'saveBlock', sheet:SHEET, block:b});   // ← siempre a Sheets
+  pushOp({action:'saveBlock', sheet:SHEET, block:b});
 }
 function deleteSnip(id){
   const b = dict().find(x=>x.id===id); if(!b) return;
@@ -657,7 +676,7 @@ function seedDict(){
     if(!have.has(s.id)){
       const row = Object.assign({createdAt:t, updatedAt:t}, s);
       (BLOCKS[SHEET] = BLOCKS[SHEET]||[]).push(normBlock(row));
-      pushOp({action:'saveBlock', sheet:SHEET, block:row});   // ← las 18 se suben a Sheets
+      pushOp({action:'saveBlock', sheet:SHEET, block:row});
     }
   });
   (BLOCKS[SHEET]||[]).sort((a,b)=>a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
@@ -665,7 +684,143 @@ function seedDict(){
   localStorage.setItem(LS_SEEDED,'1');
 }
 
-/* ═══ 11 · EDITOR: resaltado ═══════════════════════════════ */
+/* ═══ 11 · FORMATEO tipo Prettier ══════════════════════════
+   Reindenta el documento completo a 2 espacios, SIN tocar
+   cadenas, template literals ni comentarios. Normaliza
+   espacios tras «,» y «:», colapsa blancos y recorta.       ══ */
+function logicalLines(src){
+  const out = []; let cur = '';
+  let st = 'norm';                       // norm | sq | dq | tpl | lc
+  for(let i=0; i<src.length; i++){
+    const c = src[i], n = src[i+1];
+    if(st === 'norm'){
+      if(c === '\''){ st='sq'; cur+=c; }
+      else if(c === '"'){ st='dq'; cur+=c; }
+      else if(c === '`'){ st='tpl'; cur+=c; }
+      else if(c === '/' && n === '/'){ st='lc'; cur+=c; }
+      else if(c === '\n'){ out.push(cur); cur=''; }
+      else cur+=c;
+    } else if(st === 'sq'){
+      cur+=c;
+      if(c==='\\'){ if(n!=null){ cur+=n; i++; } } else if(c==='\'') st='norm';
+    } else if(st === 'dq'){
+      cur+=c;
+      if(c==='\\'){ if(n!=null){ cur+=n; i++; } } else if(c==='"') st='norm';
+    } else if(st === 'tpl'){
+      cur+=c;                             // los saltos del template se conservan dentro
+      if(c==='\\'){ if(n!=null){ cur+=n; i++; } } else if(c==='`') st='norm';
+    } else {                              // lc: comentario de línea
+      if(c === '\n'){ out.push(cur); cur=''; st='norm'; }
+      else cur+=c;
+    }
+  }
+  if(cur !== '') out.push(cur);
+  return out;
+}
+function formatLine(t){
+  let out = '', i = 0;
+  let st = 'norm';
+  while(i < t.length){
+    const c = t[i], n = t[i+1];
+    if(st === 'norm'){
+      if(c === '\''){ st='sq'; out+=c; }
+      else if(c === '"'){ st='dq'; out+=c; }
+      else if(c === '`'){ st='tpl'; out+=c; }
+      else if(c === '/' && n === '/'){ out += t.slice(i); break; }   // comentario intacto
+      else if(c === ' ' || c === '\t'){
+        let j = i; while(j < t.length && (t[j]===' '||t[j]==='\t')) j++;
+        const nc = t[j];
+        if(nc === ',' || nc === ']' || nc === '}' || nc === ')' || nc === ':' || nc == null){ i = j; continue; }
+        const pc = out.charAt(out.length-1);
+        out += (pc === '(' || pc === '[') ? '' : ' ';
+        i = j; continue;
+      }
+      else if(c === ','){
+        out += ', ';
+        let j = i+1; while(j < t.length && (t[j]===' '||t[j]==='\t')) j++;
+        i = j; continue;
+      }
+      else if(c === ':'){
+        const pc = out.charAt(out.length-1);
+        out += ':';
+        const isKey = /[\w$\]\}"']/.test(pc || '');
+        if(isKey && n != null && !/[ ,\)\]\}]/.test(n)) out += ' ';
+        i++; continue;
+      }
+      else out += c;
+    } else if(st === 'sq'){
+      out+=c;
+      if(c==='\\'){ if(n!=null){ out+=n; i++; } } else if(c==='\'') st='norm';
+    } else if(st === 'dq'){
+      out+=c;
+      if(c==='\\'){ if(n!=null){ out+=n; i++; } } else if(c==='"') st='norm';
+    } else {                               // tpl: pasa todo, incluidos saltos
+      out+=c;
+      if(c==='\\'){ if(n!=null){ out+=n; i++; } } else if(c==='`') st='norm';
+    }
+    i++;
+  }
+  return out.replace(/\s+$/,'');
+}
+function lineDelta(t){
+  let d = 0, i = 0, st = 'norm';
+  while(i < t.length){
+    const c = t[i];
+    if(st === 'norm'){
+      if(c === '\'') st='sq';
+      else if(c === '"') st='dq';
+      else if(c === '`') st='tpl';
+      else if(c === '/' && t[i+1] === '/') break;
+      else if(c === '{' || c === '[' || c === '(') d++;
+      else if(c === '}' || c === ']' || c === ')') d--;
+    } else if(st === 'sq'){ if(c==='\\') i++; else if(c==='\'') st='norm'; }
+    else if(st === 'dq'){ if(c==='\\') i++; else if(c==='"') st='norm'; }
+    else { if(c==='\\') i++; else if(c==='`') st='norm'; }
+    i++;
+  }
+  return d;
+}
+function reindent(src){
+  const IND = '  ';
+  const lines = logicalLines(src);
+  let depth = 0;
+  const out = [];
+  for(const raw of lines){
+    let t = formatLine(raw.trim());
+    if(!t){ out.push(''); continue; }
+    let disp = depth, j = 0;
+    while(j < t.length){                   // cierres al inicio de línea («} », «}],»)
+      const c = t[j];
+      if(c === '}' || c === ']' || c === ')'){ disp--; j++; }
+      else if(c === ',' || c === ' ' || c === '\t'){ j++; }
+      else break;
+    }
+    out.push(IND.repeat(Math.max(0, disp)) + t);
+    depth += lineDelta(t);
+  }
+  const res = []; let blanks = 0;
+  for(const l of out){
+    if(l === ''){ blanks++; if(blanks > 1) continue; } else blanks = 0;
+    res.push(l);
+  }
+  while(res.length && res[0] === '') res.shift();
+  while(res.length && res[res.length-1] === '') res.pop();
+  return res.join('\n');
+}
+function formatDoc(){
+  const src = ed.value;
+  const out = reindent(src);
+  if(out === src){ toast('El código ya está formateado'); return; }
+  const cp = ed.selectionStart;
+  let k = 0; const max = Math.min(cp, out.length, src.length);
+  while(k < max && out[k] === src[k]) k++;          // ancla el cursor al prefijo común
+  ed.value = out;
+  ed.selectionStart = ed.selectionEnd = Math.min(k, out.length);
+  onEdInput();
+  toast('Código formateado');
+}
+
+/* ═══ 12 · EDITOR: resaltado ═══════════════════════════════ */
 function hled(src){
   return esc(src).replace(
     /(\/\/[^\n]*)|('(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*")|\b(true|false|null)\b|([A-Za-z_$\u00C0-\u024F][\w$\u00C0-\u024F]*)(?=\s*:)|\b(\d+(?:\.\d+)?)\b/g,
@@ -683,7 +838,7 @@ function syncHL(){
   hl.scrollTop = ed.scrollTop; hl.scrollLeft = ed.scrollLeft;
 }
 
-/* ═══ 12 · AUTOCOMPLETADO ══════════════════════════════════ */
+/* ═══ 13 · AUTOCOMPLETADO ══════════════════════════════════ */
 function currentWord(){
   const before = ed.value.slice(0, ed.selectionStart);
   const m = before.match(/[A-Za-z0-9_$\u00C0-\u024F-]+$/);
@@ -749,9 +904,14 @@ function insertSnippet(sn){
   const before = ed.value.slice(0, pos);
   const m = before.match(/[A-Za-z0-9_$\u00C0-\u024F-]+$/);
   const start = m ? pos - m[0].length : pos;
-  let code = String(sn.code||''), off = code.length;
-  const i = code.indexOf('$0');
-  if(i>=0){ code = code.slice(0,i) + code.slice(i+2); off = i; }
+  // indentación base de la línea actual → el snippet se alinea con tu código
+  const lineStart = ed.value.lastIndexOf('\n', start - 1) + 1;
+  const baseIndent = (ed.value.slice(lineStart, start).match(/^[ \t]*/) || [''])[0];
+  let code = String(sn.code || '');
+  code = code.split('\n').map((l, idx) => (idx === 0 || !l.trim()) ? l : baseIndent + l).join('\n');
+  let off = code.length;
+  const i0 = code.indexOf('$0');
+  if(i0 >= 0){ code = code.slice(0, i0) + code.slice(i0 + 2); off = i0; }
   ed.setRangeText(code, start, selEnd, 'end');
   ed.selectionStart = ed.selectionEnd = start + off;
   hideSug(); ed.focus(); onEdInput();
@@ -773,7 +933,7 @@ document.addEventListener('pointerdown', e=>{
   if(!e.target.closest('#sug') && e.target!==ed) hideSug();
 });
 
-/* ═══ 13 · COMPILACIÓN + RENDER ════════════════════════════ */
+/* ═══ 14 · COMPILACIÓN + RENDER ════════════════════════════ */
 function failNow(msg){
   cset('error','err'); tabDot('err');
   const box = $('#errBox'); box.hidden = false; box.textContent = msg;
@@ -842,7 +1002,7 @@ function saveDraftSoon(){
 }
 function onEdInput(){ syncHL(); saveDraftSoon(); pushDraftSoon(); scheduleCompile(); showSug(); }
 
-/* ═══ 14 · VISTAS ══════════════════════════════════════════ */
+/* ═══ 15 · VISTAS ══════════════════════════════════════════ */
 function setView(v){
   document.body.classList.toggle('view-pdf', v==='pdf');
   document.body.classList.toggle('view-code', v==='code');
@@ -853,7 +1013,7 @@ function setView(v){
   const b = e.target.closest('button[data-view]'); if(b) setView(b.dataset.view);
 });
 
-/* ═══ 15 · DICCIONARIO (diálogo) ═══════════════════════════ */
+/* ═══ 16 · DICCIONARIO (diálogo) ═══════════════════════════ */
 function renderDict(){
   const q = ($('#q2').value||'').trim().toLowerCase();
   let arr = dict().slice().sort((a,b)=>a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
@@ -891,7 +1051,7 @@ function renderDict(){
   else if(a==='del') armConfirm(btn, ()=>deleteSnip(b.id));
 });
 
-/* ═══ 16 · DIÁLOGO entrada ═════════════════════════════════ */
+/* ═══ 17 · DIÁLOGO entrada ═════════════════════════════════ */
 function openSnip(entry, opts={}){
   snipReturn = opts.ret || 'dict';
   $('#snipTitle').textContent = entry ? 'Editar entrada' : 'Nueva entrada';
@@ -918,7 +1078,7 @@ function openSnip(entry, opts={}){
   if(snipReturn==='insert' && !f.id.value) insertSnippet(b);
 });
 
-/* ═══ 17 · Confirmación en dos clicks ══════════════════════ */
+/* ═══ 18 · Confirmación en dos clicks ══════════════════════ */
 function armConfirm(btn, fn){
   if(btn.dataset.armed){ delete btn.dataset.armed; fn(); return; }
   btn.dataset.armed='1'; btn.dataset.html = btn.innerHTML;
@@ -930,8 +1090,9 @@ function armConfirm(btn, fn){
   }, 2600);
 }
 
-/* ═══ 18 · TECLADO ═════════════════════════════════════════ */
+/* ═══ 19 · TECLADO ═════════════════════════════════════════ */
 ed.addEventListener('keydown', e=>{
+  if(e.shiftKey && e.altKey && e.code === 'KeyF'){ e.preventDefault(); formatDoc(); return; }
   if(!sug.hidden){
     if(e.key==='ArrowDown'){ e.preventDefault(); moveActive(1); return; }
     if(e.key==='ArrowUp'){   e.preventDefault(); moveActive(-1); return; }
@@ -951,7 +1112,8 @@ ed.addEventListener('scroll', ()=>{ hl.scrollTop = ed.scrollTop; hl.scrollLeft =
   if(e.key==='Tab'){ e.preventDefault(); e.target.setRangeText('  ', e.target.selectionStart, e.target.selectionEnd, 'end'); }
 });
 
-/* ═══ 19 · BOTONES ═════════════════════════════════════════ */
+/* ═══ 20 · BOTONES ═════════════════════════════════════════ */
+ $('#btnFmt').addEventListener('click', formatDoc);
  $('#btnDict').addEventListener('click', ()=>{ renderDict(); $('#dlgDict').showModal(); refreshIcons(); });
  $('#btnJson').addEventListener('click', ()=>{
   if(!currentDD){ toast('Aún no hay un docDefinition válido','err'); return; }
@@ -965,7 +1127,7 @@ ed.addEventListener('scroll', ()=>{ hl.scrollTop = ed.scrollTop; hl.scrollLeft =
 function manualSync(){
   diagDone = false;
   sync().then(()=>{
-    if(!connected && connLabel) openConnDlg(false);   // click manual → siempre panel
+    if(!connected && connLabel) openConnDlg(false);
   });
 }
  $('#btnSync').addEventListener('click', manualSync);
@@ -999,7 +1161,7 @@ window.addEventListener('resize', ()=>{
   rT = setTimeout(()=>{ if(lastBuf){ const s=++seq; renderFromBuf(lastBuf, s); } }, 300);
 });
 
-/* ═══ 20 · ARRANQUE ════════════════════════════════════════ */
+/* ═══ 21 · ARRANQUE ════════════════════════════════════════ */
 (function init(){
   loadQueue();
   loadCache();

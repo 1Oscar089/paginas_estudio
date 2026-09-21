@@ -58,7 +58,7 @@ header{flex:none;border-bottom:1.5px solid var(--ink);background:var(--bg)}
 .brand .star{color:var(--acc)}
 .bsub{color:var(--mut);font-weight:500;letter-spacing:.06em}
 .h-right{display:flex;align-items:center;gap:8px}
-.status{display:inline-flex;align-items:center;gap:7px;font:500 10px/1 var(--mono);letter-spacing:.06em;color:var(--mut);text-transform:uppercase;margin-right:4px}
+.status{display:inline-flex;align-items:center;gap:7px;font:500 10px/1 var(--mono);letter-spacing:.06em;color:var(--mut);text-transform:uppercase;margin-right:4px;cursor:pointer}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--mut);flex:none}
 .dot.ok{background:var(--ok)} .dot.err{background:var(--acc)}
 .dot.busy{background:var(--warn);animation:pulse 1.2s infinite} .dot.warn{background:var(--warn)}
@@ -192,7 +192,7 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
       <button class="iconbtn" id="btnDict" title="Diccionario de funciones"><i data-lucide="book-open"></i></button>
       <button class="iconbtn" id="btnJson" title="Ver docDefinition como JSON"><i data-lucide="braces"></i></button>
       <button class="btn" id="btnDl" title="Descargar PDF"><i data-lucide="download"></i><span class="lbl">PDF</span></button>
-      <button class="iconbtn" id="btnSync" title="Sincronizar con Sheets"><i data-lucide="refresh-cw"></i></button>
+      <button class="iconbtn" id="btnSync" title="Sincronizar / diagnosticar"><i data-lucide="refresh-cw"></i></button>
     </div>
   </div>
 </header>
@@ -291,17 +291,16 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
 
 <script>
 /* ═══ 1 · CONFIG ═══════════════════════════════════════════ */
-const API_URL   = 'https://script.google.com/macros/s/AKfycbzSLoucR2yC7X7kKpbeDnQUCNd94-WuVuGyR55CMIrP4hq5f1tgynDDdHumc8iBj8gI9g/exec'; // la misma del index, termina en /exec
+const API_URL   = 'https://script.google.com/macros/s/AKfycbzSLoucR2yC7X7kKpbeDnQUCNd94-WuVuGyR55CMIrP4hq5f1tgynDDdHumc8iBj8gI9g/exec';
 const SHEET     = 'pdfmake';
-const LS_DB     = 'blocklab.db.v1';       // caché compartida con el index
+const LS_DB     = 'blocklab.db.v1';
 const LS_Q      = 'blocklab.queue.v1';
-const LS_DRAFT  = 'blocklab.draft.pdfmake.v1';   // texto del editor (local)
-const LS_DRAFT_T= 'blocklab.draft.pdfmake.t';    // fecha de última edición local
+const LS_DRAFT  = 'blocklab.draft.pdfmake.v1';
+const LS_DRAFT_T= 'blocklab.draft.pdfmake.t';
 const LS_SEEDED = 'blocklab.pdfmake.seeds.v1';
-const DRAFT_ID   = '__draft__';            // fila-sistema que respalda el editor en Sheets
+const DRAFT_ID   = '__draft__';
 const DRAFT_NAME = 'BORRADOR · editor';
 
-/* Semillas del diccionario (IDs estables → se suben una vez a la hoja) */
 const SEED = [
   { id:'d-text',      name:'text',      tag:'propiedad', code:`text: '$0'` },
   { id:'d-bold',      name:'bold',      tag:'propiedad', code:`bold: true` },
@@ -367,9 +366,10 @@ let seq = 0, lastBuf = null, currentDD = null, libTries = 0;
 let sugItems = [], sugNew = null, sugActive = 0;
 let editSnipId = null, snipReturn = 'dict';
 
-/* Estado de conexión */
-let connected = false;      // cerillo: una vez conectado, la etiqueta queda en «Conectado»
-let connLabel = '', connDetail = '', lastSyncFailed = false;
+/* Conexión */
+let connected = false;        // cerillo: al conectar una vez, la etiqueta queda fija
+let connLabel = '', connDetail = '';
+let diagDone = false, diagRunning = false;
 let lastPushedDraft = '';
 
 const $   = s => document.querySelector(s);
@@ -379,11 +379,10 @@ const hora = iso => new Date(iso).toLocaleTimeString('es',{hour12:false});
 const apiOK = () => !!API_URL && !API_URL.includes('PEGA_AQUI');
 const refreshIcons = () => { if(window.lucide) lucide.createIcons(); };
 
-/* El diccionario = entradas de la hoja, SIN la fila-sistema del borrador */
 const dict = () => (BLOCKS[SHEET] || (BLOCKS[SHEET] = [])).filter(b => b.id !== DRAFT_ID);
 const ed = $('#ed'), hl = $('#hl'), sug = $('#sug'), edWrap = $('#edWrap');
 
-/* ═══ 3 · FUENTES: alias Helvetica/Courier/Times → Roboto ══ */
+/* ═══ 3 · FUENTES: alias → Roboto (la vfs del navegador solo trae Roboto) ══ */
 (function aliasFonts(){
   try{
     const vfs = pdfMake.vfs || {};
@@ -416,11 +415,13 @@ const loadQueue = () => { try{ queue = JSON.parse(localStorage.getItem(LS_Q)||'[
 /* ═══ 5 · ESTADO VISIBLE ═══════════════════════════════════ */
 function renderConn(){
   const qb = $('#qb');
-  qb.hidden = !queue.length; qb.textContent = '↑' + queue.length;
-  const dot = $('#stDot'), txt = $('#stTxt'), pill = $('#stPill');
-  pill.title = connDetail || '';
+  const pend = queue.filter(op => !(op.action==='saveBlock' && op.block && op.block.id===DRAFT_ID)).length;
+  qb.hidden = !pend; qb.textContent = '↑' + pend;
+
+  const dot = $('#stDot'), txt = $('#stTxt');
+  $('#stPill').title = connDetail || '';
   if(!apiOK()){ txt.textContent='Sin backend'; dot.className='dot warn'; return; }
-  if(connected){ txt.textContent='Conectado'; dot.className='dot ok'; return; }  // ← queda fijo
+  if(connected){ txt.textContent='Conectado'; dot.className='dot ok'; return; }   // ← queda fijo
   if(syncing){ txt.textContent='Conectando…'; dot.className='dot busy'; return; }
   txt.textContent = connLabel || 'En espera';
   dot.className = 'dot ' + (connLabel ? 'err' : '');
@@ -432,108 +433,167 @@ function toast(msg, kind){
   t.className = 'toast' + (kind==='err'?' err':'');
   t.innerHTML = `<i data-lucide="${kind==='err'?'alert-triangle':'check'}"></i><span>${esc(msg)}</span>`;
   $('#toasts').appendChild(t); refreshIcons();
-  setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity .25s'; setTimeout(()=>t.remove(),260); }, 3600);
+  setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity .25s'; setTimeout(()=>t.remove(),260); }, 4200);
 }
 
-/* ═══ 6 · RED — timeouts + POST sin preflight + fallback JSONP ══ */
-function fetchTO(url, opts={}, ms=9000){
-  const c = new AbortController(); const t = setTimeout(()=>c.abort(), ms);
-  return fetch(url, Object.assign({}, opts, {signal:c.signal})).finally(()=>clearTimeout(t));
-}
+/* ═══ 6 · RED SIN CORS ═════════════════════════════════════
+   · Lecturas  → JSONP (etiqueta <script>): inmune a CORS.
+   · Escrituras→ POST en modo no-cors: el servidor SÍ recibe y
+     ejecuta; la confirmación real llega al reconciliar contra
+     el siguiente bootstrap (fuente de verdad = Sheets).      ══ */
 function jsonpGet(action, params={}){
   return new Promise((res,rej)=>{
-    const cb = '__bl_'+Date.now();
+    const cb = '__bl_'+Date.now()+Math.floor(Math.random()*1e4);
     const s  = document.createElement('script');
     const to = setTimeout(()=>{ clean(); rej(new Error('timeout')); }, 9000);
     function clean(){ clearTimeout(to); delete window[cb]; s.remove(); }
     window[cb] = d => { clean(); res(d); };
     s.onerror  = () => { clean(); rej(new Error('error')); };
-    s.src = `${API_URL}?${new URLSearchParams({action, callback:cb, ...params})}`;
+    const q = new URLSearchParams({ action, callback:cb, _:Date.now(), ...params });
+    s.src = `${API_URL}?${q}`;                    // «_» evita respuestas cacheadas
     document.head.appendChild(s);
   });
 }
-async function apiGet(action, params={}){
+async function sendNoCors(op){
+  op.lastTry = Date.now(); op.tries = (op.tries||0) + 1;
   try{
-    const r = await fetchTO(`${API_URL}?${new URLSearchParams({action,...params})}`);
-    if(!r.ok) throw Object.assign(new Error('HTTP '+r.status), {http:r.status});
-    return await r.json();
-  }catch(e){
-    if(e.http) throw e;                       // el servidor respondió, pero mal → no es CORS
-    return jsonpGet(action, params);          // red/CORS → JSONP
-  }
+    await fetch(API_URL, { method:'POST', mode:'no-cors', body: JSON.stringify(op) });
+    return true;                                   // no se puede leer respuesta; confirma reconcile
+  }catch(e){ return false; }
 }
-async function apiPost(payload){
-  const r = await fetchTO(API_URL, { method:'POST', body: JSON.stringify(payload) });
-  if(!r.ok) throw Object.assign(new Error('HTTP '+r.status), {http:r.status});
-  return r.json();
-}
+let syncT = null;
+function scheduleSync(ms=3500){ clearTimeout(syncT); syncT = setTimeout(sync, ms); }
+
 function pushOp(op){
   if(!apiOK()) return;
-  apiPost(op)
-    .then(r => { if(!(r&&r.ok)) throw new Error((r&&r.error)||'nok'); })
-    .catch(() => { queue.push(op); saveQueue(); renderConn(); }); // sube solo al reconectar
-}
-async function flushQueue(){
-  if(!queue.length || !apiOK()) return;
-  const rest = [];
-  for(const op of queue){
-    try{ const r = await apiPost(op); if(!(r&&r.ok)) throw new Error('nok'); }
-    catch(e){ rest.push(op); }
+  // el borrador se coalesce: solo la última versión espera en cola
+  if(op.action==='saveBlock' && op.block && op.block.id===DRAFT_ID){
+    queue = queue.filter(q => !(q.action==='saveBlock' && q.block && q.block.id===DRAFT_ID));
   }
-  const ok = queue.length - rest.length;
-  queue = rest; saveQueue();
-  if(ok){
-    toast(ok + ' operación(es) guardada(s) en Sheets');
-    lastSyncFailed = false;
+  op.lastTry = 0;
+  queue.push(op); saveQueue(); renderConn();
+  sendNoCors(op).then(()=>scheduleSync(3500));     // verificar pronto en Sheets
+}
+function retryPending(){
+  if(!apiOK() || !queue.length) return;
+  const now = Date.now();
+  let re = false;
+  queue.forEach(op => { if(now - (op.lastTry||0) > 20000){ sendNoCors(op); re = true; } });
+  saveQueue();
+  if(re) scheduleSync(4000);
+}
+
+/* ¿La operación ya quedó reflejada en lo que devolvió Sheets? */
+function isConfirmed(op, data){
+  const B = data.blocks || {};
+  if(op.action==='saveBlock'){
+    const arr = B[op.sheet]; if(!arr) return false;
+    const r = arr.find(b=>b.id===(op.block&&op.block.id));
+    return !!r && String(r.updatedAt||'') >= String((op.block&&op.block.updatedAt)||'');
+  }
+  if(op.action==='deleteBlock'){
+    const arr = B[op.sheet];
+    return !arr || !arr.some(b=>b.id===op.id);
+  }
+  if(op.action==='upsertModule') return !!(data.modules||[]).some(m=>m.id===op.module.id);
+  if(op.action==='deleteModule') return !(data.modules||[]).some(m=>m.id===op.id);
+  if(op.action==='ensureSheet')  return Object.prototype.hasOwnProperty.call(B, op.sheet);
+  return true;
+}
+function reconcileOps(data){
+  if(!queue.length) return;
+  const before = queue.length;
+  queue = queue.filter(op => !isConfirmed(op, data));
+  const confirmed = before - queue.length;
+  if(confirmed){
+    saveQueue();
+    const visibles = queue.filter(op => !(op.action==='saveBlock' && op.block && op.block.id===DRAFT_ID)).length;
+    if(visibles < before - queue.length || confirmed > (before - queue.length - visibles)) {
+      // solo avisa si se confirmó algo visible (no el borrador)
+    }
+    if(queue.some(op=>op.action!=='saveBlock' || !op.block || op.block.id!==DRAFT_ID) === false && confirmed>0){
+      /* solo borrador confirmado → silencio */
+    } else if(confirmed) toast(confirmed + ' cambio(s) guardado(s) en Sheets');
   }
   renderConn();
 }
 
-/* ═══ 7 · SYNC — máquina de estados + reconciliación ═══════ */
+/* ═══ 7 · SYNC + DIAGNÓSTICO ═══════════════════════════════ */
 const normBlock = o => ({ id:String(o.id||''), name:String(o.name||''), tag:String(o.tag||''),
   code:(o.code==null?'':String(o.code)), createdAt:String(o.createdAt||''), updatedAt:String(o.updatedAt||'') });
-function srvErr(msg){ const e = new Error(msg||'error del servidor'); e.srv = true; return e; }
 
 async function sync(){
   if(syncing || !apiOK()){ renderConn(); return; }
-  syncing = true; $('#btnSync').classList.add('spin'); renderConn();
+  syncing = true; $('#btnSync').classList.add('spin');
+  if(!connected) renderConn();
   try{
-    const data = await apiGet('bootstrap', { m: SHEET });
-    if(!data || !data.ok) throw srvErr((data && data.error) || 'respuesta inválida');
+    const data = await jsonpGet('bootstrap', { m: SHEET });
+    if(!data || !data.ok){
+      const e = new Error((data && data.error) || 'respuesta inválida'); e.srv = true; throw e;
+    }
 
-    /* ── conectado: a partir de aquí la etiqueta queda en verde ── */
-    connected = true; connLabel=''; connDetail=''; lastSyncFailed=false;
+    /* ── conectado: la etiqueta queda fija en verde ── */
+    connected = true; connLabel=''; connDetail=''; diagDone=false;
 
     if(data.modules && data.modules.length) MODULES = data.modules;
 
     const remote = ((data.blocks||{})[SHEET] || []).map(normBlock);
     const merged = remote.slice();
-    // entradas creadas offline que aún viajan en la cola: no perderlas
+    // no perder lo creado offline que aún viaja en la cola
     for(const op of queue){
       if(op.action==='saveBlock' && op.sheet===SHEET && op.block && !merged.some(r=>r.id===op.block.id))
         merged.push(normBlock(op.block));
     }
     BLOCKS[SHEET] = merged.sort((a,b)=>a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
     saveCache();
-    reconcileDraft();       // respaldo del editor ↔ Sheets (gana el más reciente)
-    seedDict();             // si las semillas nunca se subieron, subirlas ya
+
+    reconcileOps(data);     // confirmar operaciones ya visibles en Sheets
+    retryPending();         // reenviar las que faltan
+    reconcileDraft();       // respaldo del editor ↔ Sheets
+    seedDict();             // semillas pendientes de subir
     renderDict();
-    await flushQueue();     // subir todo lo pendiente en cuanto hay conexión
   }catch(err){
-    lastSyncFailed = connected;              // si ya estábamos conectados, no tocamos la etiqueta
     if(!connected){
-      if(err && err.http){ connLabel = 'HTTP ' + err.http; connDetail = 'El servidor respondió ' + err.http + '. Verifica que la URL sea la del deployment …/exec y re-despliega si editaste el código.'; }
-      else if(err && err.srv){ connLabel = 'Error servidor'; connDetail = String(err.message); }
-      else { connLabel = 'Sin conexión'; connDetail = 'No se pudo alcanzar Apps Script. Revisa: URL /exec correcta · acceso «Cualquier usuario» · ejecutar como «Yo».'; }
+      if(err && err.srv){
+        connLabel = 'Error servidor';
+        connDetail = 'El script responde pero falla: ' + err.message +
+          ' → Si el script no está dentro de la hoja, pon el ID en SPREADSHEET_ID (Code.gs) y crea nueva versión del despliegue.';
+      } else if(!diagDone){
+        diagnose();         // afinar el diagnóstico una vez
+      } else {
+        connLabel = connLabel || 'Sin conexión';
+      }
     }
+    // si ya estábamos conectados: la etiqueta no cambia; el loop reintenta solo
   }finally{
     syncing = false; $('#btnSync').classList.remove('spin'); renderConn();
   }
 }
-/* reintento agresivo hasta conectar; después, mantiene la cola a raya */
-setInterval(()=>{ if(!apiOK()) return; if(!connected) sync(); else if(queue.length) flushQueue(); }, 25000);
-setInterval(()=>{ if(connected) sync(); }, 5*60*1000);   // refresco del diccionario ya conectado
-window.addEventListener('online', ()=>{ if(!connected) sync(); else flushQueue(); });
+
+async function diagnose(){
+  if(diagRunning) return;
+  diagRunning = true; diagDone = true;
+  connLabel = 'Diagnosticando…'; connDetail=''; renderConn();
+  try{
+    const p = await jsonpGet('ping');
+    if(p && p.ok){
+      connLabel = 'Error de datos';
+      connDetail = 'El script SÍ responde y es público, pero falla al abrir la hoja de cálculo. Causa típica: el script se creó independiente (script.google.com) y no dentro de la hoja. Solución: abre Code.gs, pon el ID de tu hoja en SPREADSHEET_ID, guarda y en Implementar → Gestionar implementaciones → editar → «Nueva versión».';
+    } else {
+      connLabel = 'Requiere login';
+      connDetail = 'Apps Script redirige a inicio de sesión → el despliegue no es público. Ve a Implementar → Gestionar implementaciones → editar (lápiz) → «Quién tiene acceso»: CUALQUIERA. Y ejecuta setup() una vez en el editor para autorizar los permisos.';
+    }
+  }catch(e){
+    connLabel = 'Sin conexión real';
+    connDetail = 'Ni «ping» responde: el despliegue no existe en esa URL, o es anterior a tu Code.gs (crea «Nueva versión» en Gestionar implementaciones), o el acceso no es «Cualquiera».';
+  }
+  diagRunning = false; renderConn();
+}
+
+/* loops de mantenimiento */
+setInterval(()=>{ if(!apiOK()) return; if(!connected) sync(); else retryPending(); }, 25000);
+setInterval(()=>{ if(connected) sync(); }, 5*60*1000);
+window.addEventListener('online', ()=>{ if(!connected) sync(); else { retryPending(); scheduleSync(500); } });
 
 /* ═══ 8 · BORRADOR: respaldo del editor en Sheets ══════════ */
 const getDraftRemote = () => (BLOCKS[SHEET]||[]).find(b => b.id === DRAFT_ID);
@@ -549,7 +609,6 @@ function pushDraftNow(){
   const prev = getDraftRemote();
   const row = { id:DRAFT_ID, name:DRAFT_NAME, tag:'sistema', code:txt,
     createdAt:(prev && prev.createdAt) || nowISO(), updatedAt: nowISO() };
-  // reflejar en caché sin disparar otra subida
   const arr = BLOCKS[SHEET] || (BLOCKS[SHEET] = []);
   const i = arr.findIndex(x=>x.id===DRAFT_ID);
   if(i<0) arr.push(normBlock(row)); else arr[i] = Object.assign({}, arr[i], row);
@@ -566,15 +625,15 @@ function reconcileDraft(){
   if(rem && rem.code != null){
     const remoteNewer = !localT || (rem.updatedAt && rem.updatedAt > localT);
     if(!typing && remoteNewer && rem.code !== ed.value){
-      ed.value = rem.code;                                  // Sheets manda (más reciente)
+      ed.value = rem.code;
       lastPushedDraft = rem.code;
       syncHL(); scheduleCompile(200);
       $('#draftInfo').textContent = 'desde Sheets ' + hora(rem.updatedAt||nowISO());
     } else if(!remoteNewer && ed.value !== rem.code){
-      pushDraftSoon();                                      // local más nuevo → subir
+      pushDraftSoon();
     }
   } else if(ed.value.trim()){
-    pushDraftNow();                                         // primera vez: crear la fila
+    pushDraftNow();
   }
 }
 
@@ -587,7 +646,7 @@ function upsertSnipLocal(b){
   else arr[i] = Object.assign({}, arr[i], b);
   arr.sort((a,c)=>a.name.toLowerCase().localeCompare(c.name.toLowerCase()));
   saveCache(); renderDict();
-  pushOp({action:'saveBlock', sheet:SHEET, block:b});       // ← se guarda en Sheets
+  pushOp({action:'saveBlock', sheet:SHEET, block:b});
 }
 function deleteSnip(id){
   const b = dict().find(x=>x.id===id); if(!b) return;
@@ -597,21 +656,24 @@ function deleteSnip(id){
   pushOp({action:'deleteBlock', sheet:SHEET, id});
 }
 
-/* ═══ 10 · SEMILLAS (una sola vez; si no había red, se suben al conectar) ══ */
+/* ═══ 10 · SEMILLAS (una sola vez) ═════════════════════════ */
 function seedDict(){
   if(localStorage.getItem(LS_SEEDED)) return;
   const have = new Set((BLOCKS[SHEET]||[]).map(b=>b.id));
   const t = nowISO();
+  let added = false;
   SEED.forEach(s=>{
     if(!have.has(s.id)){
       const row = Object.assign({createdAt:t, updatedAt:t}, s);
       (BLOCKS[SHEET] = BLOCKS[SHEET]||[]).push(normBlock(row));
       pushOp({action:'saveBlock', sheet:SHEET, block:row});
+      added = true;
     }
   });
   (BLOCKS[SHEET]||[]).sort((a,b)=>a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
   saveCache();
-  if(apiOK()) localStorage.setItem(LS_SEEDED,'1');
+  if(apiOK() && added) localStorage.setItem(LS_SEEDED,'1');
+  else if(apiOK()) localStorage.setItem(LS_SEEDED,'1');
 }
 
 /* ═══ 11 · EDITOR: resaltado ═══════════════════════════════ */
@@ -791,7 +853,7 @@ function saveDraftSoon(){
 }
 function onEdInput(){ syncHL(); saveDraftSoon(); pushDraftSoon(); scheduleCompile(); showSug(); }
 
-/* ═══ 14 · VISTAS (móvil: pestañas; PC: split) ═════════════ */
+/* ═══ 14 · VISTAS ══════════════════════════════════════════ */
 function setView(v){
   document.body.classList.toggle('view-pdf', v==='pdf');
   document.body.classList.toggle('view-code', v==='code');
@@ -807,9 +869,9 @@ function renderDict(){
   const q = ($('#q2').value||'').trim().toLowerCase();
   let arr = dict().slice().sort((a,b)=>a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
   if(q) arr = arr.filter(e => (e.name+' '+(e.tag||'')).toLowerCase().includes(q));
-  const pend = new Set(queue.filter(o=>o.action==='saveBlock' && o.sheet===SHEET && o.block).map(o=>o.block.id));
+  const pend = new Set(queue.filter(o=>o.action==='saveBlock' && o.sheet===SHEET && o.block && o.block.id!==DRAFT_ID).map(o=>o.block.id));
   $('#dictCount').textContent = dict().length + ' entradas · hoja ' + SHEET +
-    (pend.size ? ' · ↑' + pend.size + ' por subir' : ' · todo en Sheets');
+    (pend.size ? ' · ↑' + pend.size + ' por subir' : (connected ? ' · todo en Sheets' : ''));
   let html = '', letter = null;
   for(const e of arr){
     const L = (e.name.charAt(0)||'#').toUpperCase();
@@ -840,7 +902,7 @@ function renderDict(){
   else if(a==='del') armConfirm(btn, ()=>deleteSnip(b.id));
 });
 
-/* ═══ 16 · DIÁLOGO entrada (crear/editar) ══════════════════ */
+/* ═══ 16 · DIÁLOGO entrada ═════════════════════════════════ */
 function openSnip(entry, opts={}){
   editSnipId = entry ? entry.id : null;
   snipReturn = opts.ret || 'dict';
@@ -912,11 +974,15 @@ ed.addEventListener('scroll', ()=>{ hl.scrollTop = ed.scrollTop; hl.scrollLeft =
   if(!currentDD){ toast('Corrige los errores antes de descargar','err'); return; }
   pdfMake.createPdf(currentDD).download('blocklab.pdfmake.pdf');
 });
- $('#btnSync').addEventListener('click', async ()=>{
-  await sync();
-  if(!connected && connDetail) toast(connDetail, 'err');   // click manual → detalle del fallo
-  else if(connected && lastSyncFailed) toast('Sheets respondió con error; reintentando…','err');
-});
+function manualSync(){
+  if(!apiOK()){ toast('Falta configurar API_URL','err'); return; }
+  diagDone = false;          // permitir diagnóstico completo en este intento
+  sync().then(()=>{
+    if(!connected && connDetail) toast(connDetail, 'err');
+  });
+}
+ $('#btnSync').addEventListener('click', manualSync);
+ $('#stPill').addEventListener('click', manualSync);   // click en la píldora = sync + detalle
  $('#btnReset').addEventListener('click', e=>{
   armConfirm(e.currentTarget, ()=>{
     ed.value = STARTER; onEdInput();
@@ -954,11 +1020,11 @@ window.addEventListener('resize', ()=>{
   seedDict();
   const draft = localStorage.getItem(LS_DRAFT);
   ed.value = (draft && draft.trim()) ? draft : STARTER;
-  lastPushedDraft = '';          // forces first push → crea la fila __draft__ en Sheets
+  lastPushedDraft = '';
   syncHL(); refreshIcons(); renderConn();
-  reconcileDraft();              // si la caché trae un borrador de Sheets más nuevo, gana él
+  reconcileDraft();
   compile();
-  sync();                        // primera conexión (reintenta sola cada 25s hasta lograrlo)
+  sync();
 })();
 </script>
 </body>

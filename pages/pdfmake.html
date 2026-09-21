@@ -10,7 +10,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500..700;1,9..144,400..600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 
-<!-- pdfmake (genera el PDF) + pdf.js (lo pinta en canvas: funciona en móvil) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -97,7 +96,7 @@ body.view-pdf .pv{display:flex}
 .pane-head .r{display:flex;align-items:center;gap:8px}
 .saved{font:500 9.5px/1 var(--mono);letter-spacing:.06em;color:var(--mut);text-transform:none}
 
-/* ═══ Editor con resaltado (textarea transparente + pre) ═══ */
+/* ═══ Editor ═══════════════════════════════════════════════ */
 .ed-wrap{flex:1;min-height:0;position:relative;margin:12px;border:1.5px solid var(--ink);background:var(--card)}
 #hl,#ed{position:absolute;inset:0;margin:0;padding:14px;border:none;outline:none;
   font:400 13px/1.7 var(--mono);tab-size:2;
@@ -105,9 +104,9 @@ body.view-pdf .pv{display:flex}
 #ed{background:transparent;color:transparent;caret-color:var(--ink);resize:none;-webkit-text-fill-color:transparent}
 #hl{background:var(--card);pointer-events:none;scrollbar-width:none;color:var(--ink)}
 #hl::-webkit-scrollbar{display:none}
-#hl .p{color:#A63A0A}          /* claves */
-#hl .s{color:#3F6B33}          /* cadenas */
-#hl .n{color:#8A6D2F}          /* números */
+#hl .p{color:#A63A0A}
+#hl .s{color:#3F6B33}
+#hl .n{color:#8A6D2F}
 #hl .k{color:var(--acc);font-weight:700}
 #hl .c{color:var(--mut);font-style:italic}
 
@@ -121,13 +120,14 @@ body.view-pdf .pv{display:flex}
 .sug button.on,.sug button:hover{background:var(--ink);color:var(--bg)}
 .sug button.on .tag,.sug button:hover .tag{background:var(--bg);color:var(--ink)}
 .tag{font:700 8.5px/1 var(--mono);letter-spacing:.07em;text-transform:uppercase;padding:3px 6px;background:var(--ink);color:var(--bg)}
+.tag.pend{background:var(--acc)}
 .sug .newrow{color:var(--acc);font-weight:700;border-top:1px solid var(--line)}
 .sug .newrow:hover{background:var(--acc);color:var(--bg)}
 
 /* ═══ Vista previa ═════════════════════════════════════════ */
 .err{flex:none;margin:10px 12px 0;padding:10px 12px;border:1.5px solid var(--acc);color:var(--acc);
   background:#FBEFE9;font:500 11px/1.55 var(--mono);max-height:90px;overflow:auto;white-space:pre-wrap}
-.pages{flex:1;min-height:0;overflow:auto;padding:16px;background:var(--paper2,#E9E4D6);background:var(--bg);background:#E9E4D6}
+.pages{flex:1;min-height:0;overflow:auto;padding:16px;background:#E9E4D6}
 .pg{display:block;width:100%;height:auto;margin:0 auto 14px;background:#fff;
   box-shadow:0 1px 3px rgba(28,25,21,.28),0 4px 14px rgba(28,25,21,.10)}
 .pv-hint{color:var(--mut);font-size:11.5px;text-align:center;padding:40px 20px}
@@ -188,7 +188,7 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
     <div class="brand">BLOCKLAB<span class="star">*</span><span class="bsub"> / pdfmake</span></div>
     <div class="h-right">
       <span class="qb" id="qb" hidden>↑0</span>
-      <span class="status"><span class="dot" id="stDot"></span><span id="stTxt">—</span></span>
+      <span class="status" id="stPill" title=""><span class="dot" id="stDot"></span><span id="stTxt">—</span></span>
       <button class="iconbtn" id="btnDict" title="Diccionario de funciones"><i data-lucide="book-open"></i></button>
       <button class="iconbtn" id="btnJson" title="Ver docDefinition como JSON"><i data-lucide="braces"></i></button>
       <button class="btn" id="btnDl" title="Descargar PDF"><i data-lucide="download"></i><span class="lbl">PDF</span></button>
@@ -291,12 +291,15 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
 
 <script>
 /* ═══ 1 · CONFIG ═══════════════════════════════════════════ */
-const API_URL   = 'https://script.google.com/macros/s/AKfycbzSLoucR2yC7X7kKpbeDnQUCNd94-WuVuGyR55CMIrP4hq5f1tgynDDdHumc8iBj8gI9g/exec'; // la misma del index
-const SHEET     = 'pdfmake';              // hoja = diccionario de este playground
+const API_URL   = 'https://script.google.com/macros/s/AKfycbzSLoucR2yC7X7kKpbeDnQUCNd94-WuVuGyR55CMIrP4hq5f1tgynDDdHumc8iBj8gI9g/exec'; // la misma del index, termina en /exec
+const SHEET     = 'pdfmake';
 const LS_DB     = 'blocklab.db.v1';       // caché compartida con el index
 const LS_Q      = 'blocklab.queue.v1';
-const LS_DRAFT  = 'blocklab.draft.pdfmake.v1';
+const LS_DRAFT  = 'blocklab.draft.pdfmake.v1';   // texto del editor (local)
+const LS_DRAFT_T= 'blocklab.draft.pdfmake.t';    // fecha de última edición local
 const LS_SEEDED = 'blocklab.pdfmake.seeds.v1';
+const DRAFT_ID   = '__draft__';            // fila-sistema que respalda el editor en Sheets
+const DRAFT_NAME = 'BORRADOR · editor';
 
 /* Semillas del diccionario (IDs estables → se suben una vez a la hoja) */
 const SEED = [
@@ -337,7 +340,6 @@ const SEED = [
 ]` }
 ];
 
-/* Código inicial (borrador) */
 const STARTER = `content: [
   { text: 'Hola, BLOCKLAB', fontSize: 24, bold: true, margin: [0, 0, 0, 14] },
   { text: 'Escribe a la izquierda: el PDF nace aquí, en vivo.', italics: true, color: '#666666' },
@@ -365,16 +367,23 @@ let seq = 0, lastBuf = null, currentDD = null, libTries = 0;
 let sugItems = [], sugNew = null, sugActive = 0;
 let editSnipId = null, snipReturn = 'dict';
 
+/* Estado de conexión */
+let connected = false;      // cerillo: una vez conectado, la etiqueta queda en «Conectado»
+let connLabel = '', connDetail = '', lastSyncFailed = false;
+let lastPushedDraft = '';
+
 const $   = s => document.querySelector(s);
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const nowISO = () => new Date().toISOString();
 const hora = iso => new Date(iso).toLocaleTimeString('es',{hour12:false});
 const apiOK = () => !!API_URL && !API_URL.includes('PEGA_AQUI');
 const refreshIcons = () => { if(window.lucide) lucide.createIcons(); };
-const dict = () => BLOCKS[SHEET] || (BLOCKS[SHEET] = []);
+
+/* El diccionario = entradas de la hoja, SIN la fila-sistema del borrador */
+const dict = () => (BLOCKS[SHEET] || (BLOCKS[SHEET] = [])).filter(b => b.id !== DRAFT_ID);
 const ed = $('#ed'), hl = $('#hl'), sug = $('#sug'), edWrap = $('#edWrap');
 
-/* ═══ 3 · FUENTES: alias Helvetica/Courier → Roboto (la vfs del navegador solo trae Roboto) ══ */
+/* ═══ 3 · FUENTES: alias Helvetica/Courier/Times → Roboto ══ */
 (function aliasFonts(){
   try{
     const vfs = pdfMake.vfs || {};
@@ -405,11 +414,16 @@ const saveQueue = () => { try{ localStorage.setItem(LS_Q, JSON.stringify(queue))
 const loadQueue = () => { try{ queue = JSON.parse(localStorage.getItem(LS_Q)||'[]'); }catch(e){ queue=[]; } };
 
 /* ═══ 5 · ESTADO VISIBLE ═══════════════════════════════════ */
-function setStatus(txt, cls){
-  $('#stTxt').textContent = txt;
-  $('#stDot').className = 'dot ' + (cls||'');
+function renderConn(){
   const qb = $('#qb');
   qb.hidden = !queue.length; qb.textContent = '↑' + queue.length;
+  const dot = $('#stDot'), txt = $('#stTxt'), pill = $('#stPill');
+  pill.title = connDetail || '';
+  if(!apiOK()){ txt.textContent='Sin backend'; dot.className='dot warn'; return; }
+  if(connected){ txt.textContent='Conectado'; dot.className='dot ok'; return; }  // ← queda fijo
+  if(syncing){ txt.textContent='Conectando…'; dot.className='dot busy'; return; }
+  txt.textContent = connLabel || 'En espera';
+  dot.className = 'dot ' + (connLabel ? 'err' : '');
 }
 function cset(txt, cls){ $('#cTxt').textContent = txt; $('#cDot').className = 'dot ' + (cls||''); }
 function tabDot(cls){ $('#tabDot').className = 'tdot ' + (cls||''); }
@@ -418,15 +432,19 @@ function toast(msg, kind){
   t.className = 'toast' + (kind==='err'?' err':'');
   t.innerHTML = `<i data-lucide="${kind==='err'?'alert-triangle':'check'}"></i><span>${esc(msg)}</span>`;
   $('#toasts').appendChild(t); refreshIcons();
-  setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity .25s'; setTimeout(()=>t.remove(),260); }, 3000);
+  setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity .25s'; setTimeout(()=>t.remove(),260); }, 3600);
 }
 
-/* ═══ 6 · RED — igual que el index (POST text/plain + JSONP fallback) ══ */
+/* ═══ 6 · RED — timeouts + POST sin preflight + fallback JSONP ══ */
+function fetchTO(url, opts={}, ms=9000){
+  const c = new AbortController(); const t = setTimeout(()=>c.abort(), ms);
+  return fetch(url, Object.assign({}, opts, {signal:c.signal})).finally(()=>clearTimeout(t));
+}
 function jsonpGet(action, params={}){
   return new Promise((res,rej)=>{
     const cb = '__bl_'+Date.now();
     const s  = document.createElement('script');
-    const to = setTimeout(()=>{ clean(); rej(new Error('timeout')); }, 12000);
+    const to = setTimeout(()=>{ clean(); rej(new Error('timeout')); }, 9000);
     function clean(){ clearTimeout(to); delete window[cb]; s.remove(); }
     window[cb] = d => { clean(); res(d); };
     s.onerror  = () => { clean(); rej(new Error('error')); };
@@ -434,21 +452,26 @@ function jsonpGet(action, params={}){
     document.head.appendChild(s);
   });
 }
-function apiGet(action, params={}){
-  return fetch(`${API_URL}?${new URLSearchParams({action,...params})}`)
-    .then(r => { if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
-    .catch(() => jsonpGet(action, params));
+async function apiGet(action, params={}){
+  try{
+    const r = await fetchTO(`${API_URL}?${new URLSearchParams({action,...params})}`);
+    if(!r.ok) throw Object.assign(new Error('HTTP '+r.status), {http:r.status});
+    return await r.json();
+  }catch(e){
+    if(e.http) throw e;                       // el servidor respondió, pero mal → no es CORS
+    return jsonpGet(action, params);          // red/CORS → JSONP
+  }
 }
 async function apiPost(payload){
-  const r = await fetch(API_URL, { method:'POST', body: JSON.stringify(payload) });
-  if(!r.ok) throw new Error('HTTP '+r.status);
+  const r = await fetchTO(API_URL, { method:'POST', body: JSON.stringify(payload) });
+  if(!r.ok) throw Object.assign(new Error('HTTP '+r.status), {http:r.status});
   return r.json();
 }
 function pushOp(op){
   if(!apiOK()) return;
   apiPost(op)
     .then(r => { if(!(r&&r.ok)) throw new Error((r&&r.error)||'nok'); })
-    .catch(() => { queue.push(op); saveQueue(); setStatus('Pendientes ↑'+queue.length,'warn'); });
+    .catch(() => { queue.push(op); saveQueue(); renderConn(); }); // sube solo al reconectar
 }
 async function flushQueue(){
   if(!queue.length || !apiOK()) return;
@@ -459,76 +482,139 @@ async function flushQueue(){
   }
   const ok = queue.length - rest.length;
   queue = rest; saveQueue();
-  if(ok) toast(ok + ' operación(es) sincronizada(s)');
+  if(ok){
+    toast(ok + ' operación(es) guardada(s) en Sheets');
+    lastSyncFailed = false;
+  }
+  renderConn();
 }
 
-/* ═══ 7 · SYNC — la hoja «pdfmake» es el diccionario ═══════ */
+/* ═══ 7 · SYNC — máquina de estados + reconciliación ═══════ */
 const normBlock = o => ({ id:String(o.id||''), name:String(o.name||''), tag:String(o.tag||''),
   code:(o.code==null?'':String(o.code)), createdAt:String(o.createdAt||''), updatedAt:String(o.updatedAt||'') });
+function srvErr(msg){ const e = new Error(msg||'error del servidor'); e.srv = true; return e; }
 
 async function sync(){
-  if(syncing) return;
-  if(!apiOK()){ setStatus('Local · sin backend','warn'); return; }
-  syncing = true; $('#btnSync').classList.add('spin'); setStatus('Sincronizando…','busy');
+  if(syncing || !apiOK()){ renderConn(); return; }
+  syncing = true; $('#btnSync').classList.add('spin'); renderConn();
   try{
     const data = await apiGet('bootstrap', { m: SHEET });
-    if(!data.ok) throw new Error(data.error||'nok');
-    if(data.modules) MODULES = data.modules;   // mantener la caché al día para el index
+    if(!data || !data.ok) throw srvErr((data && data.error) || 'respuesta inválida');
+
+    /* ── conectado: a partir de aquí la etiqueta queda en verde ── */
+    connected = true; connLabel=''; connDetail=''; lastSyncFailed=false;
+
+    if(data.modules && data.modules.length) MODULES = data.modules;
 
     const remote = ((data.blocks||{})[SHEET] || []).map(normBlock);
-    BLOCKS[SHEET] = remote;
-    // entradas creadas offline cuya subida quedó en cola: no perderlas
+    const merged = remote.slice();
+    // entradas creadas offline que aún viajan en la cola: no perderlas
     for(const op of queue){
-      if(op.action==='saveBlock' && op.sheet===SHEET && op.block && !remote.some(r=>r.id===op.block.id))
-        BLOCKS[SHEET].push(normBlock(op.block));
+      if(op.action==='saveBlock' && op.sheet===SHEET && op.block && !merged.some(r=>r.id===op.block.id))
+        merged.push(normBlock(op.block));
     }
-    BLOCKS[SHEET].sort((a,b)=>a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
-    saveCache(); renderDict();
-    setStatus('Sync ' + hora(data.ts), 'ok');
-    await flushQueue();
+    BLOCKS[SHEET] = merged.sort((a,b)=>a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+    saveCache();
+    reconcileDraft();       // respaldo del editor ↔ Sheets (gana el más reciente)
+    seedDict();             // si las semillas nunca se subieron, subirlas ya
+    renderDict();
+    await flushQueue();     // subir todo lo pendiente en cuanto hay conexión
   }catch(err){
-    setStatus('Offline · caché','err');
+    lastSyncFailed = connected;              // si ya estábamos conectados, no tocamos la etiqueta
+    if(!connected){
+      if(err && err.http){ connLabel = 'HTTP ' + err.http; connDetail = 'El servidor respondió ' + err.http + '. Verifica que la URL sea la del deployment …/exec y re-despliega si editaste el código.'; }
+      else if(err && err.srv){ connLabel = 'Error servidor'; connDetail = String(err.message); }
+      else { connLabel = 'Sin conexión'; connDetail = 'No se pudo alcanzar Apps Script. Revisa: URL /exec correcta · acceso «Cualquier usuario» · ejecutar como «Yo».'; }
+    }
   }finally{
-    syncing = false; $('#btnSync').classList.remove('spin');
+    syncing = false; $('#btnSync').classList.remove('spin'); renderConn();
+  }
+}
+/* reintento agresivo hasta conectar; después, mantiene la cola a raya */
+setInterval(()=>{ if(!apiOK()) return; if(!connected) sync(); else if(queue.length) flushQueue(); }, 25000);
+setInterval(()=>{ if(connected) sync(); }, 5*60*1000);   // refresco del diccionario ya conectado
+window.addEventListener('online', ()=>{ if(!connected) sync(); else flushQueue(); });
+
+/* ═══ 8 · BORRADOR: respaldo del editor en Sheets ══════════ */
+const getDraftRemote = () => (BLOCKS[SHEET]||[]).find(b => b.id === DRAFT_ID);
+
+function saveDraftLocal(txt){
+  try{ localStorage.setItem(LS_DRAFT, txt); localStorage.setItem(LS_DRAFT_T, nowISO()); }catch(e){}
+}
+function pushDraftNow(){
+  if(!apiOK()) return;
+  const txt = ed.value;
+  if(txt === lastPushedDraft) return;
+  lastPushedDraft = txt;
+  const prev = getDraftRemote();
+  const row = { id:DRAFT_ID, name:DRAFT_NAME, tag:'sistema', code:txt,
+    createdAt:(prev && prev.createdAt) || nowISO(), updatedAt: nowISO() };
+  // reflejar en caché sin disparar otra subida
+  const arr = BLOCKS[SHEET] || (BLOCKS[SHEET] = []);
+  const i = arr.findIndex(x=>x.id===DRAFT_ID);
+  if(i<0) arr.push(normBlock(row)); else arr[i] = Object.assign({}, arr[i], row);
+  saveCache();
+  pushOp({action:'saveBlock', sheet:SHEET, block:row});   // ← el código viaja a Sheets
+}
+let pushDT = null;
+function pushDraftSoon(){ clearTimeout(pushDT); pushDT = setTimeout(pushDraftNow, 2500); }
+
+function reconcileDraft(){
+  const rem = getDraftRemote();
+  const localT = localStorage.getItem(LS_DRAFT_T) || '';
+  const typing = document.activeElement === ed;
+  if(rem && rem.code != null){
+    const remoteNewer = !localT || (rem.updatedAt && rem.updatedAt > localT);
+    if(!typing && remoteNewer && rem.code !== ed.value){
+      ed.value = rem.code;                                  // Sheets manda (más reciente)
+      lastPushedDraft = rem.code;
+      syncHL(); scheduleCompile(200);
+      $('#draftInfo').textContent = 'desde Sheets ' + hora(rem.updatedAt||nowISO());
+    } else if(!remoteNewer && ed.value !== rem.code){
+      pushDraftSoon();                                      // local más nuevo → subir
+    }
+  } else if(ed.value.trim()){
+    pushDraftNow();                                         // primera vez: crear la fila
   }
 }
 
-/* ═══ 8 · MUTACIONES del diccionario (optimistas) ══════════ */
+/* ═══ 9 · MUTACIONES del diccionario (optimistas, siempre a Sheets) ══ */
 function upsertSnipLocal(b){
   b.updatedAt = nowISO();
-  const i = dict().findIndex(x=>x.id===b.id);
-  if(i<0){ b.createdAt = b.createdAt||nowISO(); dict().push(b); }
-  else dict()[i] = Object.assign({}, dict()[i], b);
-  dict().sort((a,b)=>a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+  const arr = BLOCKS[SHEET] || (BLOCKS[SHEET] = []);
+  const i = arr.findIndex(x=>x.id===b.id);
+  if(i<0){ b.createdAt = b.createdAt||nowISO(); arr.push(b); }
+  else arr[i] = Object.assign({}, arr[i], b);
+  arr.sort((a,c)=>a.name.toLowerCase().localeCompare(c.name.toLowerCase()));
   saveCache(); renderDict();
-  pushOp({action:'saveBlock', sheet:SHEET, block:b});
+  pushOp({action:'saveBlock', sheet:SHEET, block:b});       // ← se guarda en Sheets
 }
 function deleteSnip(id){
   const b = dict().find(x=>x.id===id); if(!b) return;
-  BLOCKS[SHEET] = dict().filter(x=>x.id!==id);
+  BLOCKS[SHEET] = (BLOCKS[SHEET]||[]).filter(x=>x.id!==id);
   saveCache(); renderDict();
   toast('Entrada "'+b.name+'" eliminada');
   pushOp({action:'deleteBlock', sheet:SHEET, id});
 }
 
-/* ═══ 9 · SEMILLAS (una sola vez; sin backend se reintentan) ══ */
+/* ═══ 10 · SEMILLAS (una sola vez; si no había red, se suben al conectar) ══ */
 function seedDict(){
   if(localStorage.getItem(LS_SEEDED)) return;
-  const have = new Set(dict().map(b=>b.id));
+  const have = new Set((BLOCKS[SHEET]||[]).map(b=>b.id));
   const t = nowISO();
   SEED.forEach(s=>{
-    if(!have.has(s.id)) dict().push(Object.assign({createdAt:t, updatedAt:t}, s));
+    if(!have.has(s.id)){
+      const row = Object.assign({createdAt:t, updatedAt:t}, s);
+      (BLOCKS[SHEET] = BLOCKS[SHEET]||[]).push(normBlock(row));
+      pushOp({action:'saveBlock', sheet:SHEET, block:row});
+    }
   });
-  dict().sort((a,b)=>a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+  (BLOCKS[SHEET]||[]).sort((a,b)=>a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
   saveCache();
-  if(apiOK()){
-    SEED.forEach(s=>pushOp({action:'saveBlock', sheet:SHEET,
-      block:{id:s.id, name:s.name, tag:s.tag, code:s.code, createdAt:t, updatedAt:t}}));
-    localStorage.setItem(LS_SEEDED,'1');
-  }
+  if(apiOK()) localStorage.setItem(LS_SEEDED,'1');
 }
 
-/* ═══ 10 · EDITOR: resaltado ═══════════════════════════════ */
+/* ═══ 11 · EDITOR: resaltado ═══════════════════════════════ */
 function hled(src){
   return esc(src).replace(
     /(\/\/[^\n]*)|('(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*")|\b(true|false|null)\b|([A-Za-z_$\u00C0-\u024F][\w$\u00C0-\u024F]*)(?=\s*:)|\b(\d+(?:\.\d+)?)\b/g,
@@ -546,7 +632,7 @@ function syncHL(){
   hl.scrollTop = ed.scrollTop; hl.scrollLeft = ed.scrollLeft;
 }
 
-/* ═══ 11 · AUTOCOMPLETADO ══════════════════════════════════ */
+/* ═══ 12 · AUTOCOMPLETADO ══════════════════════════════════ */
 function currentWord(){
   const before = ed.value.slice(0, ed.selectionStart);
   const m = before.match(/[A-Za-z0-9_$\u00C0-\u024F-]+$/);
@@ -575,7 +661,7 @@ function caretXY(){
 }
 function showSug(){
   const w = currentWord();
-  if(!w || w.length < 1){ hideSug(); return; }
+  if(!w){ hideSug(); return; }
   const list = matches(w);
   const exact = list.some(e=>e.name.toLowerCase()===w.toLowerCase());
   const canNew = w.length>=2 && !exact;
@@ -636,7 +722,7 @@ document.addEventListener('pointerdown', e=>{
   if(!e.target.closest('#sug') && e.target!==ed) hideSug();
 });
 
-/* ═══ 12 · COMPILACIÓN + RENDER (pdfmake → blob → pdf.js → canvas) ══ */
+/* ═══ 13 · COMPILACIÓN + RENDER ════════════════════════════ */
 function failNow(msg){
   cset('error','err'); tabDot('err');
   const box = $('#errBox'); box.hidden = false; box.textContent = msg;
@@ -699,13 +785,13 @@ function scheduleCompile(ms=550){ clearTimeout(cT); cT = setTimeout(compile, ms)
 function saveDraftSoon(){
   clearTimeout(dT);
   dT = setTimeout(()=>{
-    try{ localStorage.setItem(LS_DRAFT, ed.value); }catch(e){}
+    saveDraftLocal(ed.value);
     $('#draftInfo').textContent = 'guardado ' + hora(nowISO());
   }, 700);
 }
-function onEdInput(){ syncHL(); saveDraftSoon(); scheduleCompile(); showSug(); }
+function onEdInput(){ syncHL(); saveDraftSoon(); pushDraftSoon(); scheduleCompile(); showSug(); }
 
-/* ═══ 13 · VISTAS (móvil: pestañas; PC: split) ═════════════ */
+/* ═══ 14 · VISTAS (móvil: pestañas; PC: split) ═════════════ */
 function setView(v){
   document.body.classList.toggle('view-pdf', v==='pdf');
   document.body.classList.toggle('view-code', v==='code');
@@ -716,12 +802,14 @@ function setView(v){
   const b = e.target.closest('button[data-view]'); if(b) setView(b.dataset.view);
 });
 
-/* ═══ 14 · DICCIONARIO (diálogo) ═══════════════════════════ */
+/* ═══ 15 · DICCIONARIO (diálogo) ═══════════════════════════ */
 function renderDict(){
   const q = ($('#q2').value||'').trim().toLowerCase();
   let arr = dict().slice().sort((a,b)=>a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
   if(q) arr = arr.filter(e => (e.name+' '+(e.tag||'')).toLowerCase().includes(q));
-  $('#dictCount').textContent = dict().length + ' entradas · hoja ' + SHEET;
+  const pend = new Set(queue.filter(o=>o.action==='saveBlock' && o.sheet===SHEET && o.block).map(o=>o.block.id));
+  $('#dictCount').textContent = dict().length + ' entradas · hoja ' + SHEET +
+    (pend.size ? ' · ↑' + pend.size + ' por subir' : ' · todo en Sheets');
   let html = '', letter = null;
   for(const e of arr){
     const L = (e.name.charAt(0)||'#').toUpperCase();
@@ -729,7 +817,7 @@ function renderDict(){
     const one = String(e.code||'').replace(/\s+/g,' ').slice(0,52);
     html += `<div class="drow" data-id="${esc(e.id)}">
       <div class="d-main">
-        <div class="t"><strong>${esc(e.name)}</strong>${e.tag?`<span class="tag">${esc(e.tag)}</span>`:''}</div>
+        <div class="t"><strong>${esc(e.name)}</strong>${e.tag?`<span class="tag">${esc(e.tag)}</span>`:''}${pend.has(e.id)?'<span class="tag pend">↑</span>':''}</div>
         <code class="d-c">${esc(one)}${String(e.code||'').length>52?'…':''}</code>
       </div>
       <div class="d-acts">
@@ -752,7 +840,7 @@ function renderDict(){
   else if(a==='del') armConfirm(btn, ()=>deleteSnip(b.id));
 });
 
-/* ═══ 15 · DIÁLOGO entrada (crear/editar) ══════════════════ */
+/* ═══ 16 · DIÁLOGO entrada (crear/editar) ══════════════════ */
 function openSnip(entry, opts={}){
   editSnipId = entry ? entry.id : null;
   snipReturn = opts.ret || 'dict';
@@ -775,12 +863,12 @@ function openSnip(entry, opts={}){
     name: f.name.value.trim(), tag: f.tag.value.trim(), code: f.code.value
   };
   upsertSnipLocal(b);
-  toast('Entrada "'+b.name+'" guardada en hoja "'+SHEET+'"');
+  toast('"' + b.name + '" guardada' + (apiOK() ? ' — subiendo a Sheets' : ' (se subirá al conectar)'));
   f.closest('dialog').close();
-  if(snipReturn==='insert' && !f.id.value) insertSnippet(b); // creada desde el autocompletado → insertar ya
+  if(snipReturn==='insert' && !f.id.value) insertSnippet(b);
 });
 
-/* ═══ 16 · Confirmación en dos clicks ══════════════════════ */
+/* ═══ 17 · Confirmación en dos clicks ══════════════════════ */
 function armConfirm(btn, fn){
   if(btn.dataset.armed){ delete btn.dataset.armed; fn(); return; }
   btn.dataset.armed='1'; btn.dataset.html = btn.innerHTML;
@@ -792,7 +880,7 @@ function armConfirm(btn, fn){
   }, 2600);
 }
 
-/* ═══ 17 · TECLADO del editor ══════════════════════════════ */
+/* ═══ 18 · TECLADO del editor ══════════════════════════════ */
 ed.addEventListener('keydown', e=>{
   if(!sug.hidden){
     if(e.key==='ArrowDown'){ e.preventDefault(); moveActive(1); return; }
@@ -813,7 +901,7 @@ ed.addEventListener('scroll', ()=>{ hl.scrollTop = ed.scrollTop; hl.scrollLeft =
   if(e.key==='Tab'){ e.preventDefault(); e.target.setRangeText('  ', e.target.selectionStart, e.target.selectionEnd, 'end'); }
 });
 
-/* ═══ 18 · BOTONES de cabecera ═════════════════════════════ */
+/* ═══ 19 · BOTONES de cabecera ═════════════════════════════ */
  $('#btnDict').addEventListener('click', ()=>{ renderDict(); $('#dlgDict').showModal(); refreshIcons(); });
  $('#btnJson').addEventListener('click', ()=>{
   if(!currentDD){ toast('Aún no hay un docDefinition válido','err'); return; }
@@ -824,16 +912,18 @@ ed.addEventListener('scroll', ()=>{ hl.scrollTop = ed.scrollTop; hl.scrollLeft =
   if(!currentDD){ toast('Corrige los errores antes de descargar','err'); return; }
   pdfMake.createPdf(currentDD).download('blocklab.pdfmake.pdf');
 });
- $('#btnSync').addEventListener('click', sync);
+ $('#btnSync').addEventListener('click', async ()=>{
+  await sync();
+  if(!connected && connDetail) toast(connDetail, 'err');   // click manual → detalle del fallo
+  else if(connected && lastSyncFailed) toast('Sheets respondió con error; reintentando…','err');
+});
  $('#btnReset').addEventListener('click', e=>{
   armConfirm(e.currentTarget, ()=>{
     ed.value = STARTER; onEdInput();
     toast('Código restablecido al ejemplo');
   });
 });
- $('#btnJsonCopy').addEventListener('click', ()=>{
-  copyText($('#jcode').textContent, 'JSON copiado');
-});
+ $('#btnJsonCopy').addEventListener('click', ()=>copyText($('#jcode').textContent, 'JSON copiado'));
 function copyText(txt, msg){
   const done = ()=>toast(msg||'Copiado');
   const fb = () => {
@@ -846,32 +936,29 @@ function copyText(txt, msg){
   navigator.clipboard?.writeText ? navigator.clipboard.writeText(txt).then(done).catch(fb) : fb();
 }
 
-/* Diálogos: cerrar con click fuera y botones data-close */
 document.querySelectorAll('dialog').forEach(d=>{
   d.addEventListener('click', e => { if(e.target===d) d.close(); });
   d.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', ()=>d.close()));
 });
  $('#q2').addEventListener('input', renderDict);
 
-/* Re-render al cambiar tamaño (el ancho de página depende del contenedor) */
 window.addEventListener('resize', ()=>{
   clearTimeout(rT);
   rT = setTimeout(()=>{ if(lastBuf){ const s=++seq; renderFromBuf(lastBuf, s); } }, 300);
 });
 
-/* ═══ 19 · ARRANQUE ════════════════════════════════════════ */
+/* ═══ 20 · ARRANQUE ════════════════════════════════════════ */
 (function init(){
   loadQueue();
   loadCache();
   seedDict();
   const draft = localStorage.getItem(LS_DRAFT);
   ed.value = (draft && draft.trim()) ? draft : STARTER;
-  syncHL(); refreshIcons();
-  setStatus(apiOK() ? 'Cacheado' : 'Local · sin backend', apiOK() ? 'busy' : 'warn');
-  compile();                       // primer render inmediato
-  sync();
-  setInterval(sync, 5*60*1000);
-  window.addEventListener('online', sync);
+  lastPushedDraft = '';          // forces first push → crea la fila __draft__ en Sheets
+  syncHL(); refreshIcons(); renderConn();
+  reconcileDraft();              // si la caché trae un borrador de Sheets más nuevo, gana él
+  compile();
+  sync();                        // primera conexión (reintenta sola cada 25s hasta lograrlo)
 })();
 </script>
 </body>

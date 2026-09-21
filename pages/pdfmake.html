@@ -14,12 +14,9 @@
     <style>
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; }
         
-        /* Ace Editor Container */
         #editor { position: absolute; top: 0; right: 0; bottom: 0; left: 0; font-size: 14px;}
+        iframe { border: none; width: 100%; height: 100%; background: #525659; } /* Fondo típico de lector PDF */
         
-        iframe { border: none; width: 100%; height: 100%; }
-        
-        /* Custom Scrollbars */
         .custom-scrollbar::-webkit-scrollbar { width: 8px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #fee2e2; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #ef4444; border-radius: 4px; }
@@ -28,7 +25,6 @@
         .modal-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .modal-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 
-        /* Floating Button Setup */
         #floating-add-btn {
             position: absolute;
             z-index: 40;
@@ -48,6 +44,9 @@
 
     <header class="bg-slate-900 text-white h-14 flex items-center justify-between px-6 shadow-md z-10 shrink-0">
         <div class="flex items-center gap-3">
+            <a href="../index.html" class="hover:bg-slate-800 p-1.5 rounded-md transition mr-2 text-slate-400 hover:text-white" title="Volver al Inicio">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            </a>
             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-400">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                 <polyline points="14 2 14 8 20 8"></polyline>
@@ -55,14 +54,14 @@
                 <line x1="16" y1="17" x2="8" y2="17"></line>
                 <polyline points="10 9 9 9 8 9"></polyline>
             </svg>
-            <h1 class="text-lg font-semibold tracking-wide">Estudio PDFMake en Vivo</h1>
+            <h1 class="text-lg font-semibold tracking-wide hidden sm:block">Estudio PDFMake en Vivo</h1>
         </div>
         <div class="flex items-center gap-4">
             <button onclick="openDictionaryManager()" class="flex items-center gap-2 bg-slate-700 hover:bg-slate-600 text-sm py-1.5 px-3 rounded-md transition border border-slate-600">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path></svg>
                 Gestor de Diccionario
             </button>
-            <div class="text-xs text-slate-400 flex items-center gap-1.5">
+            <div class="text-xs text-slate-400 flex items-center gap-1.5 hidden sm:flex">
                 <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
                 Renderizado en Vivo
             </div>
@@ -70,6 +69,7 @@
     </header>
 
     <main class="flex-1 flex flex-col md:flex-row w-full overflow-hidden relative">
+        <!-- Panel Izquierdo: Editor -->
         <section class="w-full md:w-1/2 h-1/2 md:h-full relative border-b md:border-b-0 md:border-r border-slate-700 bg-slate-800 flex flex-col">
             <div class="bg-slate-800 text-slate-400 text-xs px-4 py-2 border-b border-slate-700 flex justify-between">
                 <span>Define 'var dd' para construir el PDF</span>
@@ -80,20 +80,27 @@
             </div>
         </section>
 
+        <!-- Panel Derecho: Preview -->
         <section class="w-full md:w-1/2 h-1/2 md:h-full relative bg-gray-200 flex flex-col">
             <div class="bg-white text-slate-600 text-xs px-4 py-2 border-b border-gray-300 flex justify-between items-center shadow-sm z-10">
-                <span class="font-medium">Vista Previa del PDF en Tiempo Real</span>
+                <span class="font-medium">Vista Previa del PDF</span>
             </div>
             
-            <div class="flex-1 relative w-full h-full bg-gray-400">
-                <iframe id="pdf-preview" title="Vista Previa del PDF"></iframe>
+            <div class="flex-1 relative w-full h-full bg-gray-300 flex items-center justify-center">
+                <!-- Indicador de carga -->
+                <div id="pdf-loading" class="absolute text-slate-500 flex flex-col items-center gap-2">
+                    <svg class="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <span class="text-sm font-medium">Generando PDF...</span>
+                </div>
+                <!-- Iframe para Blob del PDF -->
+                <iframe id="pdf-preview" title="Vista Previa del PDF" class="relative z-10 hidden"></iframe>
                 
-                <!-- Overlay de Errores -->
+                <!-- Overlay de Error -->
                 <div id="error-overlay" class="hidden absolute inset-0 bg-red-50/95 p-6 z-20 flex flex-col justify-center">
                     <div class="max-w-md mx-auto bg-white rounded-xl shadow-2xl border-l-4 border-red-500 p-5 w-full">
                         <div class="flex items-center gap-2 text-red-600 mb-3">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                            <h3 class="font-bold">Error de Renderizado</h3>
+                            <h3 class="font-bold">Error de Código</h3>
                         </div>
                         <div class="bg-red-50 text-red-800 p-3 rounded font-mono text-xs max-h-48 overflow-y-auto custom-scrollbar break-words border border-red-100" id="error-message">
                         </div>
@@ -103,54 +110,39 @@
         </section>
     </main>
 
-    <!-- Botón Flotante -->
-    <button id="floating-add-btn" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded shadow-lg cursor-pointer flex items-center gap-1 transition">
-        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-        Añadir '<span id="floating-word"></span>' al dicc.
-    </button>
-
     <div id="dict-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden h-full">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden h-full">
             
-            <!-- Cabecera del Modal -->
             <div class="bg-slate-50 border-b border-slate-200 px-6 py-4 flex justify-between items-center shrink-0 flex-wrap gap-2">
                 <h2 class="text-lg font-bold text-slate-800">Gestor de Diccionario</h2>
                 <div class="flex items-center gap-2 flex-wrap">
+                    
                     <input type="file" id="import-json" class="hidden" accept=".json" onchange="importDictionary(event)">
                     <button onclick="document.getElementById('import-json').click()" class="text-xs font-medium text-slate-600 bg-white border border-slate-300 rounded px-3 py-1.5 hover:bg-slate-100 transition flex items-center gap-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                         Importar JSON
                     </button>
                     <button onclick="exportDictionary()" class="text-xs font-medium text-slate-600 bg-white border border-slate-300 rounded px-3 py-1.5 hover:bg-slate-100 transition flex items-center gap-1">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                        Exportar JSON
+                        Descargar JSON
                     </button>
-                    <button onclick="copyJsonForGitHub()" class="text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded px-3 py-1.5 transition flex items-center gap-1 shadow-sm" title="Copiar código JSON para actualizar diccionario.json en GitHub Pages">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                        Copiar para GitHub
-                    </button>
-                    <div class="w-px h-6 bg-slate-300 mx-1 hidden sm:block"></div>
-                    <button onclick="closeDictionaryManager()" class="text-slate-400 hover:text-slate-600 transition p-1">
+                    
+                    <button onclick="closeDictionaryManager()" class="text-slate-400 hover:text-slate-600 transition p-1 ml-2 bg-slate-200 rounded-full">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                     </button>
                 </div>
             </div>
             
-            <!-- Banner Informativo para GitHub Pages -->
             <div class="bg-slate-100 border-b border-slate-200 px-6 py-2.5 text-xs text-slate-600 flex items-center justify-between gap-2 shrink-0">
                 <div class="flex items-center gap-2">
-                    <span class="bg-blue-600 text-white font-semibold text-[10px] px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0">GitHub Pages</span>
-                    <span>Para guardar permanentemente en GitHub Pages: haz clic en <strong>Copiar para GitHub</strong> y pégalo en tu archivo <code>diccionario.json</code> en tu repositorio.</span>
+                    <span id="save-mode-badge" class="bg-green-600 text-white font-semibold text-[10px] px-1.5 py-0.5 rounded uppercase tracking-wider shrink-0">Nube Activa</span>
+                    <span id="save-mode-text">Conectado a <strong>Google Sheets</strong>. Guardando en tiempo real.</span>
                 </div>
                 <div id="github-sync-status" class="text-[11px] text-slate-500 font-medium shrink-0">
-                    Estado: <span id="status-text" class="text-slate-600">Listo</span>
+                    Base: <span id="status-text" class="text-slate-600">Conectando...</span>
                 </div>
             </div>
 
-            <!-- Cuerpo Dividido en 2 Columnas -->
             <div class="flex-1 flex overflow-hidden">
-                <!-- Columna Izquierda: Buscador y Lista de Funciones -->
-                <div class="w-1/3 border-r border-slate-200 bg-slate-50 flex flex-col p-4 gap-3">
+                <div class="w-1/3 border-r border-slate-200 bg-slate-50 flex flex-col p-4 gap-3 min-w-[250px]">
                     <div class="flex items-center gap-2">
                         <div class="relative flex-1">
                             <input type="text" id="dict-search" oninput="renderDictList(this.value)" placeholder="Buscar función..." class="w-full bg-white border border-slate-300 rounded-lg pl-8 pr-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -161,36 +153,33 @@
                         </button>
                     </div>
                     <ul id="dict-list" class="flex-1 overflow-y-auto modal-scrollbar space-y-1 pr-1 text-xs">
-                        <!-- Lista dinámica -->
+                        <!-- Lista generada por JS -->
                     </ul>
                 </div>
 
-                <!-- Columna Derecha: Editor de Estructuras/Bloques -->
                 <div class="w-2/3 bg-white flex flex-col p-6 overflow-y-auto modal-scrollbar relative">
-                    <!-- Estado Vacío -->
                     <div id="dict-empty-state" class="flex-1 flex flex-col items-center justify-center text-slate-400 gap-2 my-auto">
                         <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
-                        <p class="text-sm font-medium">Selecciona una propiedad de la lista o crea una nueva</p>
+                        <p class="text-sm font-medium">Selecciona una propiedad o crea una nueva</p>
                     </div>
 
-                    <!-- Formulario de Edición -->
                     <div id="dict-editor-form" class="hidden flex flex-col gap-4">
                         <input type="hidden" id="dict-original-name" value="">
                         <div>
                             <label class="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1 block">Nombre de la Propiedad / Función</label>
-                            <input type="text" id="dict-prop-name" placeholder="Ej: defaultStyle, table, pageMargins" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono">
+                            <input type="text" id="dict-prop-name" placeholder="Ej: miNuevaFuncion" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono">
                         </div>
 
                         <div>
                             <div class="flex justify-between items-center mb-2">
                                 <label class="text-xs font-semibold text-slate-600 uppercase tracking-wider">Estructuras / Variantes</label>
-                                <button type="button" onclick="addSnippetRow()" class="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1">
+                                <button type="button" onclick="addSnippetRow()" class="text-xs text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1 bg-blue-50 px-2 py-1 rounded">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                                     Añadir Variante
                                 </button>
                             </div>
                             <div id="snippets-container" class="space-y-3">
-                                <!-- Filas dinámicas de variantes -->
+                                <!-- Filas de variantes por JS -->
                             </div>
                         </div>
 
@@ -199,9 +188,12 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                                 Eliminar Propiedad
                             </button>
-                            <div class="flex gap-2">
+                            <div class="flex gap-2 ml-auto">
                                 <button type="button" onclick="closeDictionaryManager()" class="text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-lg transition">Cancelar</button>
-                                <button type="button" onclick="saveDictionaryEntry()" class="text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition shadow-sm">Guardar Cambios</button>
+                                <button type="button" onclick="saveDictionaryEntry()" class="text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 px-6 py-2 rounded-lg transition shadow-sm font-bold flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                                    Guardar Cambios
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -210,111 +202,69 @@
         </div>
     </div>
 
-    <!-- Botón Flotante -->
     <button id="floating-add-btn" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded shadow-lg cursor-pointer flex items-center gap-1 transition">
         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
         Añadir '<span id="floating-word"></span>' al dicc.
     </button>
 
-    <!-- Toast de Notificaciones -->
-    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white text-xs px-4 py-3 rounded-lg shadow-xl z-50 transform translate-y-20 opacity-0 transition-all duration-300 flex items-center gap-2 pointer-events-none">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-green-400"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-        <span id="toast-message">Notificación</span>
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white text-sm px-5 py-4 rounded-lg shadow-xl z-50 transform translate-y-20 opacity-0 transition-all duration-300 flex items-center gap-3 pointer-events-none">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-green-400"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        <span id="toast-message" class="font-medium">Notificación</span>
     </div>
 
     <script>
-        // Plantilla Inicial Vacía
         const defaultCode = `var dd = {
   content: [
-    
-  ]
+    '¡El renderizado en vivo está funcionando!',
+    { text: 'Comienza a escribir aquí...', style: 'header' }
+  ],
+  styles: {
+    header: {
+      fontSize: 18,
+      bold: true,
+      margin: [0, 0, 0, 10]
+    }
+  }
 };`;
 
-        // Diccionario por defecto ampliado para PDFMake
-        const defaultDict = {
-            "content": [
-                { caption: "content (arreglo)", snippet: "content: [\n\t$1\n],\n" }
-            ],
-            "styles": [
-                { caption: "styles (objeto)", snippet: "styles: {\n\t${1:miEstilo}: {\n\t\t$2\n\t}\n},\n" }
-            ],
+        // === CONFIGURACIÓN DE GOOGLE SHEETS ===
+        // PEGA AQUÍ LA URL DE TU WEB APP DE APPS SCRIPT (Reemplaza el texto de abajo)
+        const GAS_URL = "URL_DE_TU_WEB_APP_AQUI"; 
+        
+        // El nombre de la pestaña dentro de tu Google Sheet
+        const SHEET_NAME = "PDFMakeDict";
+
+        // Diccionario base por defecto en caso de no tener conexión a Sheets aún
+        const defaultDictionary = {
+            "content": [{ "caption": "content (arreglo)", "snippet": "content: [\n\t$1\n],\n" }],
+            "styles": [{ "caption": "styles (objeto)", "snippet": "styles: {\n\t${1:miEstilo}: {\n\t\t$2\n\t}\n},\n" }],
             "defaultStyle": [
-                { caption: "defaultStyle (objeto)", snippet: "defaultStyle: {\n\tfontSize: ${1:12},\n\tbold: ${2:false}\n},\n" },
-                { caption: "defaultStyle (texto)", snippet: "defaultStyle: '${1:estilo}',\n" }
+                { "caption": "defaultStyle (objeto)", "snippet": "defaultStyle: {\n\tfontSize: ${1:12},\n\tbold:${2:false}\n},\n" },
+                { "caption": "defaultStyle (texto)", "snippet": "defaultStyle: '${1:estilo}',\n" }
             ],
             "pageSize": [
-                { caption: "pageSize (A4/Letter)", snippet: "pageSize: '${1:A4}',\n" },
-                { caption: "pageSize (medidas)", snippet: "pageSize: { width: ${1:595.28}, height: ${2:841.89} },\n" }
+                { "caption": "pageSize (A4/Letter)", "snippet": "pageSize: '${1:A4}',\n" },
+                { "caption": "pageSize (medidas)", "snippet": "pageSize: { width: ${1:595.28}, height:${2:841.89} },\n" }
             ],
             "pageOrientation": [
-                { caption: "pageOrientation (portrait)", snippet: "pageOrientation: 'portrait',\n" },
-                { caption: "pageOrientation (landscape)", snippet: "pageOrientation: 'landscape',\n" }
+                { "caption": "pageOrientation (portrait)", "snippet": "pageOrientation: 'portrait',\n" },
+                { "caption": "pageOrientation (landscape)", "snippet": "pageOrientation: 'landscape',\n" }
             ],
             "pageMargins": [
-                { caption: "pageMargins (4 lados)", snippet: "pageMargins: [ ${1:40}, ${2:60}, ${3:40}, ${4:60} ],\n" },
-                { caption: "pageMargins (H/V)", snippet: "pageMargins: [ ${1:40}, ${2:60} ],\n" }
+                { "caption": "pageMargins (4 lados)", "snippet": "pageMargins: [ ${1:40},${2:60}, ${3:40},${4:60} ],\n" },
+                { "caption": "pageMargins (H/V)", "snippet": "pageMargins: [ ${1:40},${2:60} ],\n" }
             ],
             "header": [
-                { caption: "header (texto simple)", snippet: "header: '${1:Encabezado del documento}',\n" },
-                { caption: "header (función dinámica)", snippet: "header: function(currentPage, pageCount, pageSize) {\n\treturn { text: currentPage.toString() + ' de ' + pageCount, alignment: 'right', margin: [0, 20, 20, 0] };\n},\n" }
-            ],
-            "footer": [
-                { caption: "footer (función dinámica)", snippet: "footer: function(currentPage, pageCount) {\n\treturn { text: 'Página ' + currentPage.toString() + ' de ' + pageCount, alignment: 'center' };\n},\n" }
-            ],
-            "background": [
-                { caption: "background (función dinámicas)", snippet: "background: function(currentPage, pageSize) {\n\treturn [ { text: 'CONFIDENCIAL', color: '#f0f0f0', fontSize: 60, alignment: 'center', margin: [0, 200] } ];\n},\n" }
-            ],
-            "watermark": [
-                { caption: "watermark (texto)", snippet: "watermark: { text: '${1:BORRADOR}', color: '${2:blue}', opacity: ${3:0.3}, bold: true },\n" }
-            ],
-            "table": [
-                { caption: "table (estructura completa)", snippet: "table: {\n\theaderRows: ${1:1},\n\twidths: [ '${2:*}', '${3:auto}' ],\n\tbody: [\n\t\t[ '${4:Col 1}', '${5:Col 2}' ],\n\t\t[ '${6:Val 1}', '${7:Val 2}' ]\n\t]\n},\n" }
-            ],
-            "columns": [
-                { caption: "columns (arreglo de bloques)", snippet: "columns: [\n\t{\n\t\twidth: '${1:*}',\n\t\ttext: '${2:Columna 1}'\n\t},\n\t{\n\t\twidth: '${3:auto}',\n\t\ttext: '${4:Columna 2}'\n\t}\n],\ncolumnGap: 10,\n" }
-            ],
-            "bold": [
-                { caption: "bold (true)", snippet: "bold: true,\n" },
-                { caption: "bold (false)", snippet: "bold: false,\n" }
-            ],
-            "italics": [
-                { caption: "italics (true)", snippet: "italics: true,\n" },
-                { caption: "italics (false)", snippet: "italics: false,\n" }
-            ],
-            "fontSize": [
-                { caption: "fontSize (número)", snippet: "fontSize: ${1:12},\n" }
-            ],
-            "alignment": [
-                { caption: "alignment (left)", snippet: "alignment: 'left',\n" },
-                { caption: "alignment (center)", snippet: "alignment: 'center',\n" },
-                { caption: "alignment (right)", snippet: "alignment: 'right',\n" },
-                { caption: "alignment (justify)", snippet: "alignment: 'justify',\n" }
-            ],
-            "color": [
-                { caption: "color (hex/nombre)", snippet: "color: '${1:#333333}',\n" }
-            ],
-            "fillColor": [
-                { caption: "fillColor (hex/nombre)", snippet: "fillColor: '${1:#f3f4f6}',\n" }
-            ],
-            "margin": [
-                { caption: "margin (todos lados)", snippet: "margin: [${1:10}],\n" },
-                { caption: "margin (H/V)", snippet: "margin: [${1:10}, ${2:5}],\n" },
-                { caption: "margin (Izq, Arr, Der, Aba)", snippet: "margin: [${1:10}, ${2:5}, ${3:10}, ${4:5}],\n" }
-            ],
-            "canvas": [
-                { caption: "canvas (línea)", snippet: "canvas: [{ type: 'line', x1: 0, y1: 5, x2: 595, y2: 5, lineWidth: 1 }],\n" },
-                { caption: "canvas (rectángulo)", snippet: "canvas: [{ type: 'rect', x: 0, y: 0, w: 100, h: 50, r: 5, color: '#3b82f6' }],\n" }
-            ],
-            "pageBreak": [
-                { caption: "pageBreak (before)", snippet: "pageBreak: 'before',\n" },
-                { caption: "pageBreak (after)", snippet: "pageBreak: 'after',\n" }
+                { "caption": "header (texto)", "snippet": "header: '${1:Encabezado}',\n" },
+                { "caption": "header (función)", "snippet": "header: function(currentPage, pageCount, pageSize) {\n\treturn { text: currentPage.toString() + ' de ' + pageCount, alignment: 'right', margin: [0, 20, 20, 0] };\n},\n" }
             ]
         };
 
         let customDictionary = {};
+        let currentPdfUrl = null;
         
-        // Elementos del DOM
         const iframe = document.getElementById('pdf-preview');
+        const pdfLoading = document.getElementById('pdf-loading');
         const errorOverlay = document.getElementById('error-overlay');
         const errorMessage = document.getElementById('error-message');
         const floatingBtn = document.getElementById('floating-add-btn');
@@ -328,61 +278,116 @@
         const statusText = document.getElementById('status-text');
         
         let currentFloatingWord = "";
+        let editor;
 
         async function initializeApp() {
-            // 1. Cargar diccionario base
-            customDictionary = { ...defaultDict };
+            statusText.textContent = "Cargando desde Google Sheets...";
+            statusText.className = "text-blue-600 font-semibold animate-pulse";
             
-            // 2. Intentar cargar desde 'diccionario.json' en el mismo repositorio/servidor (GitHub Pages)
             try {
-                const response = await fetch('diccionario.json', { cache: 'no-store' });
+                if (GAS_URL === "URL_DE_TU_WEB_APP_AQUI") {
+                    console.warn("Aviso: URL de Google Apps Script no configurada. Usando modo local/offline.");
+                    // Salimos suavemente hacia el catch para evitar el Error en consola
+                    throw "NOT_CONFIGURED";
+                }
+
+                // Cargar desde Google Sheets
+                const response = await fetch(`${GAS_URL}?sheetName=${SHEET_NAME}`);
                 if (response.ok) {
-                    const fileDict = await response.json();
-                    customDictionary = { ...customDictionary, ...fileDict };
-                    if (statusText) {
-                        statusText.textContent = "Sincronizado con diccionario.json";
-                        statusText.className = "text-emerald-600 font-semibold";
+                    customDictionary = await response.json();
+                    
+                    if (customDictionary.error) {
+                         throw new Error(customDictionary.error);
                     }
+
+                    statusText.textContent = "Sincronizado con Sheets";
+                    statusText.className = "text-emerald-600 font-semibold";
+                    localStorage.setItem('pdfmakeDict_backup', JSON.stringify(customDictionary)); // Backup de seguridad
+                } else {
+                    throw new Error("Error en la petición HTTP");
                 }
             } catch (e) {
-                console.log("Servidor/GitHub Pages: No se halló diccionario.json o fue bloqueado, se usa diccionario interno.");
-            }
-
-            // 3. Sobrescribir con cambios en localStorage (persistencia del usuario en el navegador)
-            const localDict = JSON.parse(localStorage.getItem('pdfmakeDict'));
-            if (localDict) {
-                customDictionary = { ...customDictionary, ...localDict };
+                if (e !== "NOT_CONFIGURED") {
+                    console.error("Fallo de red o servidor:", e);
+                }
+                
+                statusText.textContent = "Modo Local (Sin Nube)";
+                statusText.className = "text-amber-500 font-semibold";
+                
+                // Fallback: Si no hay internet o no está configurado, busca el backup o usa el diccionario por defecto
+                const localDict = JSON.parse(localStorage.getItem('pdfmakeDict_backup'));
+                if (localDict && Object.keys(localDict).length > 0) {
+                    customDictionary = localDict;
+                    showToast("Usando diccionario de la caché local.", true);
+                } else {
+                    customDictionary = JSON.parse(JSON.stringify(defaultDictionary));
+                    showToast("Modo demo: Añade tu link de Apps Script para guardar en la nube.", true);
+                }
             }
 
             setupAceEditor();
-            renderPDF();
+            setTimeout(renderPDF, 1000); 
         }
 
-        function copyJsonForGitHub() {
-            const jsonStr = JSON.stringify(customDictionary, null, 2);
-            
-            const textarea = document.createElement('textarea');
-            textarea.value = jsonStr;
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textarea);
+        async function syncToGoogleSheets(action, key, value) {
+            if (GAS_URL === "URL_DE_TU_WEB_APP_AQUI") {
+                showToast("Aviso: Configura la URL de Apps Script para guardar en la nube.", true);
+                return;
+            }
 
-            showToast("¡JSON copiado al portapapeles! Pégalo en diccionario.json en GitHub.");
+            statusText.textContent = "Guardando en la nube...";
+            statusText.className = "text-blue-600 font-semibold animate-pulse";
+
+            try {
+                // Usamos text/plain en el Header Content-Type para evitar el preflight de CORS
+                const response = await fetch(GAS_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8',
+                    },
+                    body: JSON.stringify({
+                        sheetName: SHEET_NAME,
+                        action: action,
+                        key: key,
+                        value: value
+                    })
+                });
+
+                const result = await response.json();
+                if (result.status === 'success') {
+                    statusText.textContent = "Sincronizado con Sheets";
+                    statusText.className = "text-emerald-600 font-semibold";
+                    // Actualizar el backup local en caso de exito
+                    localStorage.setItem('pdfmakeDict_backup', JSON.stringify(customDictionary));
+                } else {
+                     throw new Error(result.message || "Error en el servidor de Apps Script");
+                }
+            } catch (err) {
+                console.error("Fallo al sincronizar con Sheets:", err);
+                showToast("Error al guardar en Google Sheets.", true);
+                statusText.textContent = "Error de sincronización";
+                statusText.className = "text-red-500 font-semibold";
+            }
         }
 
-        function showToast(message) {
+        function showToast(message, isError = false) {
             const toast = document.getElementById('toast');
             const toastMessage = document.getElementById('toast-message');
-            toastMessage.textContent = message;
-            toast.classList.remove('translate-y-20', 'opacity-0');
+            const svg = toast.querySelector('svg');
             
-            setTimeout(() => {
-                toast.classList.add('translate-y-20', 'opacity-0');
-            }, 3500);
-        }
+            toastMessage.textContent = message;
+            
+            if(isError) {
+                svg.innerHTML = '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>';
+                svg.classList.replace('text-green-400', 'text-red-400');
+            } else {
+                svg.innerHTML = '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline>';
+                svg.classList.replace('text-red-400', 'text-green-400');
+            }
 
-        let editor;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => { toast.classList.add('translate-y-20', 'opacity-0'); }, 3500);
+        }
 
         function setupAceEditor() {
             ace.require("ace/ext/language_tools");
@@ -402,7 +407,6 @@
 
             editor.setValue(defaultCode, 1);
 
-            // Completador personalizado
             const pdfMakeCompleter = {
                 getCompletions: function(editor, session, pos, prefix, callback) {
                     if (prefix.length === 0) { callback(null, []); return; }
@@ -424,7 +428,6 @@
             };
             editor.completers.push(pdfMakeCompleter);
 
-            // Botón flotante al escribir palabras nuevas
             editor.selection.on('changeCursor', debounce(() => {
                 const pos = editor.getCursorPosition();
                 const range = editor.session.getWordRange(pos.row, pos.column);
@@ -448,7 +451,7 @@
                 }
             }, 200));
 
-            const debouncedRender = debounce(renderPDF, 800);
+            const debouncedRender = debounce(renderPDF, 600);
             editor.session.on('change', debouncedRender);
         }
 
@@ -457,10 +460,8 @@
             renderDictList();
             
             if (propName) {
-                // Viene desde el botón flotante
                 createNewEntry(propName);
             } else {
-                // Estado vacío por defecto
                 emptyState.classList.remove('hidden');
                 editorForm.classList.add('hidden');
             }
@@ -475,7 +476,6 @@
         function renderDictList(searchTerm = "") {
             dictList.innerHTML = '';
             const keys = Object.keys(customDictionary).sort();
-            
             const currentEditing = document.getElementById('dict-original-name').value;
 
             keys.forEach(key => {
@@ -504,28 +504,23 @@
                     addSnippetRow(entry.caption, entry.snippet);
                 });
             }
-            
-            // Actualizar estilo visual de la lista
             renderDictList(document.getElementById('dict-search').value);
         }
 
         function createNewEntry(initialName = "") {
             emptyState.classList.add('hidden');
             editorForm.classList.remove('hidden');
-            btnDelete.classList.add('hidden'); // Ocultar eliminar si es nuevo
+            btnDelete.classList.add('hidden');
             
             document.getElementById('dict-prop-name').value = initialName;
-            document.getElementById('dict-original-name').value = ""; // No original name
+            document.getElementById('dict-original-name').value = "__new__";
             
             snippetsContainer.innerHTML = '';
             
-            // Añadir fila por defecto
             let defaultCaption = initialName ? `${initialName} (defecto)` : "";
             let defaultSnippet = initialName ? `${initialName}: $1,` : "";
             addSnippetRow(defaultCaption, defaultSnippet);
 
-            // Quitar clase activa de la lista
-            document.getElementById('dict-original-name').value = "__new__";
             renderDictList(document.getElementById('dict-search').value);
         }
 
@@ -540,11 +535,11 @@
                         <input type="text" placeholder="Ej. defaultStyle (objeto)" value="${caption.replace(/"/g, '&quot;')}" class="snippet-caption w-full border border-slate-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
                     </div>
                     <div>
-                        <label class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1 block">Bloque de Código</label>
-                        <textarea placeholder="Ej. defaultStyle: {\\n\\t$1\\n}," class="snippet-code w-full border border-slate-300 rounded px-3 py-2 text-sm font-mono h-20 focus:outline-none focus:ring-2 focus:ring-blue-500 custom-scrollbar bg-slate-900 text-green-400">${snippet}</textarea>
+                        <label class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-1 block">Bloque de Código (Usa $1 para cursor)</label>
+                        <textarea placeholder="Ej. defaultStyle: {\\n\\t$1\\n}," class="snippet-code w-full border border-slate-300 rounded px-3 py-2 text-sm font-mono h-24 focus:outline-none focus:ring-2 focus:ring-blue-500 custom-scrollbar bg-slate-900 text-green-400">${snippet}</textarea>
                     </div>
                 </div>
-                <button type="button" onclick="this.parentElement.remove()" class="text-slate-400 hover:text-red-500 bg-white border border-slate-200 hover:bg-red-50 p-2 rounded transition shadow-sm" title="Eliminar Variante">
+                <button type="button" onclick="this.parentElement.remove()" class="text-slate-400 hover:text-red-500 bg-white border border-slate-200 hover:bg-red-50 p-2 rounded transition shadow-sm mt-5" title="Eliminar Variante">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
             `;
@@ -555,56 +550,73 @@
             const propName = document.getElementById('dict-prop-name').value.trim();
             const originalName = document.getElementById('dict-original-name').value;
             
-            if (!propName) return;
+            if (!propName) {
+                showToast("Error: La propiedad debe tener un nombre.", true);
+                return;
+            }
 
             const rows = document.querySelectorAll('.snippet-row');
             const entries = [];
 
+            let hasEmptyFields = false;
+
             rows.forEach(row => {
                 const caption = row.querySelector('.snippet-caption').value.trim();
-                let snippet = row.querySelector('.snippet-code').value; 
+                let snippet = row.querySelector('.snippet-code').value.trim(); 
                 
-                if (caption && snippet) {
-                    // Asegurar que termine en coma o nueva línea si es necesario, 
-                    // pero confiamos en lo que escribe el usuario.
+                if (!caption || !snippet) {
+                    hasEmptyFields = true;
+                } else {
                     if(!snippet.endsWith('\n')) snippet += '\n';
                     entries.push({ caption, snippet });
                 }
             });
 
+            if (hasEmptyFields) {
+                showToast("Aviso: Ignorando variantes con campos vacíos.", true);
+            }
+
             if (entries.length > 0) {
-                // Si cambiaron el nombre, eliminar el original
+                // Si cambiaron el nombre, eliminar la entrada antigua en la nube y localmente
                 if (originalName && originalName !== propName && originalName !== "__new__") {
                     delete customDictionary[originalName];
+                    syncToGoogleSheets('delete', originalName, null);
                 }
+                
+                // Asignar nuevas entradas localmente en memoria
                 customDictionary[propName] = entries;
-                localStorage.setItem('pdfmakeDict', JSON.stringify(customDictionary));
+                
+                // Sincronizar hacia Google Sheets (el backend se encargara del replace)
+                syncToGoogleSheets('save', propName, entries);
+                
+                showToast(`'${propName}' guardado en la nube.`);
+                
             } else {
-                // Si lo guardan vacío, lo eliminamos
-                delete customDictionary[propName];
-                if (originalName && originalName !== propName && originalName !== "__new__") {
-                     delete customDictionary[originalName];
-                }
-                localStorage.setItem('pdfmakeDict', JSON.stringify(customDictionary));
+                showToast("Error: Añade al menos una variante con contenido.", true);
+                return; 
             }
             
-            // Refrescar y mostrar
             document.getElementById('dict-original-name').value = propName;
             renderDictList(document.getElementById('dict-search').value);
             selectDictEntry(propName); 
             
-            // Opcional: mostrar notificación de guardado
+            if(document.getElementById('dict-original-name').value === "__new__") {
+                closeDictionaryManager();
+            }
         }
 
         function deleteCurrentEntry() {
             const originalName = document.getElementById('dict-original-name').value;
             if (originalName && originalName !== "__new__" && customDictionary[originalName]) {
                 delete customDictionary[originalName];
-                localStorage.setItem('pdfmakeDict', JSON.stringify(customDictionary));
-                renderDictList(document.getElementById('dict-search').value);
                 
+                // Borrar en Google Sheets
+                syncToGoogleSheets('delete', originalName, null);
+                
+                renderDictList(document.getElementById('dict-search').value);
                 emptyState.classList.remove('hidden');
                 editorForm.classList.add('hidden');
+                showToast(`Función '${originalName}' eliminada.`);
             }
         }
 
@@ -616,23 +628,35 @@
             document.body.appendChild(downloadAnchorNode); 
             downloadAnchorNode.click();
             downloadAnchorNode.remove();
-            showToast("Archivo diccionario.json descargado.");
+            showToast("Archivo descargado.");
         }
 
         function importDictionary(event) {
             const file = event.target.files[0];
             if (file) {
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = async function(e) {
                     try {
                         const newDict = JSON.parse(e.target.result);
-                        customDictionary = { ...customDictionary, ...newDict }; 
-                        localStorage.setItem('pdfmakeDict', JSON.stringify(customDictionary));
+                        
+                        statusText.textContent = "Importando a Sheets...";
+                        statusText.className = "text-blue-600 font-semibold animate-pulse";
+                        
+                        // Iterar y subir todo a Google Sheets
+                        for (const prop in newDict) {
+                             customDictionary[prop] = newDict[prop];
+                             // Sincronizar uno por uno (Puede tardar si el archivo es grande, 
+                             // pero es la forma de que quede en la DB).
+                             await syncToGoogleSheets('save', prop, newDict[prop]);
+                        }
+                        
                         renderDictList(document.getElementById('dict-search').value);
-                        showToast("Diccionario importado con éxito.");
+                        showToast("Diccionario importado y sincronizado con éxito.");
                     } catch(err) {
-                        console.error("Error al analizar JSON", err);
-                        alert("Error: El archivo no tiene un formato JSON válido.");
+                        console.error(err);
+                        showToast("Error al importar. Verifica el JSON.", true);
+                        statusText.textContent = "Error de importación";
+                        statusText.className = "text-red-500 font-semibold";
                     }
                 }
                 reader.readAsText(file);
@@ -640,25 +664,49 @@
             event.target.value = ""; 
         }
 
-        function importDictionary(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    try {
-                        const newDict = JSON.parse(e.target.result);
-                        customDictionary = { ...customDictionary, ...newDict }; // Combinar
-                        localStorage.setItem('pdfmakeDict', JSON.stringify(customDictionary));
-                        renderDictList(document.getElementById('dict-search').value);
-                        alert("Diccionario importado correctamente.");
-                    } catch(err) {
-                        console.error("Error al analizar JSON", err);
-                        alert("Error: El archivo no tiene un formato JSON válido.");
-                    }
+        function renderPDF() {
+            if(!editor) return;
+            const code = editor.getValue();
+            
+            try {
+                errorOverlay.classList.add('hidden');
+                pdfLoading.classList.remove('hidden');
+                iframe.classList.add('hidden');
+                
+                // Envolver y ejecutar el código del editor de forma segura
+                const wrapper = `
+                    ${code}
+                    return (typeof dd !== 'undefined') ? dd : null;
+                `;
+                const buildDocDef = new Function(wrapper);
+                const docDefinition = buildDocDef();
+                
+                if (!docDefinition || typeof docDefinition !== 'object') {
+                    throw new Error("No se definió el objeto principal 'dd'. Escribe: var dd = { content: [...] };");
                 }
-                reader.readAsText(file);
+
+                // Generar el PDF y mostrarlo usando Blob URL (Soporte perfecto para Iframes)
+                const pdfDocGenerator = pdfMake.createPdf(docDefinition);
+                pdfDocGenerator.getBlob((blob) => {
+                    const url = URL.createObjectURL(blob);
+                    
+                    iframe.src = url;
+                    
+                    iframe.onload = () => {
+                        pdfLoading.classList.add('hidden');
+                        iframe.classList.remove('hidden');
+                        // Liberar memoria del blob anterior si existe
+                        if (currentPdfUrl) URL.revokeObjectURL(currentPdfUrl);
+                        currentPdfUrl = url;
+                    };
+                });
+                
+            } catch (error) {
+                console.error(error);
+                errorMessage.textContent = error.toString();
+                errorOverlay.classList.remove('hidden');
+                pdfLoading.classList.add('hidden');
             }
-            event.target.value = ""; // Reset input
         }
 
         function debounce(func, wait) {
@@ -674,38 +722,6 @@
             floatingBtn.style.display = 'none';
         });
 
-        function renderPDF() {
-            if(!editor) return;
-            const code = editor.getValue();
-            
-            try {
-                errorOverlay.classList.add('hidden');
-                
-                const wrapper = `
-                    ${code}
-                    return (typeof dd !== 'undefined') ? dd : null;
-                `;
-                
-                const buildDocDef = new Function(wrapper);
-                const docDefinition = buildDocDef();
-                
-                if (!docDefinition || typeof docDefinition !== 'object') {
-                    throw new Error("No se pudo encontrar un objeto 'dd' válido. Asegúrate de definir: var dd = { ... };");
-                }
-
-                const pdfDocGenerator = pdfMake.createPdf(docDefinition);
-                pdfDocGenerator.getDataUrl((dataUrl) => {
-                    iframe.src = dataUrl;
-                });
-                
-            } catch (error) {
-                console.error("Error en generación de PDF:", error);
-                errorMessage.textContent = error.toString();
-                errorOverlay.classList.remove('hidden');
-            }
-        }
-
-        // Iniciar
         window.onload = initializeApp;
     </script>
 </body>

@@ -16,7 +16,6 @@
 <script src="https://unpkg.com/lucide@latest"></script>
 
 <style>
-/* ═══ Base ═════════════════════════════════════════════════ */
 :root{
   --bg:#F4F1E9; --card:#FDFBF4; --ink:#1C1915; --mut:#6F675A;
   --line:#DED6C5; --acc:#D6481C; --ok:#3F6B33; --warn:#9A7B1F;
@@ -33,7 +32,6 @@ svg{flex:none}
 i[data-lucide]{display:inline-flex}
 .wrap-x{max-width:1400px;width:100%;margin:0 auto}
 
-/* ═══ Botones ══════════════════════════════════════════════ */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:38px;padding:8px 12px;
   font:600 10.5px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;
   border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;
@@ -51,7 +49,6 @@ i[data-lucide]{display:inline-flex}
 .spin svg{animation:rot 1s linear infinite}
 @keyframes rot{to{transform:rotate(360deg)}}
 
-/* ═══ Cabecera ═════════════════════════════════════════════ */
 header{flex:none;border-bottom:1.5px solid var(--ink);background:var(--bg)}
 .h-in{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px}
 .brand{font:700 14px/1 var(--mono);letter-spacing:.12em;white-space:nowrap}
@@ -66,7 +63,6 @@ header{flex:none;border-bottom:1.5px solid var(--ink);background:var(--bg)}
 .qb{font:700 10px/1 var(--mono);color:var(--acc);border:1.5px solid var(--acc);padding:4px 6px}
 @media(max-width:640px){#stTxt{display:none}.btn .lbl{display:none}}
 
-/* ═══ Pestañas (solo < 1024px) ═════════════════════════════ */
 .tabs{flex:none;display:flex;border-bottom:1.5px solid var(--ink)}
 .tabs button{flex:1;display:flex;justify-content:center;align-items:center;gap:8px;min-height:46px;
   font:600 11px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;
@@ -78,7 +74,6 @@ header{flex:none;border-bottom:1.5px solid var(--ink);background:var(--bg)}
 .tdot.ok{background:#7FCB6A}.tdot.err{background:#FF8A5C}
 .tabs button.on .tdot.ok{background:#8FE07A}.tabs button.on .tdot.err{background:#FFB08A}
 
-/* ═══ Paneles ══════════════════════════════════════════════ */
 .panes{flex:1;min-height:0;display:grid;grid-template-columns:1fr}
 .pane{display:flex;flex-direction:column;min-height:0;min-width:0}
 .pv{display:none}
@@ -96,7 +91,6 @@ body.view-pdf .pv{display:flex}
 .pane-head .r{display:flex;align-items:center;gap:8px}
 .saved{font:500 9.5px/1 var(--mono);letter-spacing:.06em;color:var(--mut);text-transform:none}
 
-/* ═══ Editor ═══════════════════════════════════════════════ */
 .ed-wrap{flex:1;min-height:0;position:relative;margin:12px;border:1.5px solid var(--ink);background:var(--card)}
 #hl,#ed{position:absolute;inset:0;margin:0;padding:14px;border:none;outline:none;
   font:400 13px/1.7 var(--mono);tab-size:2;
@@ -110,7 +104,6 @@ body.view-pdf .pv{display:flex}
 #hl .k{color:var(--acc);font-weight:700}
 #hl .c{color:var(--mut);font-style:italic}
 
-/* Autocompletado */
 .sug{position:absolute;z-index:8;min-width:230px;max-width:330px;max-height:262px;overflow:auto;
   background:var(--card);border:1.5px solid var(--ink);box-shadow:5px 5px 0 rgba(28,25,21,.18);
   font:400 12px/1.4 var(--mono)}
@@ -124,7 +117,6 @@ body.view-pdf .pv{display:flex}
 .sug .newrow{color:var(--acc);font-weight:700;border-top:1px solid var(--line)}
 .sug .newrow:hover{background:var(--acc);color:var(--bg)}
 
-/* ═══ Vista previa ═════════════════════════════════════════ */
 .err{flex:none;margin:10px 12px 0;padding:10px 12px;border:1.5px solid var(--acc);color:var(--acc);
   background:#FBEFE9;font:500 11px/1.55 var(--mono);max-height:90px;overflow:auto;white-space:pre-wrap}
 .pages{flex:1;min-height:0;overflow:auto;padding:16px;background:#E9E4D6}
@@ -132,15 +124,14 @@ body.view-pdf .pv{display:flex}
   box-shadow:0 1px 3px rgba(28,25,21,.28),0 4px 14px rgba(28,25,21,.10)}
 .pv-hint{color:var(--mut);font-size:11.5px;text-align:center;padding:40px 20px}
 
-/* ═══ Diálogos ═════════════════════════════════════════════ */
 dialog{border:2px solid var(--ink);background:var(--card);color:var(--ink);
-  box-shadow:7px 7px 0 var(--ink);padding:0;width:min(560px,94vw);margin:auto}
+  box-shadow:7px 7px 0 var(--ink);padding:0;width:min(600px,94vw);margin:auto}
 dialog::backdrop{background:rgba(28,25,21,.55)}
 .dlg-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:15px 18px;border-bottom:1.5px solid var(--ink)}
 .dlg-head h3{font:600 20px/1.15 var(--serif)}
 .dlg-head small{display:block;font:500 10px/1.5 var(--mono);letter-spacing:.06em;color:var(--mut);margin-top:4px}
 .dlg-body{padding:16px 18px}
-.dlg-foot{display:flex;justify-content:flex-end;gap:10px;padding:0 18px 18px}
+.dlg-foot{display:flex;justify-content:flex-end;gap:10px;padding:0 18px 18px;flex-wrap:wrap}
 .field{display:flex;flex-direction:column;gap:5px;margin-bottom:13px}
 .field label{font:700 9px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
 .field input,.field textarea{font:400 13px/1.6 var(--mono);padding:10px 12px;min-height:42px;
@@ -152,7 +143,6 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:560px){.field-row{grid-template-columns:1fr}}
 
-/* Diccionario */
 .d-tools{display:flex;gap:8px;margin-bottom:12px}
 #q2{flex:1;min-width:0;font:500 13px/1 var(--mono);padding:0 4px;min-height:38px;
   border:none;border-bottom:1.5px solid var(--ink);background:transparent;outline:none}
@@ -167,11 +157,20 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
 .d-acts{display:flex;gap:5px}
 .d-empty{padding:24px 8px;text-align:center;color:var(--mut);font-size:12px}
 
-/* JSON */
 #jcode{font:400 11.5px/1.65 var(--mono);background:var(--ink);color:#EDE7D8;padding:14px;
   white-space:pre-wrap;word-break:break-word;max-height:56vh;overflow:auto}
 
-/* ═══ Toasts ═══════════════════════════════════════════════ */
+/* Panel de conexión */
+.conn-status{display:flex;align-items:center;gap:10px;padding:12px 14px;border:1.5px solid var(--ink);background:var(--bg);margin-bottom:14px;font:600 12px/1.4 var(--mono)}
+.conn-cause{font:400 11.5px/1.65 var(--mono);color:var(--mut);margin-bottom:14px;white-space:pre-wrap}
+.steps-c{counter-reset:st;font:400 12px/1.7 var(--mono)}
+.steps-c li{list-style:none;counter-increment:st;display:flex;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}
+.steps-c li::before{content:counter(st,decimal-leading-zero);font:600 14px/1.4 var(--serif);color:var(--acc);flex:none}
+.steps-c b{font-weight:700}
+.steps-c code{background:var(--bg);padding:1px 5px;border:1px solid var(--line)}
+.conn-note{margin-top:12px;font:400 10.5px/1.6 var(--mono);color:var(--mut)}
+.conn-note b{color:var(--acc)}
+
 #toasts{position:fixed;left:16px;right:16px;bottom:16px;display:flex;flex-direction:column;align-items:center;gap:8px;z-index:99;pointer-events:none}
 .toast{display:flex;gap:9px;align-items:center;background:var(--ink);color:var(--bg);padding:11px 15px;
   font:500 12px/1.4 var(--mono);max-width:100%;animation:tin .2s ease}
@@ -203,8 +202,6 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
 </nav>
 
 <main class="panes">
-
-  <!-- ══ Editor ══ -->
   <section class="pane ed">
     <div class="pane-head">
       <span>Editor · docDefinition</span>
@@ -220,7 +217,6 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
     </div>
   </section>
 
-  <!-- ══ Vista previa ══ -->
   <section class="pane pv">
     <div class="pane-head">
       <span>Vista previa</span>
@@ -229,10 +225,9 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
     <div class="err" id="errBox" hidden></div>
     <div class="pages" id="pages"><div class="pv-hint">Escribe código a la izquierda —<br>el PDF nace aquí, en vivo.</div></div>
   </section>
-
 </main>
 
-<!-- ══ Diálogo: diccionario ══ -->
+<!-- Diccionario -->
 <dialog id="dlgDict">
   <div class="dlg-head">
     <div><h3>Diccionario</h3><small id="dictCount">—</small></div>
@@ -247,7 +242,7 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
   </div>
 </dialog>
 
-<!-- ══ Diálogo: guardar/editar entrada ══ -->
+<!-- Entrada -->
 <dialog id="dlgSnip">
   <form id="fmSnip" method="dialog">
     <div class="dlg-head">
@@ -277,7 +272,7 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
   </form>
 </dialog>
 
-<!-- ══ Diálogo: JSON resuelto ══ -->
+<!-- JSON -->
 <dialog id="dlgJson">
   <div class="dlg-head">
     <div><h3>docDefinition</h3><small>el objeto que recibe pdfMake</small></div>
@@ -285,6 +280,29 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
   </div>
   <div class="dlg-body" style="padding:14px"><pre id="jcode"></pre></div>
   <div class="dlg-foot"><button type="button" class="btn btn-solid" id="btnJsonCopy"><i data-lucide="copy"></i>Copiar</button></div>
+</dialog>
+
+<!-- Panel de conexión -->
+<dialog id="dlgConn">
+  <div class="dlg-head">
+    <div><h3>Conexión con Google Sheets</h3><small>diagnóstico y montaje</small></div>
+    <button type="button" class="iconbtn" data-close><i data-lucide="x"></i></button>
+  </div>
+  <div class="dlg-body">
+    <div class="conn-status"><span class="dot err" id="cDot2"></span><span id="connTxt">—</span></div>
+    <div class="conn-cause" id="connCause">—</div>
+    <ol class="steps-c">
+      <li><span>Abre tu hoja → <b>Extensiones → Apps Script</b>, borra todo y pega el <b>Code.gs v2</b>. Guarda (💾).</span></li>
+      <li><span>Arriba elige la función <code>setup</code> → <b>Ejecutar</b> → autoriza permisos (si avisa “no está verificada”: <b>Configuración avanzada → Ir a… → Permitir</b>).</span></li>
+      <li><span><b>Implementar → Gestionar implementaciones</b> → ✏️ editar → Versión: <b>Nueva versión</b> → Ejecutar como <b>Yo</b> → Acceso: <b>Cualquiera</b> (sin “con cuenta de Google”) → Implementar.</span></li>
+      <li><span>Prueba: <b>abre la URL /exec en una pestaña</b>. Debe verse texto <code>{"ok":true…}</code> sin pedir login. Vuelve aquí y pulsa <b>Probar de nuevo</b>.</span></li>
+    </ol>
+    <p class="conn-note"><b>Nota:</b> los bloques CORB de la consola son la señal de que la URL devuelve una página de login o de error, no JavaScript. Los <b>↑N</b> pendientes no se pierden: se suben solos en cuanto haya conexión.</p>
+  </div>
+  <div class="dlg-foot">
+    <a class="btn" id="btnOpenExec" target="_blank" rel="noopener"><i data-lucide="external-link"></i>Abrir /exec</a>
+    <button type="button" class="btn btn-solid" id="btnRetry"><i data-lucide="refresh-cw"></i>Probar de nuevo</button>
+  </div>
 </dialog>
 
 <div id="toasts"></div>
@@ -364,38 +382,33 @@ defaultStyle: {
 let MODULES = [], BLOCKS = {}, queue = [], syncing = false;
 let seq = 0, lastBuf = null, currentDD = null, libTries = 0;
 let sugItems = [], sugNew = null, sugActive = 0;
-let editSnipId = null, snipReturn = 'dict';
+let snipReturn = 'dict';
 
-/* Conexión */
-let connected = false;        // cerillo: al conectar una vez, la etiqueta queda fija
+let connected = false;
 let connLabel = '', connDetail = '';
-let diagDone = false, diagRunning = false;
+let diagDone = false, diagRunning = false, dlgAutoShown = false;
 let lastPushedDraft = '';
 
 const $   = s => document.querySelector(s);
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const nowISO = () => new Date().toISOString();
 const hora = iso => new Date(iso).toLocaleTimeString('es',{hour12:false});
-const apiOK = () => !!API_URL && !API_URL.includes('PEGA_AQUI');
 const refreshIcons = () => { if(window.lucide) lucide.createIcons(); };
+const isDraftOp = op => op.action==='saveBlock' && op.block && op.block.id===DRAFT_ID;
 
 const dict = () => (BLOCKS[SHEET] || (BLOCKS[SHEET] = [])).filter(b => b.id !== DRAFT_ID);
 const ed = $('#ed'), hl = $('#hl'), sug = $('#sug'), edWrap = $('#edWrap');
 
-/* ═══ 3 · FUENTES: alias → Roboto (la vfs del navegador solo trae Roboto) ══ */
+/* ═══ 3 · FUENTES: alias → Roboto ══════════════════════════ */
 (function aliasFonts(){
   try{
     const vfs = pdfMake.vfs || {};
     const pick = re => Object.keys(vfs).find(k => re.test(k));
     const reg = pick(/Roboto-Regular/i) || pick(/Roboto/i);
     if(!reg) return;
-    const bold = pick(/Roboto-Medium|Roboto-Bold/i) || reg;
-    const it   = pick(/Roboto-Italic/i) || reg;
-    const bi   = pick(/Roboto-MediumItalic|Roboto-BoldItalic/i) || it;
-    const face = { normal:reg, bold:bold, italics:it, bolditalics:bi };
-    pdfMake.fonts = Object.assign({}, pdfMake.fonts, {
-      Roboto: face, Helvetica: face, Courier: face, Times: face, 'Times-Roman': face
-    });
+    const face = { normal:reg, bold:pick(/Roboto-Medium|Roboto-Bold/i)||reg,
+                   italics:pick(/Roboto-Italic/i)||reg, bolditalics:pick(/Roboto-MediumItalic|Roboto-BoldItalic/i)||reg };
+    pdfMake.fonts = Object.assign({}, pdfMake.fonts, { Roboto:face, Helvetica:face, Courier:face, Times:face, 'Times-Roman':face });
   }catch(e){}
 })();
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -414,13 +427,11 @@ const loadQueue = () => { try{ queue = JSON.parse(localStorage.getItem(LS_Q)||'[
 
 /* ═══ 5 · ESTADO VISIBLE ═══════════════════════════════════ */
 function renderConn(){
+  const pend = queue.filter(op => !isDraftOp(op)).length;
   const qb = $('#qb');
-  const pend = queue.filter(op => !(op.action==='saveBlock' && op.block && op.block.id===DRAFT_ID)).length;
   qb.hidden = !pend; qb.textContent = '↑' + pend;
-
   const dot = $('#stDot'), txt = $('#stTxt');
   $('#stPill').title = connDetail || '';
-  if(!apiOK()){ txt.textContent='Sin backend'; dot.className='dot warn'; return; }
   if(connected){ txt.textContent='Conectado'; dot.className='dot ok'; return; }   // ← queda fijo
   if(syncing){ txt.textContent='Conectando…'; dot.className='dot busy'; return; }
   txt.textContent = connLabel || 'En espera';
@@ -436,11 +447,7 @@ function toast(msg, kind){
   setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity .25s'; setTimeout(()=>t.remove(),260); }, 4200);
 }
 
-/* ═══ 6 · RED SIN CORS ═════════════════════════════════════
-   · Lecturas  → JSONP (etiqueta <script>): inmune a CORS.
-   · Escrituras→ POST en modo no-cors: el servidor SÍ recibe y
-     ejecuta; la confirmación real llega al reconciliar contra
-     el siguiente bootstrap (fuente de verdad = Sheets).      ══ */
+/* ═══ 6 · RED SIN CORS ═════════════════════════════════════ */
 function jsonpGet(action, params={}){
   return new Promise((res,rej)=>{
     const cb = '__bl_'+Date.now()+Math.floor(Math.random()*1e4);
@@ -448,48 +455,40 @@ function jsonpGet(action, params={}){
     const to = setTimeout(()=>{ clean(); rej(new Error('timeout')); }, 9000);
     function clean(){ clearTimeout(to); delete window[cb]; s.remove(); }
     window[cb] = d => { clean(); res(d); };
-    s.onerror  = () => { clean(); rej(new Error('error')); };
+    s.onerror  = () => { clean(); rej(new Error('corb-o-red')); };
     const q = new URLSearchParams({ action, callback:cb, _:Date.now(), ...params });
-    s.src = `${API_URL}?${q}`;                    // «_» evita respuestas cacheadas
+    s.src = `${API_URL}?${q}`;
     document.head.appendChild(s);
   });
 }
 async function sendNoCors(op){
   op.lastTry = Date.now(); op.tries = (op.tries||0) + 1;
-  try{
-    await fetch(API_URL, { method:'POST', mode:'no-cors', body: JSON.stringify(op) });
-    return true;                                   // no se puede leer respuesta; confirma reconcile
-  }catch(e){ return false; }
+  try{ await fetch(API_URL, { method:'POST', mode:'no-cors', body: JSON.stringify(op) }); return true; }
+  catch(e){ return false; }
 }
 let syncT = null;
 function scheduleSync(ms=3500){ clearTimeout(syncT); syncT = setTimeout(sync, ms); }
 
 function pushOp(op){
-  if(!apiOK()) return;
-  // el borrador se coalesce: solo la última versión espera en cola
-  if(op.action==='saveBlock' && op.block && op.block.id===DRAFT_ID){
-    queue = queue.filter(q => !(q.action==='saveBlock' && q.block && q.block.id===DRAFT_ID));
-  }
+  if(isDraftOp(op)) queue = queue.filter(q => !isDraftOp(q));
   op.lastTry = 0;
   queue.push(op); saveQueue(); renderConn();
-  sendNoCors(op).then(()=>scheduleSync(3500));     // verificar pronto en Sheets
+  sendNoCors(op).then(()=>scheduleSync(3500));
 }
 function retryPending(){
-  if(!apiOK() || !queue.length) return;
+  if(!queue.length) return;
   const now = Date.now();
   let re = false;
   queue.forEach(op => { if(now - (op.lastTry||0) > 20000){ sendNoCors(op); re = true; } });
   saveQueue();
   if(re) scheduleSync(4000);
 }
-
-/* ¿La operación ya quedó reflejada en lo que devolvió Sheets? */
 function isConfirmed(op, data){
   const B = data.blocks || {};
   if(op.action==='saveBlock'){
     const arr = B[op.sheet]; if(!arr) return false;
     const r = arr.find(b=>b.id===(op.block&&op.block.id));
-    return !!r && String(r.updatedAt||'') >= String((op.block&&op.block.updatedAt)||'');
+    return !!r && r.code === op.block.code;            // confirma por CONTENIDO (a prueba de fechas)
   }
   if(op.action==='deleteBlock'){
     const arr = B[op.sheet];
@@ -502,19 +501,11 @@ function isConfirmed(op, data){
 }
 function reconcileOps(data){
   if(!queue.length) return;
-  const before = queue.length;
+  const confirmedOps = queue.filter(op => isConfirmed(op, data));
+  if(!confirmedOps.length) return;
   queue = queue.filter(op => !isConfirmed(op, data));
-  const confirmed = before - queue.length;
-  if(confirmed){
-    saveQueue();
-    const visibles = queue.filter(op => !(op.action==='saveBlock' && op.block && op.block.id===DRAFT_ID)).length;
-    if(visibles < before - queue.length || confirmed > (before - queue.length - visibles)) {
-      // solo avisa si se confirmó algo visible (no el borrador)
-    }
-    if(queue.some(op=>op.action!=='saveBlock' || !op.block || op.block.id!==DRAFT_ID) === false && confirmed>0){
-      /* solo borrador confirmado → silencio */
-    } else if(confirmed) toast(confirmed + ' cambio(s) guardado(s) en Sheets');
-  }
+  saveQueue();
+  if(confirmedOps.some(op => !isDraftOp(op))) toast('Guardado en Sheets ✓');
   renderConn();
 }
 
@@ -523,7 +514,7 @@ const normBlock = o => ({ id:String(o.id||''), name:String(o.name||''), tag:Stri
   code:(o.code==null?'':String(o.code)), createdAt:String(o.createdAt||''), updatedAt:String(o.updatedAt||'') });
 
 async function sync(){
-  if(syncing || !apiOK()){ renderConn(); return; }
+  if(syncing) return;
   syncing = true; $('#btnSync').classList.add('spin');
   if(!connected) renderConn();
   try{
@@ -531,15 +522,11 @@ async function sync(){
     if(!data || !data.ok){
       const e = new Error((data && data.error) || 'respuesta inválida'); e.srv = true; throw e;
     }
-
-    /* ── conectado: la etiqueta queda fija en verde ── */
     connected = true; connLabel=''; connDetail=''; diagDone=false;
 
     if(data.modules && data.modules.length) MODULES = data.modules;
-
     const remote = ((data.blocks||{})[SHEET] || []).map(normBlock);
     const merged = remote.slice();
-    // no perder lo creado offline que aún viaja en la cola
     for(const op of queue){
       if(op.action==='saveBlock' && op.sheet===SHEET && op.block && !merged.some(r=>r.id===op.block.id))
         merged.push(normBlock(op.block));
@@ -547,24 +534,20 @@ async function sync(){
     BLOCKS[SHEET] = merged.sort((a,b)=>a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
     saveCache();
 
-    reconcileOps(data);     // confirmar operaciones ya visibles en Sheets
-    retryPending();         // reenviar las que faltan
-    reconcileDraft();       // respaldo del editor ↔ Sheets
-    seedDict();             // semillas pendientes de subir
+    reconcileOps(data);
+    retryPending();
+    reconcileDraft();
+    seedDict();
     renderDict();
   }catch(err){
     if(!connected){
       if(err && err.srv){
         connLabel = 'Error servidor';
-        connDetail = 'El script responde pero falla: ' + err.message +
-          ' → Si el script no está dentro de la hoja, pon el ID en SPREADSHEET_ID (Code.gs) y crea nueva versión del despliegue.';
+        connDetail = 'El script responde pero falla: ' + err.message;
       } else if(!diagDone){
-        diagnose();         // afinar el diagnóstico una vez
-      } else {
-        connLabel = connLabel || 'Sin conexión';
+        diagnose();
       }
     }
-    // si ya estábamos conectados: la etiqueta no cambia; el loop reintenta solo
   }finally{
     syncing = false; $('#btnSync').classList.remove('spin'); renderConn();
   }
@@ -577,32 +560,42 @@ async function diagnose(){
   try{
     const p = await jsonpGet('ping');
     if(p && p.ok){
-      connLabel = 'Error de datos';
-      connDetail = 'El script SÍ responde y es público, pero falla al abrir la hoja de cálculo. Causa típica: el script se creó independiente (script.google.com) y no dentro de la hoja. Solución: abre Code.gs, pon el ID de tu hoja en SPREADSHEET_ID, guarda y en Implementar → Gestionar implementaciones → editar → «Nueva versión».';
+      connLabel = 'Ajuste fino';
+      connDetail = 'El script responde (v' + (p.v||'?') + ', hoja «' + (p.sheet||'?') + '»). El bootstrap falló por otra causa; pulsa Sync.';
     } else {
-      connLabel = 'Requiere login';
-      connDetail = 'Apps Script redirige a inicio de sesión → el despliegue no es público. Ve a Implementar → Gestionar implementaciones → editar (lápiz) → «Quién tiene acceso»: CUALQUIERA. Y ejecuta setup() una vez en el editor para autorizar los permisos.';
+      connLabel = 'Error servidor';
+      connDetail = 'El script responde pero devuelve un error: ' + ((p && p.error) || 'desconocido') + '. Actualiza a Code.gs v2 y crea «Nueva versión».';
     }
   }catch(e){
-    connLabel = 'Sin conexión real';
-    connDetail = 'Ni «ping» responde: el despliegue no existe en esa URL, o es anterior a tu Code.gs (crea «Nueva versión» en Gestionar implementaciones), o el acceso no es «Cualquiera».';
+    connLabel = 'Login o versión vieja';
+    connDetail = 'La URL no devuelve JavaScript: el despliegue pide inicio de sesión, el script no está autorizado, o apunta a una versión anterior del código. Sigue los 4 pasos.';
+    openConnDlg(true);   // abrir automáticamente una sola vez
   }
   diagRunning = false; renderConn();
 }
 
-/* loops de mantenimiento */
-setInterval(()=>{ if(!apiOK()) return; if(!connected) sync(); else retryPending(); }, 25000);
+function openConnDlg(auto){
+  if(auto && dlgAutoShown) return;
+  if(auto) dlgAutoShown = true;
+  $('#connTxt').textContent = connected ? 'Conectado ✓' : (connLabel || 'Sin conexión');
+  $('#cDot2').className = 'dot ' + (connected ? 'ok' : 'err');
+  $('#connCause').textContent = connected
+    ? 'Todo funciona: el diccionario y el borrador se guardan en la hoja «' + SHEET + '».'
+    : (connDetail || 'Sin detalle aún. Pulsa «Probar de nuevo» tras revisar los pasos.');
+  $('#btnOpenExec').href = API_URL;
+  $('#dlgConn').showModal(); refreshIcons();
+}
+
+setInterval(()=>{ if(!connected) sync(); else retryPending(); }, 25000);
 setInterval(()=>{ if(connected) sync(); }, 5*60*1000);
 window.addEventListener('online', ()=>{ if(!connected) sync(); else { retryPending(); scheduleSync(500); } });
 
-/* ═══ 8 · BORRADOR: respaldo del editor en Sheets ══════════ */
+/* ═══ 8 · BORRADOR ↔ Sheets ════════════════════════════════ */
 const getDraftRemote = () => (BLOCKS[SHEET]||[]).find(b => b.id === DRAFT_ID);
-
 function saveDraftLocal(txt){
   try{ localStorage.setItem(LS_DRAFT, txt); localStorage.setItem(LS_DRAFT_T, nowISO()); }catch(e){}
 }
 function pushDraftNow(){
-  if(!apiOK()) return;
   const txt = ed.value;
   if(txt === lastPushedDraft) return;
   lastPushedDraft = txt;
@@ -613,11 +606,10 @@ function pushDraftNow(){
   const i = arr.findIndex(x=>x.id===DRAFT_ID);
   if(i<0) arr.push(normBlock(row)); else arr[i] = Object.assign({}, arr[i], row);
   saveCache();
-  pushOp({action:'saveBlock', sheet:SHEET, block:row});   // ← el código viaja a Sheets
+  pushOp({action:'saveBlock', sheet:SHEET, block:row});
 }
 let pushDT = null;
 function pushDraftSoon(){ clearTimeout(pushDT); pushDT = setTimeout(pushDraftNow, 2500); }
-
 function reconcileDraft(){
   const rem = getDraftRemote();
   const localT = localStorage.getItem(LS_DRAFT_T) || '';
@@ -637,7 +629,7 @@ function reconcileDraft(){
   }
 }
 
-/* ═══ 9 · MUTACIONES del diccionario (optimistas, siempre a Sheets) ══ */
+/* ═══ 9 · MUTACIONES del diccionario ═══════════════════════ */
 function upsertSnipLocal(b){
   b.updatedAt = nowISO();
   const arr = BLOCKS[SHEET] || (BLOCKS[SHEET] = []);
@@ -646,7 +638,7 @@ function upsertSnipLocal(b){
   else arr[i] = Object.assign({}, arr[i], b);
   arr.sort((a,c)=>a.name.toLowerCase().localeCompare(c.name.toLowerCase()));
   saveCache(); renderDict();
-  pushOp({action:'saveBlock', sheet:SHEET, block:b});
+  pushOp({action:'saveBlock', sheet:SHEET, block:b});   // ← siempre a Sheets
 }
 function deleteSnip(id){
   const b = dict().find(x=>x.id===id); if(!b) return;
@@ -661,19 +653,16 @@ function seedDict(){
   if(localStorage.getItem(LS_SEEDED)) return;
   const have = new Set((BLOCKS[SHEET]||[]).map(b=>b.id));
   const t = nowISO();
-  let added = false;
   SEED.forEach(s=>{
     if(!have.has(s.id)){
       const row = Object.assign({createdAt:t, updatedAt:t}, s);
       (BLOCKS[SHEET] = BLOCKS[SHEET]||[]).push(normBlock(row));
-      pushOp({action:'saveBlock', sheet:SHEET, block:row});
-      added = true;
+      pushOp({action:'saveBlock', sheet:SHEET, block:row});   // ← las 18 se suben a Sheets
     }
   });
   (BLOCKS[SHEET]||[]).sort((a,b)=>a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
   saveCache();
-  if(apiOK() && added) localStorage.setItem(LS_SEEDED,'1');
-  else if(apiOK()) localStorage.setItem(LS_SEEDED,'1');
+  localStorage.setItem(LS_SEEDED,'1');
 }
 
 /* ═══ 11 · EDITOR: resaltado ═══════════════════════════════ */
@@ -904,7 +893,6 @@ function renderDict(){
 
 /* ═══ 16 · DIÁLOGO entrada ═════════════════════════════════ */
 function openSnip(entry, opts={}){
-  editSnipId = entry ? entry.id : null;
   snipReturn = opts.ret || 'dict';
   $('#snipTitle').textContent = entry ? 'Editar entrada' : 'Nueva entrada';
   const f = $('#fmSnip');
@@ -925,7 +913,7 @@ function openSnip(entry, opts={}){
     name: f.name.value.trim(), tag: f.tag.value.trim(), code: f.code.value
   };
   upsertSnipLocal(b);
-  toast('"' + b.name + '" guardada' + (apiOK() ? ' — subiendo a Sheets' : ' (se subirá al conectar)'));
+  toast('"' + b.name + '" guardada — ' + (connected ? 'subiendo a Sheets' : 'en cola, se sube al conectar'));
   f.closest('dialog').close();
   if(snipReturn==='insert' && !f.id.value) insertSnippet(b);
 });
@@ -942,7 +930,7 @@ function armConfirm(btn, fn){
   }, 2600);
 }
 
-/* ═══ 18 · TECLADO del editor ══════════════════════════════ */
+/* ═══ 18 · TECLADO ═════════════════════════════════════════ */
 ed.addEventListener('keydown', e=>{
   if(!sug.hidden){
     if(e.key==='ArrowDown'){ e.preventDefault(); moveActive(1); return; }
@@ -963,7 +951,7 @@ ed.addEventListener('scroll', ()=>{ hl.scrollTop = ed.scrollTop; hl.scrollLeft =
   if(e.key==='Tab'){ e.preventDefault(); e.target.setRangeText('  ', e.target.selectionStart, e.target.selectionEnd, 'end'); }
 });
 
-/* ═══ 19 · BOTONES de cabecera ═════════════════════════════ */
+/* ═══ 19 · BOTONES ═════════════════════════════════════════ */
  $('#btnDict').addEventListener('click', ()=>{ renderDict(); $('#dlgDict').showModal(); refreshIcons(); });
  $('#btnJson').addEventListener('click', ()=>{
   if(!currentDD){ toast('Aún no hay un docDefinition válido','err'); return; }
@@ -975,14 +963,14 @@ ed.addEventListener('scroll', ()=>{ hl.scrollTop = ed.scrollTop; hl.scrollLeft =
   pdfMake.createPdf(currentDD).download('blocklab.pdfmake.pdf');
 });
 function manualSync(){
-  if(!apiOK()){ toast('Falta configurar API_URL','err'); return; }
-  diagDone = false;          // permitir diagnóstico completo en este intento
+  diagDone = false;
   sync().then(()=>{
-    if(!connected && connDetail) toast(connDetail, 'err');
+    if(!connected && connLabel) openConnDlg(false);   // click manual → siempre panel
   });
 }
  $('#btnSync').addEventListener('click', manualSync);
- $('#stPill').addEventListener('click', manualSync);   // click en la píldora = sync + detalle
+ $('#stPill').addEventListener('click', ()=>{ connected ? openConnDlg(false) : manualSync(); });
+ $('#btnRetry').addEventListener('click', ()=>{ $('#dlgConn').close(); diagDone=false; sync(); });
  $('#btnReset').addEventListener('click', e=>{
   armConfirm(e.currentTarget, ()=>{
     ed.value = STARTER; onEdInput();
@@ -1001,13 +989,11 @@ function copyText(txt, msg){
   };
   navigator.clipboard?.writeText ? navigator.clipboard.writeText(txt).then(done).catch(fb) : fb();
 }
-
 document.querySelectorAll('dialog').forEach(d=>{
   d.addEventListener('click', e => { if(e.target===d) d.close(); });
   d.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', ()=>d.close()));
 });
  $('#q2').addEventListener('input', renderDict);
-
 window.addEventListener('resize', ()=>{
   clearTimeout(rT);
   rT = setTimeout(()=>{ if(lastBuf){ const s=++seq; renderFromBuf(lastBuf, s); } }, 300);

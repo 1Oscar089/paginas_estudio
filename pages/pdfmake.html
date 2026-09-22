@@ -95,11 +95,23 @@ body.view-pdf .pv{display:flex}
 #hl,#ed{position:absolute;inset:0;margin:0;padding:14px;border:none;outline:none;
   font:400 13px/1.7 var(--mono);tab-size:2;
   white-space:pre-wrap;word-wrap:break-word;overflow-wrap:break-word;overflow-y:scroll;overflow-x:hidden}
-#ed{background:transparent;color:transparent;caret-color:var(--ink);resize:none;-webkit-text-fill-color:transparent}
-#hl{background:var(--card);pointer-events:none;scrollbar-width:none;color:var(--ink)}
-#hl::-webkit-scrollbar{display:none}
-/* Paleta de código: elementos azul · propiedades terracota · cadenas verde ·
-   números dorado · literales morado · llaves pizarra · comentarios gris cálido */
+/* PARIDAD DE SCROLLBAR: ambas capas reservan exactamente el mismo ancho
+   de barra (la del resaltado es invisible pero presente) → el ajuste de
+   línea ocurre en el mismo píxel y el caret nunca se desalinea del texto
+   coloreado, sin importar el ancho de la ventana. */
+#ed{background:transparent;color:transparent;caret-color:var(--ink);resize:none;-webkit-text-fill-color:transparent;
+  scrollbar-width:thin;scrollbar-color:rgba(28,25,21,.3) transparent}
+#ed::-webkit-scrollbar{width:14px}
+#ed::-webkit-scrollbar-thumb{background:rgba(28,25,21,.28)}
+#ed::-webkit-scrollbar-track{background:transparent}
+#hl{background:var(--card);pointer-events:none;color:var(--ink);
+  scrollbar-width:thin;scrollbar-color:transparent transparent}
+#hl::-webkit-scrollbar{width:14px}
+#hl::-webkit-scrollbar-thumb{background:transparent}
+#hl::-webkit-scrollbar-track{background:transparent}
+/* Paleta de código: elementos pdfmake azul · propiedades terracota ·
+   cadenas verde · números dorado · literales morado · llaves pizarra ·
+   comentarios gris cálido */
 #hl .e{color:#0F6FA8;font-weight:700}
 #hl .p{color:#A63A0A}
 #hl .s{color:#2F7D2F}
@@ -434,7 +446,12 @@ function toast(msg, kind){
   setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity .25s'; setTimeout(()=>t.remove(),260); }, 4200);
 }
 
-/* ═══ 6 · RED SIN CORS — a prueba de arranques fríos ════════ */
+/* ═══ 6 · RED SIN CORS — a prueba de arranques fríos ════════
+   · El callback vive 45 s DESPUÉS de resolverse: si Apps
+     Script responde tarde, ya no revienta con ReferenceError.
+   · Una petición JSONP a la vez (los arranques fríos en
+     paralelo saturan el servidor y alargan la espera).
+   · Timeout de 25 s (el cold start típico son 5–20 s).      ══ */
 let jsonpSeq = 0, jsonpChain = Promise.resolve();
 
 function jsonpRaw(action, params, ms){
@@ -458,7 +475,7 @@ function jsonpRaw(action, params, ms){
 }
 function jsonpGet(action, params={}){
   const run = () => jsonpRaw(action, params, 25000);
-  const p = jsonpChain.then(run, run);
+  const p = jsonpChain.then(run, run);   // en cola: una a la vez
   jsonpChain = p.then(()=>{}, ()=>{});
   return p;
 }
@@ -489,7 +506,7 @@ function isConfirmed(op, data){
   if(op.action==='saveBlock'){
     const arr = B[op.sheet]; if(!arr) return false;
     const r = arr.find(b=>b.id===(op.block&&op.block.id));
-    return !!r && r.code === op.block.code;
+    return !!r && r.code === op.block.code;            // confirma por CONTENIDO
   }
   if(op.action==='deleteBlock'){
     const arr = B[op.sheet];
@@ -666,7 +683,9 @@ function seedDict(){
   localStorage.setItem(LS_SEEDED,'1');
 }
 
-/* ═══ 11 · FORMATEO tipo Prettier ══════════════════════════ */
+/* ═══ 11 · FORMATEO tipo Prettier ══════════════════════════
+   Reindenta a 2 espacios SIN tocar cadenas, template literals
+   ni comentarios. Normaliza espacios tras «,» y «:».        ══ */
 function logicalLines(src){
   const out = []; let cur = '';
   let st = 'norm';
@@ -1124,14 +1143,26 @@ function armConfirm(btn, fn){
   }, 2600);
 }
 
-/* ═══ 20 · TECLADO ═════════════════════════════════════════ */
+/* ═══ 20 · TECLADO ═════════════════════════════════════════
+   · Enter con coincidencias reales del diccionario → inserta.
+   · Enter con solo la fila «＋ guardar» → cierra el popup y es
+     salto de línea con sangría (no secuestra el Enter).
+   · Tab inserta / abre «guardar» · Esc cierra.              ══ */
 ed.addEventListener('keydown', e=>{
   if(e.shiftKey && e.altKey && e.code === 'KeyF'){ e.preventDefault(); formatDoc(); return; }
   if(!sug.hidden){
     if(e.key==='ArrowDown'){ e.preventDefault(); moveActive(1); return; }
     if(e.key==='ArrowUp'){   e.preventDefault(); moveActive(-1); return; }
-    if(e.key==='Enter' || e.key==='Tab'){ e.preventDefault(); acceptActive(); return; }
-    if(e.key==='Escape'){  e.preventDefault(); hideSug(); return; }
+    if(e.key==='Tab'){
+      e.preventDefault();
+      if(sugItems.length || sugNew) acceptActive();   // Tab inserta / abre «guardar»
+      return;
+    }
+    if(e.key==='Enter'){
+      if(sugItems.length){ e.preventDefault(); acceptActive(); return; }
+      hideSug();   // solo «＋ guardar» → Enter cae al smartEnter de abajo
+    }
+    if(e.key==='Escape'){ e.preventDefault(); hideSug(); return; }
   }
   if(e.key==='Enter'){ e.preventDefault(); smartEnter(); return; }
   if(e.key==='Tab'){

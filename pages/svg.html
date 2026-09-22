@@ -130,8 +130,20 @@ body.view-pdf .pv{display:flex}
   background:#FBEFE9;font:500 11px/1.55 var(--mono);max-height:90px;overflow:auto;white-space:pre-wrap}
 .pages{flex:1;min-height:0;overflow:auto;padding:16px;
   background:repeating-conic-gradient(#E9E4D6 0% 25%, #F4F1E9 0% 50%) 0 0 / 24px 24px}
-.pages svg{display:block;margin:0 auto 14px;max-width:100%;height:auto;
+
+.pages svg{display:block;max-width:100%;height:auto;
   filter:drop-shadow(0 1px 2px rgba(28,25,21,.18))}
+/* El "stage" envuelve al svg con tamaño exacto (fit-content) para que las
+   guías queden clavadas al área de dibujo, incluso si el svg se escala */
+.stage{position:relative;width:-moz-fit-content;width:fit-content;max-width:100%;margin:0 auto 14px}
+.guides{position:absolute;inset:0;pointer-events:none;opacity:.9}
+.guides .frame{position:absolute;inset:0;border:1.5px dashed var(--acc)}
+.guides .cx{position:absolute;left:50%;top:0;bottom:0;border-left:1px dashed rgba(166,58,10,.45)}
+.guides .cy{position:absolute;top:50%;left:0;right:0;border-top:1px dashed rgba(166,58,10,.45)}
+.guides .gl{position:absolute;left:-1.5px;top:-1.5px;font:700 9px/1 var(--mono);letter-spacing:.05em;
+  color:var(--acc);background:var(--bg);border:1px solid var(--acc);padding:3px 6px}
+.pages.no-guides .guides{display:none}
+
 .pv-hint{color:var(--mut);font-size:11.5px;text-align:center;padding:40px 20px;background:var(--bg);border:1.5px dashed var(--line)}
 
 dialog{border:2px solid var(--ink);background:var(--card);color:var(--ink);
@@ -226,8 +238,13 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
 
   <section class="pane pv">
     <div class="pane-head">
+      
       <span>Vista previa</span>
-      <span class="r status"><span class="dot" id="cDot"></span><span id="cTxt">—</span></span>
+      <span class="r">
+        <button class="iconbtn sm" id="btnGuide" title="Mostrar / ocultar guías del lienzo"><i data-lucide="ruler"></i></button>
+        <span class="status"><span class="dot" id="cDot"></span><span id="cTxt">—</span></span>
+      </span>
+
     </div>
     <div class="err" id="errBox" hidden></div>
     <div class="pages" id="pages"><div class="pv-hint">Escribe SVG a la izquierda —<br>se dibuja aquí, en vivo.</div></div>
@@ -945,13 +962,9 @@ function scopeStyles(root){
 function compile(){
   const src = ed.value;
   let clean = src.replace(/<script[\s\S]*?<\/script>/gi, '');
-  // XML no conoce entidades HTML comunes → hacerlas compatibles
   clean = clean.replace(/&nbsp;/g, '&#160;');
-  /* CLAVE: si el <svg> no declara xmlns, XML deja TODO en namespace nulo
-     y el navegador no lo renderiza como SVG al insertarlo (preview vacío
-     con estado verde). Se inyecta en el texto ANTES de parsear, así los
-     descendientes heredan el namespace por la regla de namespace por
-     defecto de XML. */
+  /* Si el <svg> no declara xmlns, XML deja todo en namespace nulo y el
+     navegador no lo renderiza. Se inyecta en el texto ANTES de parsear. */
   if(!/<svg[^>]*\bxmlns\s*=/i.test(clean))
     clean = clean.replace(/<svg\b/i, '<svg xmlns="http://www.w3.org/2000/svg"');
   if(!clean.trim()){
@@ -984,7 +997,18 @@ function compile(){
   scopeStyles(root);
   currentRoot = root;
   pagesEl.innerHTML = '';
-  pagesEl.appendChild(document.importNode(root, true));
+  const stage = document.createElement('div');
+  stage.className = 'stage';
+  stage.appendChild(document.importNode(root, true));
+  /* Guías del lienzo: marco punteado del área de dibujo + cruz central +
+     etiqueta del viewBox. Solo viven en el preview: el archivo exportado
+     (currentRoot) nunca las contiene. */
+  const g = document.createElement('div');
+  g.className = 'guides';
+  g.innerHTML = '<div class="frame"></div><div class="cx"></div><div class="cy"></div>' +
+    (root.getAttribute('viewBox') ? `<span class="gl">viewBox ${esc(root.getAttribute('viewBox'))}</span>` : '');
+  stage.appendChild(g);
+  pagesEl.appendChild(stage);
   const w = root.getAttribute('width'), h = root.getAttribute('height');
   okNow(w && h ? (w.replace('px','')+'×'+h.replace('px','')) : '');
 }
@@ -1089,13 +1113,30 @@ function armConfirm(btn, fn){
 }
 
 /* ═══ 20 · TECLADO ═════════════════════════════════════════ */
+/* ¿El cursor está dentro de una etiqueta (< … >)? */
+function inTag(){
+  const s = ed.selectionStart;
+  const lt = ed.value.lastIndexOf('<', s - 1);
+  if(lt < 0) return false;
+  return lt > ed.value.lastIndexOf('>', s - 1);
+}
 ed.addEventListener('keydown', e=>{
   if(e.shiftKey && e.altKey && e.code === 'KeyF'){ e.preventDefault(); formatDoc(); return; }
   if(!sug.hidden){
     if(e.key==='ArrowDown'){ e.preventDefault(); moveActive(1); return; }
     if(e.key==='ArrowUp'){   e.preventDefault(); moveActive(-1); return; }
-    if(e.key==='Enter' || e.key==='Tab'){ e.preventDefault(); acceptActive(); return; }
-    if(e.key==='Escape'){  e.preventDefault(); hideSug(); return; }
+    if(e.key==='Tab'){
+      e.preventDefault();
+      if(sugItems.length || sugNew) acceptActive();   // Tab inserta / abre «guardar»
+      return;
+    }
+    if(e.key==='Escape'){ e.preventDefault(); hideSug(); return; }
+    if(e.key==='Enter'){
+      // Dentro de una etiqueta → Enter confirma la opción (flujo rápido: <pa + Enter)
+      // En contenido de texto → Enter SIEMPRE es salto de línea con sangría
+      if(sugItems.length && inTag()){ e.preventDefault(); acceptActive(); return; }
+      hideSug();   // cae al smartEnter de abajo
+    }
   }
   if(e.key==='Enter'){ e.preventDefault(); smartEnter(); return; }
   if(e.key==='Tab'){
@@ -1107,6 +1148,7 @@ ed.addEventListener('keydown', e=>{
     else { ed.setRangeText('  ', ed.selectionStart, ed.selectionEnd, 'end'); onEdInput(); }
   }
 });
+
 ed.addEventListener('input', onEdInput);
 ed.addEventListener('click', hideSug);
 ed.addEventListener('scroll', ()=>{ hl.scrollTop = ed.scrollTop; hl.scrollLeft = ed.scrollLeft; hideSug(); });
@@ -1117,6 +1159,15 @@ ed.addEventListener('scroll', ()=>{ hl.scrollTop = ed.scrollTop; hl.scrollLeft =
 /* ═══ 21 · BOTONES ═════════════════════════════════════════ */
  $('#btnFmt').addEventListener('click', formatDoc);
  $('#btnDict').addEventListener('click', ()=>{ renderDict(); $('#dlgDict').showModal(); refreshIcons(); });
+
+let guidesOn = true;
+ $('#btnGuide').addEventListener('click', ()=>{
+  guidesOn = !guidesOn;
+  pagesEl.classList.toggle('no-guides', !guidesOn);
+  $('#btnGuide').style.opacity = guidesOn ? '1' : '.45';
+  toast(guidesOn ? 'Guías del lienzo visibles' : 'Guías del lienzo ocultas');
+});
+
  $('#btnDl').addEventListener('click', ()=>{
   if(!currentRoot){ toast('Corrige los errores antes de descargar','err'); return; }
   const blob = new Blob([new XMLSerializer().serializeToString(currentRoot)], {type:'image/svg+xml;charset=utf-8'});

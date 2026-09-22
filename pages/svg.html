@@ -91,11 +91,21 @@ body.view-pdf .pv{display:flex}
 #hl,#ed{position:absolute;inset:0;margin:0;padding:14px;border:none;outline:none;
   font:400 13px/1.7 var(--mono);tab-size:2;
   white-space:pre-wrap;word-wrap:break-word;overflow-wrap:break-word;overflow-y:scroll;overflow-x:hidden}
-#ed{background:transparent;color:transparent;caret-color:var(--ink);resize:none;-webkit-text-fill-color:transparent}
-#hl{background:var(--card);pointer-events:none;scrollbar-width:none;color:var(--ink)}
-#hl::-webkit-scrollbar{display:none}
-/* Paleta: elementos SVG azul · atributos terracota · valores verde ·
-   literales morado · delimitadores pizarra · comentarios gris cálido */
+
+#ed{background:transparent;color:transparent;caret-color:var(--ink);resize:none;-webkit-text-fill-color:transparent;
+  scrollbar-width:thin;scrollbar-color:rgba(28,25,21,.3) transparent}
+#ed::-webkit-scrollbar{width:14px}
+#ed::-webkit-scrollbar-thumb{background:rgba(28,25,21,.28)}
+#ed::-webkit-scrollbar-track{background:transparent}
+/* PARIDAD: la capa de color reserva exactamente el mismo ancho de barra
+   (invisible pero presente) → ambas capas doblan las líneas en el mismo
+   punto y el caret nunca se desalinea del texto coloreado */
+#hl{background:var(--card);pointer-events:none;color:var(--ink);
+  scrollbar-width:thin;scrollbar-color:transparent transparent}
+#hl::-webkit-scrollbar{width:14px}
+#hl::-webkit-scrollbar-thumb{background:transparent}
+#hl::-webkit-scrollbar-track{background:transparent}
+
 #hl .e{color:#0F6FA8;font-weight:700}
 #hl .p{color:#A63A0A}
 #hl .s{color:#2F7D2F}

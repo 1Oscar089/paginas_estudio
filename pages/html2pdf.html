@@ -388,7 +388,7 @@ const SEED = [
 /* ═══ 2 · ESTADO ═══════════════════════════════════════════ */
 let MODULES = [], BLOCKS = {}, queue = [], syncing = false;
 let seq = 0, lastBuf = null, libTries = 0;
-let lastBlob = null, saveName = null, lastWorker = null;
+let lastBlob = null, saveName = null, lastWorker = null, pdfHolder = null;
 let sugItems = [], sugNew = null, sugActive = 0;
 let snipReturn = 'dict';
 
@@ -1095,7 +1095,7 @@ function compile(){
   });
   const userCode = jsParts.join('\n;\n');
   if(!markup.trim() && !userCode.trim()){
-    lastBlob = null;
+    lastBlob = null; lastBuf = null; pdfHolder = null;
     pagesEl.innerHTML = '<div class="pv-hint">Escribe HTML + la llamada html2pdf —<br>el PDF nace aquí, en vivo.</div>';
     cset('vacío',''); tabDot('');
     return;
@@ -1109,17 +1109,29 @@ function compile(){
         return failNow('html2pdf no cargó en el sandbox (¿sin conexión al CDN?).');
       }
       if(mySeq!==seq) return;
-      lastWorker = null; saveName = null; lastBlob = null;
+      lastWorker = null; pdfHolder = null; saveName = null; lastBlob = null;
       const real = iwin.html2pdf;
-      iwin.html2pdf = function(...a){
-        const w = real.apply(iwin, a);
-        lastWorker = w;
-        w.save = function(name){
-          saveName = name || saveName || 'documento.pdf';   // simulado
-          return w.toPdf();                                  // genera sin descargar
+      const Wk = real.Worker;
+      if(Wk && Wk.prototype){
+        /* Parche en el PROTOTIPO del Worker: .set()/.from() devuelven
+           Workers NUEVOS, así que el save de una instancia no basta.
+           Así, cualquier .save() de la cadena queda simulado, y el
+           worker sobre el que se llama es el que recibirá prop.pdf
+           al terminar .toPdf() — lo capturamos para leerlo después. */
+        Wk.prototype.save = function(filename){
+          pdfHolder = this;
+          saveName = filename || saveName || 'documento.pdf';
+          return this.toPdf();               // genera el PDF sin descargar
         };
-        return w;
-      };
+        if(Wk.prototype.outputPdf){
+          const origOut = Wk.prototype.outputPdf;
+          Wk.prototype.outputPdf = function(){
+            pdfHolder = this;                // también capturamos .outputPdf()
+            return origOut.apply(this, arguments);
+          };
+        }
+      }
+      iwin.html2pdf = function(...a){ const w = real.apply(iwin, a); lastWorker = w; return w; };
       if(userCode.trim()) iwin.eval(userCode);
       awaitWorker(mySeq);
     }catch(err){
@@ -1128,32 +1140,37 @@ function compile(){
   };
   sandbox.srcdoc = buildSrcdoc(markup);
 }
+
+/* Sondeo en vez de promesas: cuando el worker capturado tenga
+   prop.pdf, generamos el blob. Si nunca llega .save() → aviso;
+   si .save() existe pero no termina → timeout con causa. */
 function awaitWorker(mySeq){
-  const w = lastWorker;
-  if(!w) return failNow('No se detectó la cadena html2pdf().set(…).from(el).save().');
-  let settled = false;
-  const done = () => {
-    if(settled || mySeq!==seq) return;
-    settled = true;
-    const pdf = w.prop && w.prop.pdf;
-    if(!pdf) return failNow('El PDF no se generó (revisa .from(...) y termina la cadena con .save()).');
-    try{
-      const blob = pdf.output('blob');
-      lastBlob = blob;
-      cset('renderizando…','busy');
-      blob.arrayBuffer().then(buf => renderFromBuf(buf, mySeq));
-    }catch(e){ failNow('jsPDF: ' + (e && e.message ? e.message : e)); }
-  };
-  try{
-    w.then(done).catch(e => { if(!settled && mySeq===seq){ settled = true; failNow('html2pdf: ' + (e && e.message ? e.message : e)); } });
-  }catch(e){ if(mySeq===seq) failNow('html2pdf: ' + (e && e.message ? e.message : e)); return; }
-  setTimeout(() => {
-    if(!settled && mySeq===seq){
-      const pdf = w.prop && w.prop.pdf;
-      if(pdf) done(); else failNow('Tiempo de espera agotado generando el PDF.');
+  const t0 = Date.now();
+  const timer = setInterval(()=>{
+    if(mySeq!==seq){ clearInterval(timer); return; }
+    const pdf = pdfHolder && pdfHolder.prop && pdfHolder.prop.pdf;
+    if(pdf){
+      clearInterval(timer);
+      try{
+        const blob = pdf.output('blob');
+        lastBlob = blob;
+        cset('renderizando…','busy');
+        blob.arrayBuffer().then(buf => { lastBuf = buf; renderFromBuf(buf, mySeq); });
+      }catch(e){ failNow('jsPDF: ' + (e && e.message ? e.message : e)); }
+      return;
     }
-  }, 20000);
+    if(!pdfHolder && Date.now() - t0 > 3000){
+      clearInterval(timer);
+      failNow('No se detectó .save() — termina tu cadena así:\nhtml2pdf().set({…}).from(document.querySelector("#documento")).save()');
+      return;
+    }
+    if(pdfHolder && Date.now() - t0 > 25000){
+      clearInterval(timer);
+      failNow('Tiempo de espera agotado generando el PDF (¿imágenes externas sin CORS?).');
+    }
+  }, 120);
 }
+
 let cT=null, dT=null, winRT=null;
 function scheduleCompile(ms=700){ clearTimeout(cT); cT = setTimeout(compile, ms); }
 function saveDraftSoon(){

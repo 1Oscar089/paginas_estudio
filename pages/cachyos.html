@@ -70,7 +70,6 @@ header{flex:none;background:var(--bg);color:var(--ink);border-bottom:2px solid v
 #term::-webkit-scrollbar-thumb{background:rgba(237,231,216,.22)}
 .ln{white-space:pre-wrap;word-break:break-word;min-height:20px}
 .ln.dim{color:var(--tmut)}
-.ln.art{white-space:pre;color:var(--tgreen);overflow-x:auto}
 .u{color:var(--tgreen);font-weight:700}
 .p{color:var(--tblue);font-weight:700}
 .s{color:var(--tmut)}
@@ -83,6 +82,19 @@ header{flex:none;background:var(--bg);color:var(--ink);border-bottom:2px solid v
 #inPrompt{white-space:pre}
 #cin{flex:1;min-width:60px;background:transparent;border:none;outline:none;
   color:var(--tpaper);caret-color:var(--acc);font:inherit;padding:0}
+
+/* ═══ Barra de teclas especiales (pantallas táctiles) ═══════ */
+#keybar{flex:none;display:flex;gap:6px;padding:8px 10px 10px;overflow-x:auto;
+  border-top:1.5px solid rgba(237,231,216,.22);background:#0D0C0A}
+#keybar::-webkit-scrollbar{display:none}
+.kbtn{flex:none;min-width:46px;min-height:42px;padding:0 10px;font:700 12px/1 var(--mono);
+  border:1.5px solid rgba(237,231,216,.4);background:transparent;color:var(--tpaper);
+  border-radius:6px;cursor:pointer;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.kbtn:active{background:var(--tpaper);color:var(--term)}
+.kbtn.sticky{background:var(--acc);border-color:var(--acc);color:#fff}
+.kbtn.wide{min-width:70px}
+/* en PC con ratón/teclado físico no hace falta */
+@media (hover:hover) and (pointer:fine){#keybar{display:none}}
 
 /* ═══ nano (editor de la terminal) ═════════════════════════ */
 #nano{position:fixed;inset:0;z-index:60;background:var(--term);display:flex;flex-direction:column;font:inherit}
@@ -97,6 +109,12 @@ header{flex:none;background:var(--bg);color:var(--ink);border-bottom:2px solid v
   border-top:1.5px solid var(--ink);font-size:11px}
 .nano-bar span{padding:7px 10px}
 .nano-bar b{display:inline-block;background:var(--ink);color:var(--bg);padding:1px 6px;margin-right:5px;border-radius:2px}
+/* nano: botones de la barra inferior clickeables */
+.nano-bar .nbtn{border:none;background:none;color:var(--ink);font:inherit;font-size:11px;
+  padding:7px 10px;cursor:pointer;display:inline-flex;align-items:center;touch-action:manipulation}
+.nano-bar .nbtn b{display:inline-block;background:var(--ink);color:var(--bg);padding:1px 6px;margin-right:5px;border-radius:2px}
+.nano-bar .nbtn:active{background:var(--ink);color:var(--bg)}
+.nano-bar .nbtn:active b{background:var(--acc)}
 
 /* ═══ Boot / power ═════════════════════════════════════════ */
 #power{position:fixed;inset:0;z-index:70;background:#000;color:var(--tgreen);
@@ -171,14 +189,33 @@ dialog::backdrop{background:rgba(20,18,15,.7)}
   <div id="inLine" hidden><span id="inPrompt"></span><input id="cin" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="terminal"></div>
 </div>
 
+<!-- Barra de teclas especiales (solo se muestra en pantallas táctiles) -->
+<div id="keybar">
+  <button class="kbtn" data-mod="ctrl">Ctrl</button>
+  <button class="kbtn" data-mod="alt">Alt</button>
+  <button class="kbtn" data-mod="shift">⇧</button>
+  <button class="kbtn" data-act="tab">Tab</button>
+  <button class="kbtn" data-act="up">↑</button>
+  <button class="kbtn" data-act="down">↓</button>
+  <button class="kbtn" data-ch="|">|</button>
+  <button class="kbtn" data-ch="/">/</button>
+  <button class="kbtn" data-ch="~">~</button>
+  <button class="kbtn" data-ch="-">-</button>
+  <button class="kbtn" data-ch=".">.</button>
+  <button class="kbtn wide" data-act="space">espacio</button>
+  <button class="kbtn wide" data-act="enter">⏎</button>
+</div>
+
 <!-- nano -->
 <div id="nano" hidden>
   <div class="nano-top"><span id="nanoTitle">GNU nano 7.2</span><span class="ver">BLOCKLAB nano</span></div>
   <textarea id="nanoTA" spellcheck="false" autocapitalize="off"></textarea>
   <div id="nanoStatus"></div>
   <div class="nano-bar">
-    <span><b>^O</b>Guardar</span><span><b>^X</b>Salir</span><span><b>^K</b>Cortar línea</span>
-    <span><b>^G</b>Ayuda</span><span><b>Tab</b>Sangría</span>
+    <button class="nbtn" data-n="save"><b>^O</b>Guardar</button>
+    <button class="nbtn" data-n="exit"><b>^X</b>Salir</button>
+    <button class="nbtn" data-n="cut"><b>^K</b>Cortar línea</button>
+    <button class="nbtn" data-n="help"><b>^G</b>Ayuda</button>
   </div>
 </div>
 
@@ -203,7 +240,7 @@ dialog::backdrop{background:rgba(20,18,15,.7)}
 <dialog id="dlgSnip">
   <form id="fmSnip" method="dialog">
     <div class="dlg-head">
-      <div><h3 id="snipTitle">Nueva entrada</h3><small>hoja «cachyos» en Sheets · la verá `man`</small></div>
+      <div><h3 id="snipTitle">Nueva entrada</h3><small>hoja «cachyos» en Sheets · la verá man</small></div>
       <button type="button" class="iconbtn" data-close style="border-color:var(--ink);color:var(--ink)"><i data-lucide="x"></i></button>
     </div>
     <div class="dlg-body">
@@ -237,7 +274,7 @@ const SHEET     = 'cachyos';
 const LS_DB     = 'blocklab.db.v1';
 const LS_Q      = 'blocklab.queue.v1';
 const LS_SEEDED = 'blocklab.cachyos.seeds.v1';
-const LS_FS     = 'blocklab.fs.cachyos.v1';   // archivos de usuario
+const LS_FS     = 'blocklab.fs.cachyos.v1';     // archivos de usuario
 const LS_DEL    = 'blocklab.fs.cachyos.del.v1'; // tumbas (borrados)
 const LS_HIST   = 'blocklab.fs.cachyos.hist.v1';
 const LS_PKGS   = 'blocklab.fs.cachyos.pkgs.v1';
@@ -283,7 +320,9 @@ let FS = {};                    // ruta → {type, content, mtime, mode, owner, 
 let tombstones = {};            // ruta → iso (borrados; evita re-crear desde Sheets)
 let dirtyFiles = new Set();     // rutas a subir a Sheets
 let history = [], histIdx = -1;
-let session = { user:null, root:false, loggedIn:false, cwd:HOME, pass:SUDO_PASS, sudoOk:false, env:{}, pkgs:new Set(['bash','coreutils','filesystem','pacman','linux-cachyos','networkmanager','plasma','konsole','sddm']), booted:false };
+let session = { user:null, root:false, loggedIn:false, cwd:HOME, sudoOk:false, env:{},
+                pkgs:new Set(['bash','coreutils','filesystem','pacman','linux-cachyos','networkmanager','plasma','konsole','sddm']),
+                booted:false };
 let services = { 'sshd':'inactive', 'NetworkManager':'active', 'bluetooth':'inactive', 'cups':'inactive' };
 let bootT0 = Date.now();
 
@@ -312,7 +351,7 @@ function getNode(p){ return FS[p] || null; }
 function isDir(p){ const n = FS[p]; return !!n && n.type === 'dir'; }
 function isUserPath(p){ return !FS[p]?.sys && p !== '/' && !isSystemPath(p); }
 function isSystemPath(p){
-  return p === '/' || /^\/(bin|sbin|etc|usr|var|opt|proc|lib|root)(\/|$)/.test(p) && !p.startsWith('/var/tmp');
+  return p === '/' || (/^\/(bin|sbin|etc|usr|var|opt|proc|lib|root)(\/|$)/.test(p) && !p.startsWith('/var/tmp'));
 }
 function canWrite(p){
   if(session.root) return true;
@@ -330,7 +369,7 @@ function touchNode(p, data){
 }
 function writeFile(p, content){
   const par = parentOf(p);
-  if(!isDir(par)) return { err: `cat: ${par}: No existe el directorio` };
+  if(!isDir(par)) return { err: `no existe el directorio: ${par}` };
   const n = getNode(p);
   if(n && n.type === 'dir') return { err: `${p}: Es un directorio` };
   touchNode(p, { type:'file', content:String(content), owner: session.root ? 'root' : USER });
@@ -354,12 +393,12 @@ function removeNode(p, recursive){
   victims.forEach(v => {
     if(!FS[v]?.sys){
       tombstones[v] = nowISO();
-      if(FS[v] && !FS[v].sys) pushOp({ action:'deleteBlock', sheet:SHEET, id: 'f' + v });
+      pushOp({ action:'deleteBlock', sheet:SHEET, id: 'f' + v });
       dirtyFiles.delete(v);
     }
     delete FS[v];
   });
-  saveFS();
+  saveFSSoon();
   return { ok:true };
 }
 function copyNode(src, dst){
@@ -381,16 +420,23 @@ function moveNode(src, dst){
   const kids = Object.keys(FS).filter(k => k.startsWith(src + '/'));
   FS[target] = Object.assign({}, n, { mtime: nowISO() });
   kids.forEach(k => { FS[target + k.slice(src.length)] = FS[k]; delete FS[k]; });
-  if(!n.sys && FS[target] && !FS[target].sys){ dirtyFiles.add(target); }
+  if(!n.sys){ dirtyFiles.add(target); }
   delete FS[src];
   if(!n.sys){ tombstones[src] = nowISO(); pushOp({ action:'deleteBlock', sheet:SHEET, id: 'f' + src }); dirtyFiles.delete(src); }
-  saveFS();
+  saveFSSoon();
   return { ok:true };
 }
+
+/* Carpetas estándar de CachyOS — siempre presentes en el home */
+function ensureHomeDirs(){
+  [HOME+'/Escritorio', HOME+'/Documentos', HOME+'/Descargas', HOME+'/Imágenes', HOME+'/Música', HOME+'/Vídeos']
+    .forEach(p => { if(!FS[p]) FS[p] = { type:'dir', owner:USER, mtime: nowISO() }; });
+}
+
 function seedSystem(){
-  const mk = (p, d) => { FS[p] = { type:'dir', sys:true, owner:'root', mtime: nowISO(), ...d }; };
+  const mk = (p) => { if(!FS[p]) FS[p] = { type:'dir', sys:true, owner:'root', mtime: nowISO() }; };
   ['/', '/bin','/sbin','/etc','/usr','/usr/bin','/usr/share','/var','/var/log','/opt','/proc','/lib','/root','/tmp','/home']
-    .forEach(p => { if(!FS[p]) mk(p); });
+    .forEach(mk);
   const wf = (p, c) => { if(!FS[p]) FS[p] = { type:'file', content:c, sys:true, owner:'root', mtime: nowISO(), mode:'644' }; };
   wf('/etc/os-release', 'NAME="CachyOS"\nPRETTY_NAME="CachyOS"\nID=cachyos\nID_LIKE=arch\nVERSION_ID=v2024.06\nKERNEL=6.9.3-1-cachyos\n');
   wf('/etc/hostname', HOST + '\n');
@@ -399,14 +445,13 @@ function seedSystem(){
   wf('/proc/cpuinfo', 'model name\t: AMD Ryzen 7 (simulado)\ncpu MHz\t\t: 4600.000\n');
   wf('/proc/version', 'Linux version 6.9.3-1-cachyos (simulador BLOCKLAB)\n');
   wf('/var/log/pacman.log', '[2024-06-01] sistema inicializado (simulado)\n');
-  [HOME, HOME+'/Escritorio', HOME+'/Documentos', HOME+'/Descargas', HOME+'/Imágenes', HOME+'/Música', HOME+'/Vídeos']
-    .forEach(p => { if(!FS[p]) FS[p] = { type:'dir', owner:USER, mtime: nowISO() }; });
   if(!FS[HOME + '/.bashrc'])
     FS[HOME + '/.bashrc'] = { type:'file', owner:USER, mtime: nowISO(),
       content:'# ~/.bashrc de ' + USER + '\n# Edítame con: nano ~/.bashrc\nalias ll="ls -l"\nalias update="sudo pacman -Syu"\n' };
   if(!FS[HOME + '/README.md'])
     FS[HOME + '/README.md'] = { type:'file', owner:USER, mtime: nowISO(),
       content:'# Bienvenido a la terminal CachyOS (simulada)\n\n· Todo archivo que crees aquí se guarda en Google Sheets.\n· Contraseña de sudo/su: 1234\n· Prueba: neofetch · ls -la · nano Documentos/nota.txt\n· pacman -S firefox (solo simula el proceso)\n· help para ver todos los comandos\n' };
+  ensureHomeDirs();
 }
 function saveFS(){
   try{
@@ -419,7 +464,10 @@ function saveFS(){
   }catch(e){}
 }
 let fsT = null;
-function saveFSSoon(){ clearTimeout(fsT); fsT = setTimeout(saveFS, 600); }
+function saveFSSoon(){
+  clearTimeout(fsT);
+  fsT = setTimeout(()=>{ saveFS(); pushDirtyFiles(); }, 600);   // guarda local Y sube a Sheets
+}
 function loadFS(){
   seedSystem();
   try{
@@ -428,6 +476,7 @@ function loadFS(){
     for(const [p, n] of Object.entries(nodes)) FS[p] = Object.assign({ sys:false }, n);
     session.pkgs = new Set(JSON.parse(localStorage.getItem(LS_PKGS) || 'null') || [...session.pkgs]);
   }catch(e){}
+  ensureHomeDirs();
 }
 let pushFT = null;
 function scheduleFilePush(){ clearTimeout(pushFT); pushFT = setTimeout(pushDirtyFiles, 2200); }
@@ -575,7 +624,7 @@ async function sync(){
                   owner: USER, mtime: b.updatedAt || nowISO(), sys:false };
       }
     }
-    /* locales sucios → subir */
+    /* locales nuevos → subir */
     for(const p of Object.keys(FS)){
       const n = FS[p];
       if(!n.sys && !remote.some(b => b.name === p)) dirtyFiles.add(p);
@@ -605,14 +654,8 @@ async function diagnose(){
   }catch(e){
     connLabel = 'Login o versión vieja';
     connDetail = 'La URL no devuelve JavaScript. Sigue los 4 pasos del panel (Code.gs v2 + setup + acceso Cualquiera).';
-    openConnDlg(true);
   }
   diagRunning = false; renderConn();
-}
-function openConnDlg(auto){
-  if(auto && dlgAutoShown) return;
-  if(auto) dlgAutoShown = true;
-  openDlg($('#dlgDict')); // reutiliza: muestra el diccionario con el estado en el título
 }
 setInterval(()=>{ if(!connected) sync(); else retryPending(); }, 25000);
 window.addEventListener('online', ()=>{ if(!connected) sync(); else { retryPending(); scheduleSync(500); } });
@@ -691,7 +734,6 @@ function splitPipeline(toks){
   return { segs, redirect };
 }
 function resolveArgs(args){
-  // expandir $VAR
   return args.map(a => a.replace(/\$(\w+)/g, (m, v) => {
     if(v === 'HOME') return HOME;
     if(v === 'PWD') return session.cwd;
@@ -734,8 +776,7 @@ function listDir(path, args){
   }
   return { out: lines.join('\n') };
 }
-function readTarget(args, flags){
-  // devuelve {stdin} del primer archivo que exista en args
+function readTarget(args){
   const files = args.filter(a => !a.startsWith('-'));
   if(!files.length) return { stdin };
   const p = normPath(files[0]);
@@ -746,6 +787,53 @@ function readTarget(args, flags){
 }
 let stdin = '';
 
+const PKGDB = {
+  firefox:  { v:'128.0-1',    d:'Navegador web de Mozilla',            s:'62,4 MiB', i:'218 MiB' },
+  git:      { v:'2.45.2-1',   d:'Sistema de control de versiones',     s:'5,9 MiB',  i:'30 MiB'  },
+  vim:      { v:'9.1.0500-1', d:'Editor Vi mejorado',                  s:'2,1 MiB',  i:'10 MiB'  },
+  htop:     { v:'3.3.0-1',    d:'Monitor interactivo de procesos',     s:'0,1 MiB',  i:'0,4 MiB' },
+  inkscape: { v:'1.3.2-3',    d:'Editor de gráficos vectoriales SVG',  s:'25,1 MiB', i:'110 MiB' },
+  gimp:     { v:'2.10.38-2',  d:'Editor de imágenes GNU',              s:'23,8 MiB', i:'102 MiB' },
+  vlc:      { v:'3.0.21-2',   d:'Reproductor multimedia',              s:'19,2 MiB', i:'88 MiB'  },
+  kate:     { v:'24.05-1',    d:'Editor de texto avanzado de KDE',     s:'5,2 MiB',  i:'25 MiB'  },
+  code:     { v:'1.90.0-1',   d:'Visual Studio Code (OSS build)',      s:'92,3 MiB', i:'350 MiB' },
+  tree:     { v:'2.1.1-2',    d:'Lista directorios en forma de árbol', s:'0,05 MiB', i:'0,1 MiB' },
+  cowsay:   { v:'3.8.4-1',    d:'Una vaca que dice cosas',             s:'0,02 MiB', i:'0,05 MiB'},
+  'base-devel': { v:'1-1',    d:'Herramientas básicas de compilación', s:'0,1 MiB',  i:'120 MiB' }
+};
+function processList(){
+  const list = [
+    { pid:1,    cmd:'/sbin/init splash', user:'root', cpu:0.0, mem:0.2, vsz:16704, rss:9800, protected:true },
+    { pid:2,    cmd:'[kthreadd]', user:'root', cpu:0.0, mem:0.0, vsz:0, rss:0, protected:true },
+    { pid:420,  cmd:'/usr/bin/NetworkManager --no-daemon', user:'root', cpu:0.1, mem:0.4, vsz:61200, rss:21400 },
+    { pid:512,  cmd:'/usr/bin/sddm', user:'root', cpu:0.2, mem:0.8, vsz:98000, rss:41000 },
+    { pid:733,  cmd:'/usr/bin/plasmashell', user:USER, cpu:3.8, mem:4.1, vsz:1240000, rss:653000 },
+    { pid:748,  cmd:'kwin_wayland', user:USER, cpu:2.1, mem:2.2, vsz:890000, rss:351000 }
+  ];
+  if(session.pkgs.has('firefox'))
+    list.push({ pid:1024, cmd:'/usr/lib/firefox/firefox', user:USER, cpu:12.4, mem:9.8, vsz:3100000, rss:1560000 });
+  list.push({ pid:1088, cmd:'-bash', user:session.root?'root':USER, cpu:0.0, mem:0.1, vsz:8200, rss:5200 });
+  list.push({ pid:1120, cmd:'blocklab-term', user:USER, cpu:0.3, mem:0.5, vsz:42000, rss:26000 });
+  return list;
+}
+/* barra de progreso animada estilo pacman */
+function progressLine(label){
+  return new Promise(res => {
+    const d = document.createElement('div');
+    d.className = 'ln';
+    outEl.appendChild(d);
+    let pct = 0;
+    const iv = setInterval(()=>{
+      pct = Math.min(100, pct + 9 + Math.random()*14);
+      const bars = Math.round(pct/100*22);
+      const size = (Math.random()*4+1).toFixed(1);
+      d.innerHTML = esc(label) + String(size).padStart(6) + ' MiB  ' + C('dim', (Math.random()*9+2).toFixed(1) + ' MiB/s') + ' ' + C('dim','00:0' + Math.floor(Math.random()*5)) + ' ' + C('green','[' + '#'.repeat(bars) + '-'.repeat(22-bars) + ']') + ' ' + Math.round(pct) + '%';
+      scrollBottom();
+      if(pct >= 100){ clearInterval(iv); setTimeout(res, 90); }
+    }, 60);
+  });
+}
+
 const CMDS = {
   help(args){
     if(args[0]){
@@ -754,10 +842,10 @@ const CMDS = {
       return C('green', args[0]) + '\n' + esc((dict().find(b=>b.name===args[0])||{}).code || 'Sin documentación. Añádela al diccionario.');
     }
     return C('yellow','── COMANDOS DEL SIMULADOR ──────────────────────') + '\n' +
-      C('blue','archivos:  ') + 'ls cd pwd mkdir rm cp mv touch cat nano echo tree find grep wc head tail sort stat ln chmod' + '\n' +
+      C('blue','archivos:  ') + 'ls cd pwd mkdir rm rmdir cp mv touch cat nano echo tree find grep wc head tail sort stat du ln chmod' + '\n' +
       C('blue','sistema:   ') + 'sudo su whoami id uname hostname neofetch uptime date cal free df ps top htop kill pkill systemctl reboot shutdown poweroff' + '\n' +
       C('blue','paquetes:  ') + 'pacman (-S -R -Syu -Ss -Q) yay' + '\n' +
-      C('blue','shell:     ') + 'clear history echo export env alias which man help exit logout cowsay' + '\n' +
+      C('blue','shell:     ') + 'clear history echo export env alias which man help exit logout cowsay ping' + '\n' +
       C('dim','· Tab completa comandos y rutas · ↑↓ historial · pipes con | · redirección > >>');
   },
   pwd(){ return session.cwd; },
@@ -781,7 +869,7 @@ const CMDS = {
         let acc = '';
         for(const s of parts){
           acc += '/' + s;
-          if(!getNode(acc)){ const r = makeDir(acc); if(r.err && !flags.includes('p')) return C('red', r.err); }
+          if(!getNode(acc)) makeDir(acc);
         }
       } else {
         if(!isDir(parentOf(p))) return C('red', `mkdir: no se puede crear el directorio «${t}»: No existe el directorio`);
@@ -794,7 +882,8 @@ const CMDS = {
     if(!p) return C('red','rmdir: falta un operando');
     if(!isDir(p)) return C('red', `rmdir: '${p}': No es un directorio`);
     if(Object.keys(FS).some(k => k.startsWith(p + '/'))) return C('red', `rmdir: '${p}': El directorio no está vacío`);
-    return removeNode(p, false).err ? C('red', removeNode(p,false).err) : undefined;
+    const r = removeNode(p, false);
+    if(r.err) return C('red', r.err);
   },
   touch(args){
     if(!args[0]) return C('red','touch: falta un operando');
@@ -833,7 +922,7 @@ const CMDS = {
         if(FS[k].type === 'dir') touchNode(t, { type:'dir', owner: session.root?'root':USER });
         else { FS[t] = Object.assign({}, FS[k], { mtime: nowISO() }); dirtyFiles.add(t); }
       });
-      saveFS(); return;
+      saveFSSoon(); return;
     }
     const r = copyNode(src, dst);
     if(r.err) return C('red', r.err);
@@ -861,7 +950,7 @@ const CMDS = {
   echo(args){ return args.join(' '); },
   wc(args){
     const flags = args.filter(a => a.startsWith('-')).join('');
-    const r = readTarget(args.filter(a => a !== 'wc'), stdin);
+    const r = readTarget(args.filter(a => a !== 'wc'));
     if(r.err) return C('red', 'wc: ' + r.err);
     const t = r.stdin || '';
     const l = t.split('\n').filter((x,i,a) => i < a.length-1 || x !== '').length;
@@ -875,21 +964,21 @@ const CMDS = {
   head(args){
     const nFlag = args.indexOf('-n');
     const count = nFlag >= 0 ? parseInt(args[nFlag+1]) || 10 : 10;
-    const r = readTarget(args.filter(a => a !== '-n' && !(nFlag>=0 && a === args[nFlag+1])), stdin);
+    const r = readTarget(args.filter(a => a !== '-n' && !(nFlag>=0 && a === args[nFlag+1])));
     if(r.err) return C('red', 'head: ' + r.err);
     return (r.stdin || '').split('\n').slice(0, count).join('\n');
   },
   tail(args){
     const nFlag = args.indexOf('-n');
     const count = nFlag >= 0 ? parseInt(args[nFlag+1]) || 10 : 10;
-    const r = readTarget(args.filter(a => a !== '-n' && !(nFlag>=0 && a === args[nFlag+1])), stdin);
+    const r = readTarget(args.filter(a => a !== '-n' && !(nFlag>=0 && a === args[nFlag+1])));
     if(r.err) return C('red', 'tail: ' + r.err);
     const lines = (r.stdin || '').split('\n');
     return lines.slice(Math.max(0, lines.length - count)).join('\n');
   },
   sort(args){
     const rev = args.includes('-r');
-    const r = readTarget(args.filter(a => !a.startsWith('-')), stdin);
+    const r = readTarget(args.filter(a => !a.startsWith('-')));
     if(r.err) return C('red', 'sort: ' + r.err);
     const s = (r.stdin || '').split('\n').sort((a,b)=>a.localeCompare(b,'es'));
     return (rev ? s.reverse() : s).join('\n');
@@ -899,9 +988,9 @@ const CMDS = {
     const rest = args.filter(a => !a.startsWith('-'));
     if(!rest.length) return C('red','grep: falta el patrón');
     const pat = rest[0];
-    const r = readTarget(rest.slice(1), stdin);
+    const r = readTarget(rest.slice(1));
     if(r.err) return C('red', 'grep: ' + r.err);
-    const re = new RegExp(pat.replace(/[.*+?^${}()|[\]\\]/g, m => '\\' + (m === '*' ? '*' : m)).replace(/\\\.\*/g, '.*').replace(/\\\?/g, '.'), flags.includes('i') ? 'i' : '');
+    const re = new RegExp(pat.replace(/[.+^${}()|[\]\\]/g,'\\$&').replace(/\*/g,'.*').replace(/\?/g,'.'), flags.includes('i') ? 'i' : '');
     return (r.stdin || '').split('\n').map((line, i) => {
       if(!line) return null;
       const m = line.match(re);
@@ -949,7 +1038,7 @@ const CMDS = {
     const size = n.type === 'dir' ? 4096 : (n.content||'').length;
     return `  File: ${p}\n  Size: ${size}\t\tType: ${n.type === 'dir' ? 'directory' : n.type}\nModify: ${(n.mtime||'').replace('T',' ').slice(0,19)}\nAccess: (0${n.mode || (n.type==='dir'?'755':'644')})  Uid: ( ${(n.owner||USER)==='root'?0:1000}/${n.owner||USER} )`;
   },
-  du(args){ 
+  du(args){
     const p = normPath(args.find(a=>!a.startsWith('-')) || session.cwd);
     let total = 0;
     Object.keys(FS).forEach(k => { if(k === p || k.startsWith(p + '/')) total += (FS[k].content||'').length + 4096; });
@@ -1061,7 +1150,6 @@ const CMDS = {
   vim(args){ return CMDS.vi(args); },
   less(args){ return CMDS.cat(args); },
   more(args){ return CMDS.cat(args); },
-  whoami2(){ return session.user; },
   ps(args){
     const procs = processList();
     if(args.includes('aux') || args.includes('-e')){
@@ -1226,59 +1314,10 @@ const CMDS = {
   poweroff(){ return doShutdown(); },
   logout(){ return doLogout(); },
   exit(){ return doLogout(); },
-  sudo(args){ /* manejado antes de llegar aquí */ },
-  su(args){ /* manejado antes de llegar aquí */ },
   passwd(args){
     return C('dim','Este simulador mantiene la contraseña fija en 1234 (no hay persistencia de credenciales).');
   }
 };
-
-const PKGDB = {
-  firefox:  { v:'128.0-1',      d:'Navegador web de Mozilla',           s:'62,4 MiB', i:'218 MiB' },
-  git:      { v:'2.45.2-1',     d:'Sistema de control de versiones',    s:'5,9 MiB',  i:'30 MiB'  },
-  vim:      { v:'9.1.0500-1',   d:'Editor Vi mejorado',                 s:'2,1 MiB',  i:'10 MiB'  },
-  htop:     { v:'3.3.0-1',      d:'Monitor interactivo de procesos',    s:'0,1 MiB',  i:'0,4 MiB' },
-  inkscape: { v:'1.3.2-3',      d:'Editor de gráficos vectoriales SVG', s:'25,1 MiB', i:'110 MiB' },
-  gimp:     { v:'2.10.38-2',    d:'Editor de imágenes GNU',             s:'23,8 MiB', i:'102 MiB' },
-  vlc:      { v:'3.0.21-2',     d:'Reproductor multimedia',             s:'19,2 MiB', i:'88 MiB'  },
-  kate:     { v:'24.05-1',      d:'Editor de texto avanzado de KDE',    s:'5,2 MiB',  i:'25 MiB'  },
-  code:     { v:'1.90.0-1',     d:'Visual Studio Code (OSS build)',     s:'92,3 MiB', i:'350 MiB' },
-  tree:     { v:'2.1.1-2',      d:'Lista directorios en forma de árbol',s:'0,05 MiB', i:'0,1 MiB' },
-  cowsay:   { v:'3.8.4-1',      d:'Una vaca que dice cosas',            s:'0,02 MiB', i:'0,05 MiB'},
-    'base-devel': { v:'1-1',  d:'Herramientas básicas de compilación', s:'0,1 MiB', i:'120 MiB' },
-};
-function processList(){
-  const list = [
-    { pid:1,    cmd:'/sbin/init splash', user:'root', cpu:0.0, mem:0.2, vsz:16704, rss:9800, protected:true },
-    { pid:2,    cmd:'[kthreadd]', user:'root', cpu:0.0, mem:0.0, vsz:0, rss:0, protected:true },
-    { pid:420,  cmd:'/usr/bin/NetworkManager --no-daemon', user:'root', cpu:0.1, mem:0.4, vsz:61200, rss:21400 },
-    { pid:512,  cmd:'/usr/bin/sddm', user:'root', cpu:0.2, mem:0.8, vsz:98000, rss:41000 },
-    { pid:733,  cmd:'/usr/bin/plasmashell', user:USER, cpu:3.8, mem:4.1, vsz:1240000, rss:653000 },
-    { pid:748,  cmd:'kwin_wayland', user:USER, cpu:2.1, mem:2.2, vsz:890000, rss:351000 }
-  ];
-  if(session.pkgs.has('firefox'))
-    list.push({ pid:1024, cmd:'/usr/lib/firefox/firefox', user:USER, cpu:12.4, mem:9.8, vsz:3100000, rss:1560000 });
-  list.push({ pid:1088, cmd:'-bash', user:session.root?'root':USER, cpu:0.0, mem:0.1, vsz:8200, rss:5200 });
-  list.push({ pid:1120, cmd:'blocklab-term', user:USER, cpu:0.3, mem:0.5, vsz:42000, rss:26000 });
-  return list;
-}
-/* barra de progreso animada estilo pacman */
-function progressLine(label){
-  return new Promise(res => {
-    const d = document.createElement('div');
-    d.className = 'ln';
-    outEl.appendChild(d);
-    let pct = 0;
-    const iv = setInterval(()=>{
-      pct = Math.min(100, pct + 9 + Math.random()*14);
-      const bars = Math.round(pct/100*22);
-      const size = (Math.random()*4+1).toFixed(1);
-      d.innerHTML = esc(label) + String(size).padStart(6) + ' MiB  ' + C('dim', (Math.random()*9+2).toFixed(1) + ' MiB/s') + ' ' + C('dim','00:0' + Math.floor(Math.random()*5)) + ' ' + C('green','[' + '#'.repeat(bars) + '-'.repeat(22-bars) + ']') + ' ' + Math.round(pct) + '%';
-      scrollBottom();
-      if(pct >= 100){ clearInterval(iv); setTimeout(res, 90); }
-    }, 60);
-  });
-}
 
 /* ═══ 9 · EJECUCIÓN DE LÍNEA ═══════════════════════════════ */
 async function execLine(raw){
@@ -1289,7 +1328,6 @@ async function execLine(raw){
   try{ localStorage.setItem(LS_HIST, JSON.stringify(history.slice(-200))); }catch(e){}
   histIdx = history.length;
 
-  /* sudo / su requieren contraseña antes de tokenizar */
   const toks0 = tokenize(line);
   let toks = toks0;
   let asRoot = session.root;
@@ -1331,7 +1369,6 @@ async function execLine(raw){
     const cmd = seg[0], args = resolveArgs(seg.slice(1));
     stdin = data;
     if(!(cmd in CMDS)){
-      if(asRoot && !session.root) session.root = false;
       print(C('red', cmd + ': orden no encontrada') + '\n' + C('dim', '¿Quisiste decir: ' + suggest(cmd) + ' ? · help para la lista'));
       return;
     }
@@ -1340,7 +1377,6 @@ async function execLine(raw){
     try{
       const r = await CMDS[cmd](args);
       if(typeof r === 'string') data = r;
-      else if(s === segs.length-1 && typeof r !== 'string' && r !== undefined) data = '';
     }catch(e){
       print(C('red', cmd + ': error interno: ' + esc(e.message)));
     }
@@ -1351,7 +1387,8 @@ async function execLine(raw){
     const p = normPath(redirect.file);
     if(!canWrite(p)){ print(C('red', '-bash: ' + redirect.file + ': Permiso denegado')); return; }
     if(!isDir(parentOf(p))){ print(C('red', '-bash: ' + redirect.file + ': No existe el directorio')); return; }
-    const w = writeFile(p, redirect.mode === '>>' ? ((getNode(p)||{}).content || '') + (data ? data + '\n' : '\n') : (data ? data + '\n' : '\n'));
+    const prev = (getNode(p)||{}).content || '';
+    const w = writeFile(p, redirect.mode === '>>' ? prev + (data ? data + '\n' : '\n') : (data ? data + '\n' : '\n'));
     if(w.err) print(C('red', w.err));
     scheduleFilePush();
     return;
@@ -1381,11 +1418,16 @@ function ensureRoot(mode){
     };
   });
 }
+function ask(question){
+  return new Promise(res => {
+    print(C('yellow', question));
+    showInput('normal', C('yellow', '> '));
+    pendingInput = val => { res(val); };
+  });
+}
 
-/* ═══ 10 · INPUT LOOP (historial, Tab, Ctrl) ═══════════════ */
-let pendingInput = null;      // callback para password/preguntas interactivas
-let inputMode = 'normal';     // normal | password | ask
-let askResolve = null;
+/* ═══ 10 · INPUT LOOP (historial, Tab, Ctrl, sticky keys) ══ */
+let pendingInput = null;
 
 function mainPrompt(){
   if(!session.loggedIn) return;
@@ -1393,12 +1435,23 @@ function mainPrompt(){
   showInput('normal', promptHTML());
 }
 cin.addEventListener('keydown', async e => {
-  /* interacciones activas (sudo, pacman [S/n], login…) */
+  /* Ctrl/Alt pegajosos desde la keybar táctil */
+  if(sticky.ctrl || sticky.alt){
+    const k = e.key.toLowerCase();
+    if(sticky.ctrl && (k==='c' || k==='l' || k==='u')){
+      e.preventDefault(); clearSticky();
+      if(k==='c'){ print(promptHTML() + esc(cin.value) + C('red','^C')); cin.value=''; }
+      if(k==='l'){ outEl.innerHTML=''; }
+      if(k==='u'){ cin.value=''; }
+      return;
+    }
+    clearSticky();
+  }
   if(pendingInput){
     if(e.key === 'Enter'){
       e.preventDefault();
       const val = cin.value; cin.value = '';
-      const cb = pendingInput; pendingInput = null; inputMode = 'normal';
+      const cb = pendingInput; pendingInput = null;
       cb(val);
     }
     return;
@@ -1436,6 +1489,49 @@ cin.addEventListener('keydown', async e => {
   }
   if(e.ctrlKey && e.key === 'u'){ e.preventDefault(); cin.value = ''; return; }
 });
+
+/* ═══ BARRA DE TECLAS ESPECIALES (táctil) ═══════════════════
+   Ctrl/Alt/Shift son "pegajosas": se tocan una vez y la
+   siguiente tecla (del teclado del teléfono o de esta barra)
+   se combina con ellas. Ej.: tocar Ctrl y luego la C del
+   teclado = Ctrl+C (interrumpir). */
+const sticky = { ctrl:false, alt:false, shift:false };
+function refreshSticky(){
+  document.querySelectorAll('#keybar .kbtn[data-mod]').forEach(b =>
+    b.classList.toggle('sticky', !!sticky[b.dataset.mod]));
+}
+function clearSticky(){ sticky.ctrl = sticky.alt = sticky.shift = false; refreshSticky(); }
+function insertAtCursor(t){
+  const s = cin.selectionStart, epos = cin.selectionEnd;
+  cin.value = cin.value.slice(0, s) + t + cin.value.slice(epos);
+  cin.setSelectionRange(s + t.length, s + t.length);
+}
+ $('#keybar').addEventListener('click', e=>{
+  const b = e.target.closest('.kbtn'); if(!b) return;
+  if(b.dataset.mod){ sticky[b.dataset.mod] = !sticky[b.dataset.mod]; refreshSticky(); cin.focus(); return; }
+  const act = b.dataset.act;
+  if(act === 'enter'){
+    if(pendingInput){ const v = cin.value; cin.value=''; const cb = pendingInput; pendingInput = null; clearSticky(); cb(v); }
+    else if(session.loggedIn){ const v = cin.value; cin.value=''; hideInput(); clearSticky(); execLine(v).then(mainPrompt); }
+  }
+  else if(act === 'tab'){ if(!pendingInput) tabComplete(); }
+  else if(act === 'up'){ if(!pendingInput && histIdx > 0){ histIdx--; cin.value = history[histIdx] || ''; } }
+  else if(act === 'down'){
+    if(!pendingInput){
+      if(histIdx < history.length - 1){ histIdx++; cin.value = history[histIdx] || ''; }
+      else { histIdx = history.length; cin.value = ''; }
+    }
+  }
+  else if(act === 'space') insertAtCursor(' ');
+  else if(b.dataset.ch !== undefined){
+    let c = b.dataset.ch;
+    if(sticky.shift) c = c.toUpperCase();
+    insertAtCursor(c);
+  }
+  if(!b.dataset.mod) clearSticky();
+  cin.focus();
+});
+
 function tabComplete(){
   const val = cin.value;
   const before = val.slice(0, cin.selectionStart);
@@ -1466,7 +1562,6 @@ function tabComplete(){
     cin.value = val.slice(0, cin.selectionStart - word.length) + candidates[0] + ' ' + val.slice(cin.selectionStart);
     return;
   }
-  /* ambiguo: listar */
   print(promptHTML() + esc(val));
   printText(candidates.join('  '), 'dim');
   mainPrompt();
@@ -1475,7 +1570,7 @@ function tabComplete(){
 }
 term.addEventListener('click', () => { if(!inLine.hidden || session.loggedIn) cin.focus(); });
 
-/* ═══ 11 · NANO ════════════════════════════════════════════ */
+/* ═══ 11 · NANO (teclado + botones táctiles) ═══════════════ */
 let nanoPath = null, nanoOpen = false, nanoDirty = false, nanoAsking = false;
 function openNano(p){
   nanoPath = p;
@@ -1483,7 +1578,7 @@ function openNano(p){
   $('#nanoTitle').textContent = 'GNU nano 7.2   ·   ' + p + (n ? '' : '  (Nuevo archivo)');
   $('#nanoTA').value = n ? (n.content || '') : '';
   nanoDirty = false; nanoOpen = true; nanoAsking = false;
-  $('#nanoStatus').textContent = n ? 'Editando archivo existente · Ctrl+O guarda (también a Sheets)' : 'Archivo nuevo · Ctrl+O guarda (también a Sheets)';
+  $('#nanoStatus').textContent = n ? 'Editando archivo existente · Guardar también sube a Sheets' : 'Archivo nuevo · Guardar también sube a Sheets';
   $('#nano').hidden = false;
   $('#nanoTA').focus();
   hideInput();
@@ -1502,6 +1597,27 @@ function nanoSave(){
   $('#nanoStatus').textContent = 'Guardado en ' + nanoPath + ' (' + lines + ' líneas) — subiendo a Sheets…';
   toast('Archivo guardado: ' + baseOf(nanoPath));
 }
+function cutNanoLine(){
+  const ta = $('#nanoTA');
+  const v = ta.value, pos = ta.selectionStart;
+  let ls = v.lastIndexOf('\n', pos - 1) + 1;
+  let le = v.indexOf('\n', pos); if(le < 0) le = v.length; else le += 1;
+  ta.value = v.slice(0, ls) + v.slice(le);
+  ta.selectionStart = ta.selectionEnd = ls;
+  nanoDirty = true;
+}
+function nanoExit(){
+  if(nanoDirty && !nanoAsking){
+    nanoAsking = true;
+    $('#nanoStatus').innerHTML = '¿Guardar cambios antes de salir?  <b>Y</b> = sí · <b>N</b> = no · <b>Esc</b> = seguir editando';
+    const askKey = ev => {
+      if(ev.key.toLowerCase() === 'y'){ nanoSave(); nanoAsking = false; document.removeEventListener('keydown', askKey); closeNano(); }
+      else if(ev.key.toLowerCase() === 'n'){ nanoAsking = false; document.removeEventListener('keydown', askKey); closeNano(); }
+      else if(ev.key === 'Escape'){ nanoAsking = false; document.removeEventListener('keydown', askKey); $('#nanoStatus').textContent = 'Continúa editando'; }
+    };
+    document.addEventListener('keydown', askKey);
+  } else closeNano();
+}
  $('#nanoTA').addEventListener('keydown', e => {
   if(e.key === 'Tab'){
     e.preventDefault();
@@ -1516,38 +1632,26 @@ function nanoSave(){
     $('#nanoStatus').textContent = 'Atajos: Ctrl+O guardar · Ctrl+X salir · Ctrl+K cortar línea · Tab sangría';
     return;
   }
-  if(e.ctrlKey && (e.key === 'k' || e.key === 'K')){
-    e.preventDefault();
-    const ta = e.target;
-    const v = ta.value, pos = ta.selectionStart;
-    let ls = v.lastIndexOf('\n', pos - 1) + 1;
-    let le = v.indexOf('\n', pos); if(le < 0) le = v.length; else le += 1;
-    ta.value = v.slice(0, ls) + v.slice(le);
-    ta.selectionStart = ta.selectionEnd = ls;
-    nanoDirty = true;
-    return;
-  }
-  if(e.ctrlKey && (e.key === 'x' || e.key === 'X')){
-    e.preventDefault();
-    if(nanoDirty && !nanoAsking){
-      nanoAsking = true;
-      $('#nanoStatus').innerHTML = '¿Guardar cambios antes de salir?  <b>Y</b> = sí · <b>N</b> = no · <b>Esc</b> = volver al editor';
-      const askKey = ev => {
-        if(ev.key.toLowerCase() === 'y'){ nanoSave(); nanoAsking = false; document.removeEventListener('keydown', askKey); closeNano(); }
-        else if(ev.key.toLowerCase() === 'n'){ nanoAsking = false; document.removeEventListener('keydown', askKey); closeNano(); }
-        else if(ev.key === 'Escape'){ nanoAsking = false; document.removeEventListener('keydown', askKey); $('#nanoStatus').textContent = 'Continúa editando'; }
-      };
-      document.addEventListener('keydown', askKey);
-    } else {
-      closeNano();
-    }
-    return;
-  }
+  if(e.ctrlKey && (e.key === 'k' || e.key === 'K')){ e.preventDefault(); cutNanoLine(); return; }
+  if(e.ctrlKey && (e.key === 'x' || e.key === 'X')){ e.preventDefault(); nanoExit(); return; }
+});
+/* Barra inferior de nano: clickeable en móvil */
+document.querySelectorAll('.nano-bar .nbtn').forEach(b => {
+  b.addEventListener('click', ()=>{
+    if(nanoAsking) return;
+    const a = b.dataset.n;
+    if(a === 'save') nanoSave();
+    else if(a === 'cut') cutNanoLine();
+    else if(a === 'help') $('#nanoStatus').textContent = 'Atajos: Ctrl+O guardar · Ctrl+X salir · Ctrl+K cortar línea · Tab sangría';
+    else if(a === 'exit') nanoExit();
+    $('#nanoTA').focus();
+  });
 });
  $('#nanoTA').addEventListener('input', () => { nanoDirty = true; });
 
 /* ═══ 12 · BOOT / LOGIN / POWER ════════════════════════════ */
 async function bootSequence(){
+  ensureHomeDirs();
   outEl.innerHTML = '';
   session.loggedIn = false; session.root = false; session.user = null;
   session.sudoOk = false; session.cwd = HOME;
@@ -1750,6 +1854,7 @@ function manualSync(){
     dirtyFiles.clear();
     try{ localStorage.removeItem(LS_FS); }catch(err){}
     session.pkgs = new Set(['bash','coreutils','filesystem','pacman','linux-cachyos','networkmanager','plasma','konsole','sddm']);
+    ensureHomeDirs();
     saveFS();
     bootSequence();
     toast('Home formateada — archivos borrados también en Sheets');

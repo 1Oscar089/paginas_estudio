@@ -24,7 +24,8 @@ body{height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidd
   background:var(--bg);color:var(--ink);font:400 14px/1.6 var(--mono)}
 ::selection{background:rgba(214,72,28,.25)}
 button,a{font-family:var(--mono)}
-svg,i[data-lucide]{flex:none;display:inline-flex}
+svg{flex:none}
+i[data-lucide]{display:inline-flex}
 .wrap-x{max-width:1400px;width:100%;margin:0 auto}
 
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:38px;padding:8px 12px;
@@ -930,9 +931,19 @@ function scopeStyles(root){
     [...el.attributes].forEach(a=>{ if(/^on/i.test(a.name)) el.removeAttribute(a.name); });
   });
 }
+
 function compile(){
   const src = ed.value;
-  const clean = src.replace(/<script[\s\S]*?<\/script>/gi, '');
+  let clean = src.replace(/<script[\s\S]*?<\/script>/gi, '');
+  // XML no conoce entidades HTML comunes → hacerlas compatibles
+  clean = clean.replace(/&nbsp;/g, '&#160;');
+  /* CLAVE: si el <svg> no declara xmlns, XML deja TODO en namespace nulo
+     y el navegador no lo renderiza como SVG al insertarlo (preview vacío
+     con estado verde). Se inyecta en el texto ANTES de parsear, así los
+     descendientes heredan el namespace por la regla de namespace por
+     defecto de XML. */
+  if(!/<svg[^>]*\bxmlns\s*=/i.test(clean))
+    clean = clean.replace(/<svg\b/i, '<svg xmlns="http://www.w3.org/2000/svg"');
   if(!clean.trim()){
     currentRoot = null;
     pagesEl.innerHTML = '<div class="pv-hint">Escribe SVG a la izquierda —<br>se dibuja aquí, en vivo.</div>';
@@ -950,6 +961,8 @@ function compile(){
   const root = doc.documentElement;
   if(!root || root.nodeName.toLowerCase() !== 'svg')
     return failNow('El documento debe ser <svg …> … </svg>.');
+  if(root.namespaceURI !== 'http://www.w3.org/2000/svg')
+    return failNow('Namespace inválido: asegúrate de que el nodo raíz sea <svg> (sin prefijos raros).');
   if(root.hasAttribute('viewBox') && !root.getAttribute('width')){
     const vb = (root.getAttribute('viewBox')||'').split(/[\s,]+/).map(Number);
     if(vb.length === 4 && vb[2] > 0){
@@ -958,7 +971,6 @@ function compile(){
       root.setAttribute('height', Math.round(W * vb[3] / vb[2]));
     }
   }
-  if(!root.getAttribute('xmlns')) root.setAttribute('xmlns','http://www.w3.org/2000/svg');
   scopeStyles(root);
   currentRoot = root;
   pagesEl.innerHTML = '';
@@ -966,6 +978,7 @@ function compile(){
   const w = root.getAttribute('width'), h = root.getAttribute('height');
   okNow(w && h ? (w.replace('px','')+'×'+h.replace('px','')) : '');
 }
+
 let cT=null, rT=null;
 function scheduleCompile(ms=550){ clearTimeout(cT); cT = setTimeout(compile, ms); }
 function saveDraftSoon(){

@@ -1,0 +1,1778 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#14120F">
+<title>BLOCKLAB · cachyos</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500..700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<style>
+:root{
+  --bg:#F4F1E9; --card:#FDFBF4; --ink:#1C1915; --mut:#6F675A;
+  --line:#DED6C5; --acc:#D6481C; --ok:#3F6B33; --warn:#9A7B1F;
+  --term:#14120F; --tpaper:#EDE7D8; --tmut:#8A8272;
+  --tgreen:#7FCB6A; --tblue:#6FB5E0; --tred:#FF8A5C; --tyellow:#E8C15A; --tmag:#D98BC0;
+  --mono:'JetBrains Mono',monospace; --serif:'Fraunces',serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden;
+  background:var(--term);color:var(--tpaper);font:400 13px/1.55 var(--mono)}
+::selection{background:rgba(214,72,28,.4)}
+button,a{font-family:var(--mono)}
+svg{flex:none}
+i[data-lucide]{display:inline-flex}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:36px;padding:7px 11px;
+  font:600 10.5px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;
+  border:1.5px solid var(--tpaper);background:transparent;color:var(--tpaper);cursor:pointer;
+  transition:background .15s,color .15s,border-color .15s}
+.btn:hover{background:var(--tpaper);color:var(--term)}
+.btn svg{width:14px;height:14px}
+.iconbtn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;flex:none;
+  border:1.5px solid var(--tpaper);background:transparent;color:var(--tpaper);cursor:pointer;transition:all .15s}
+.iconbtn:hover{background:var(--tpaper);color:var(--term)}
+.iconbtn.sm{width:26px;height:26px;border-width:1px}
+.iconbtn.sm svg{width:12px;height:12px}
+.iconbtn.armed{width:auto;padding:0 9px;font:700 10px/1 var(--mono);border-color:var(--acc);color:var(--acc)}
+.spin svg{animation:rot 1s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+/* ═══ Cabecera (papel sobre tinta) ═════════════════════════ */
+header{flex:none;background:var(--bg);color:var(--ink);border-bottom:2px solid var(--acc)}
+.h-in{max-width:1500px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 14px}
+.brand{font:700 14px/1 var(--mono);letter-spacing:.12em;white-space:nowrap}
+.brand .star{color:var(--acc)}
+.bsub{color:var(--mut);font-weight:500;letter-spacing:.06em}
+.h-right{display:flex;align-items:center;gap:8px}
+.h-right .btn{border-color:var(--ink);color:var(--ink)}
+.h-right .btn:hover{background:var(--ink);color:var(--bg)}
+.h-right .iconbtn{border-color:var(--ink);color:var(--ink)}
+.h-right .iconbtn:hover{background:var(--ink);color:var(--bg)}
+.h-right .iconbtn.danger:hover{background:var(--acc);border-color:var(--acc);color:var(--bg)}
+.status{display:inline-flex;align-items:center;gap:7px;font:500 10px/1 var(--mono);letter-spacing:.06em;color:var(--mut);text-transform:uppercase;cursor:pointer}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--mut);flex:none}
+.dot.ok{background:var(--ok)} .dot.err{background:var(--acc)}
+.dot.busy{background:var(--warn);animation:pulse 1.2s infinite} .dot.warn{background:var(--warn)}
+@keyframes pulse{50%{opacity:.3}}
+.qb{font:700 10px/1 var(--mono);color:var(--acc);border:1.5px solid var(--acc);padding:4px 6px}
+@media(max-width:640px){#stTxt{display:none}.btn .lbl{display:none}}
+
+/* ═══ Terminal ═════════════════════════════════════════════ */
+#term{flex:1;min-height:0;overflow-y:auto;padding:14px 16px 20px;cursor:text}
+#term::-webkit-scrollbar{width:12px}
+#term::-webkit-scrollbar-thumb{background:rgba(237,231,216,.22)}
+.ln{white-space:pre-wrap;word-break:break-word;min-height:20px}
+.ln.dim{color:var(--tmut)}
+.ln.art{white-space:pre;color:var(--tgreen);overflow-x:auto}
+.u{color:var(--tgreen);font-weight:700}
+.p{color:var(--tblue);font-weight:700}
+.s{color:var(--tmut)}
+.c-red{color:var(--tred)} .c-green{color:var(--tgreen)} .c-blue{color:var(--tblue)}
+.c-yellow{color:var(--tyellow)} .c-mag{color:var(--tmag)} .c-dim{color:var(--tmut)}
+.c-bold{font-weight:700} .c-ink{color:var(--term);background:var(--tyellow);padding:0 4px}
+.okmark{color:var(--tgreen);font-weight:700}
+
+#inLine{display:flex;align-items:baseline;gap:0}
+#inPrompt{white-space:pre}
+#cin{flex:1;min-width:60px;background:transparent;border:none;outline:none;
+  color:var(--tpaper);caret-color:var(--acc);font:inherit;padding:0}
+
+/* ═══ nano (editor de la terminal) ═════════════════════════ */
+#nano{position:fixed;inset:0;z-index:60;background:var(--term);display:flex;flex-direction:column;font:inherit}
+.nano-top{flex:none;display:flex;justify-content:space-between;gap:12px;padding:8px 14px;
+  background:var(--bg);color:var(--ink);font-weight:700;font-size:12px;border-bottom:2px solid var(--acc)}
+.nano-top .ver{color:var(--mut);font-weight:400}
+#nanoTA{flex:1;min-height:0;background:var(--term);color:var(--tpaper);border:none;outline:none;resize:none;
+  font:400 13px/1.6 var(--mono);padding:14px 18px;tab-size:4}
+#nanoStatus{flex:none;padding:6px 14px;min-height:28px;font-weight:700;font-size:12px;
+  background:var(--bg);color:var(--ink)}
+.nano-bar{flex:none;display:flex;gap:0;flex-wrap:wrap;background:var(--bg);color:var(--ink);
+  border-top:1.5px solid var(--ink);font-size:11px}
+.nano-bar span{padding:7px 10px}
+.nano-bar b{display:inline-block;background:var(--ink);color:var(--bg);padding:1px 6px;margin-right:5px;border-radius:2px}
+
+/* ═══ Boot / power ═════════════════════════════════════════ */
+#power{position:fixed;inset:0;z-index:70;background:#000;color:var(--tgreen);
+  display:flex;align-items:center;justify-content:center;font:400 14px/1.8 var(--mono);text-align:center;padding:20px}
+
+/* ═══ Diálogos / toasts (papel) ════════════════════════════ */
+dialog{border:2px solid var(--ink);background:var(--card);color:var(--ink);
+  box-shadow:7px 7px 0 var(--ink);padding:0;width:min(600px,94vw);margin:auto;font:400 13px/1.6 var(--mono)}
+dialog::backdrop{background:rgba(20,18,15,.7)}
+.dlg-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:15px 18px;border-bottom:1.5px solid var(--ink)}
+.dlg-head h3{font:600 20px/1.15 var(--serif)}
+.dlg-head small{display:block;font:500 10px/1.5 var(--mono);letter-spacing:.06em;color:var(--mut);margin-top:4px}
+.dlg-body{padding:16px 18px}
+.dlg-foot{display:flex;justify-content:flex-end;gap:10px;padding:0 18px 18px;flex-wrap:wrap}
+.dlg-foot .btn{border-color:var(--ink);color:var(--ink)}
+.dlg-foot .btn:hover{background:var(--ink);color:var(--bg)}
+.dlg-foot .btn-solid{background:var(--ink);color:var(--bg)}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:13px}
+.field label{font:700 9px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+.field input,.field textarea{font:400 13px/1.6 var(--mono);padding:10px 12px;min-height:40px;
+  border:1.5px solid var(--ink);background:var(--bg);color:var(--ink);outline:none;width:100%}
+.field input:focus,.field textarea:focus{border-color:var(--acc)}
+.field textarea{min-height:130px;resize:vertical}
+.hint{font:400 10px/1.5 var(--mono);color:var(--mut)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:560px){.field-row{grid-template-columns:1fr}}
+
+.d-tools{display:flex;gap:8px;margin-bottom:12px}
+#q2{flex:1;min-width:0;font:500 13px/1 var(--mono);padding:0 4px;min-height:38px;
+  border:none;border-bottom:1.5px solid var(--ink);background:transparent;outline:none;color:var(--ink)}
+#q2:focus{border-color:var(--acc)}
+.d-list{max-height:56vh;overflow:auto;border-top:1.5px solid var(--ink)}
+.dl-l{font:600 11px/1 var(--serif);padding:10px 4px 6px;color:var(--acc);letter-spacing:.1em;position:sticky;top:0;background:var(--card)}
+.drow{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid var(--line)}
+.d-main{flex:1;min-width:0}
+.d-main .t{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.d-main strong{font:700 12.5px/1.3 var(--mono)}
+.d-c{display:block;font:400 10.5px/1.4 var(--mono);color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}
+.d-acts{display:flex;gap:5px}
+.d-acts .iconbtn{border-color:var(--ink);color:var(--ink)}
+.d-acts .iconbtn:hover{background:var(--ink);color:var(--bg)}
+.d-acts .iconbtn.danger:hover{background:var(--acc);border-color:var(--acc);color:var(--bg)}
+.d-empty{padding:24px 8px;text-align:center;color:var(--mut);font-size:12px}
+.tag{font:700 8.5px/1 var(--mono);letter-spacing:.07em;text-transform:uppercase;padding:3px 6px;background:var(--ink);color:var(--bg)}
+.tag.pend{background:var(--acc)}
+
+#toasts{position:fixed;left:16px;right:16px;bottom:16px;display:flex;flex-direction:column;align-items:center;gap:8px;z-index:99;pointer-events:none}
+.toast{display:flex;gap:9px;align-items:center;background:var(--bg);color:var(--ink);border:1.5px solid var(--ink);
+  padding:11px 15px;font:500 12px/1.4 var(--mono);max-width:100%;animation:tin .2s ease}
+.toast.err{background:var(--acc);color:var(--bg);border-color:var(--acc)}
+.toast svg{width:14px;height:14px}
+@keyframes tin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media(min-width:640px){#toasts{left:auto;right:20px;align-items:flex-end}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="h-in">
+    <div class="brand">BLOCKLAB<span class="star">*</span><span class="bsub"> / cachyos</span></div>
+    <div class="h-right">
+      <span class="qb" id="qb" hidden>↑0</span>
+      <span class="status" id="stPill" title=""><span class="dot" id="stDot"></span><span id="stTxt">—</span></span>
+      <button class="iconbtn" id="btnDict" title="Diccionario de comandos (man)"><i data-lucide="book-open"></i></button>
+      <button class="iconbtn" id="btnSync" title="Sincronizar con Sheets"><i data-lucide="refresh-cw"></i></button>
+      <button class="iconbtn danger" id="btnWipe" title="Formatear home · borrar archivos y reiniciar"><i data-lucide="trash-2"></i></button>
+    </div>
+  </div>
+</header>
+
+<div id="term"><div id="out"></div>
+  <div id="inLine" hidden><span id="inPrompt"></span><input id="cin" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="terminal"></div>
+</div>
+
+<!-- nano -->
+<div id="nano" hidden>
+  <div class="nano-top"><span id="nanoTitle">GNU nano 7.2</span><span class="ver">BLOCKLAB nano</span></div>
+  <textarea id="nanoTA" spellcheck="false" autocapitalize="off"></textarea>
+  <div id="nanoStatus"></div>
+  <div class="nano-bar">
+    <span><b>^O</b>Guardar</span><span><b>^X</b>Salir</span><span><b>^K</b>Cortar línea</span>
+    <span><b>^G</b>Ayuda</span><span><b>Tab</b>Sangría</span>
+  </div>
+</div>
+
+<div id="power" hidden></div>
+
+<!-- Diccionario -->
+<dialog id="dlgDict">
+  <div class="dlg-head">
+    <div><h3>Diccionario · man pages</h3><small id="dictCount">—</small></div>
+    <button type="button" class="iconbtn" data-close style="border-color:var(--ink);color:var(--ink)"><i data-lucide="x"></i></button>
+  </div>
+  <div class="dlg-body">
+    <div class="d-tools">
+      <input id="q2" type="text" placeholder="Buscar comando…" autocomplete="off">
+      <button class="btn btn-solid" id="btnNewSnip" style="border-color:var(--ink);background:var(--ink);color:var(--bg)"><i data-lucide="plus"></i>Nueva</button>
+    </div>
+    <div class="d-list" id="dictList"></div>
+  </div>
+</dialog>
+
+<!-- Entrada -->
+<dialog id="dlgSnip">
+  <form id="fmSnip" method="dialog">
+    <div class="dlg-head">
+      <div><h3 id="snipTitle">Nueva entrada</h3><small>hoja «cachyos» en Sheets · la verá `man`</small></div>
+      <button type="button" class="iconbtn" data-close style="border-color:var(--ink);color:var(--ink)"><i data-lucide="x"></i></button>
+    </div>
+    <div class="dlg-body">
+      <input type="hidden" name="id">
+      <div class="field-row">
+        <div class="field"><label>Comando</label><input name="name" required placeholder="ls"></div>
+        <div class="field"><label>Tipo</label><input name="tag" list="kinds" placeholder="comando">
+          <datalist id="kinds">
+            <option>comando</option><option>opción</option><option>atajo</option><option>truco</option>
+          </datalist>
+        </div>
+      </div>
+      <div class="field"><label>Sintaxis / descripción (la mostrará man)</label>
+        <textarea name="code" id="snipTA" required spellcheck="false" placeholder="ls -la&#10;Lista archivos en formato largo, incluidos los ocultos."></textarea>
+        <span class="hint">Tab = sangría</span>
+      </div>
+    </div>
+    <div class="dlg-foot">
+      <button type="button" class="btn" data-close>Cancelar</button>
+      <button type="submit" class="btn btn-solid">Guardar</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="toasts"></div>
+
+<script>
+/* ═══ 1 · CONFIG ═══════════════════════════════════════════ */
+const API_URL   = 'https://script.google.com/macros/s/AKfycbzSLoucR2yC7X7kKpbeDnQUCNd94-WuVuGyR55CMIrP4hq5f1tgynDDdHumc8iBj8gI9g/exec';
+const SHEET     = 'cachyos';
+const LS_DB     = 'blocklab.db.v1';
+const LS_Q      = 'blocklab.queue.v1';
+const LS_SEEDED = 'blocklab.cachyos.seeds.v1';
+const LS_FS     = 'blocklab.fs.cachyos.v1';   // archivos de usuario
+const LS_DEL    = 'blocklab.fs.cachyos.del.v1'; // tumbas (borrados)
+const LS_HIST   = 'blocklab.fs.cachyos.hist.v1';
+const LS_PKGS   = 'blocklab.fs.cachyos.pkgs.v1';
+
+const USER = 'cachy', HOST = 'localhost', HOME = '/home/' + USER;
+const SUDO_PASS = '1234';
+
+/* Man pages semilla → hoja «cachyos», tag 'comando'. man <cmd> las lee. */
+const SEED = [
+  { id:'c-ls',   name:'ls',   tag:'comando', code:`ls [-l] [-a] [ruta]\nLista archivos. -l formato largo, -a incluye ocultos.` },
+  { id:'c-cd',   name:'cd',   tag:'comando', code:`cd [ruta] · cd .. · cd ~\nCambia de directorio. cd sin argumentos va a /home/cachy.` },
+  { id:'c-pwd',  name:'pwd',  tag:'comando', code:`pwd\nMuestra la ruta actual.` },
+  { id:'c-mkdir',name:'mkdir',tag:'comando', code:`mkdir [-p] ruta\nCrea directorios. -p crea los padres que falten.` },
+  { id:'c-rm',   name:'rm',   tag:'comando', code:`rm [-r] [-f] archivo…\nBorra archivos; -r para directorios recursivamente.` },
+  { id:'c-cp',   name:'cp',   tag:'comando', code:`cp [-r] origen destino\nCopia archivos (-r para carpetas).` },
+  { id:'c-mv',   name:'mv',   tag:'comando', code:`mv origen destino\nMueve o renombra.` },
+  { id:'c-touch',name:'touch',tag:'comando', code:`touch archivo\nCrea un archivo vacío o actualiza su fecha.` },
+  { id:'c-cat',  name:'cat',  tag:'comando', code:`cat archivo…\nMuestra el contenido. Úsalo con pipes: cat a.txt | grep hola` },
+  { id:'c-nano', name:'nano', tag:'comando', code:`nano archivo\nEditor de texto. ^O guardar · ^X salir · ^K cortar línea.` },
+  { id:'c-echo', name:'echo', tag:'comando', code:`echo "texto" [> archivo] [>> archivo]\nImprime texto; > crea/sobrescribe, >> añade.` },
+  { id:'c-grep', name:'grep', tag:'comando', code:`grep [-i] [-n] patrón [archivo]\nFiltra líneas que contengan el patrón.` },
+  { id:'c-sudo', name:'sudo', tag:'comando', code:`sudo comando\nEjecuta como root. Contraseña de este simulador: 1234` },
+  { id:'c-su',   name:'su',   tag:'comando', code:`su [usuario]\nCambia de usuario (por defecto a root). exit para volver.` },
+  { id:'c-pacman',name:'pacman',tag:'comando', code:`pacman -S paquete · -R paquete · -Syu · -Ss texto · -Q\nGestor de paquetes de Arch. AQUÍ SOLO SIMULA el proceso.` },
+  { id:'c-systemctl',name:'systemctl',tag:'comando', code:`systemctl status|start|stop|restart servicio\nControla servicios del sistema (simulados).` },
+  { id:'c-ps',   name:'ps',   tag:'comando', code:`ps aux\nLista los procesos en ejecución.` },
+  { id:'c-top',  name:'top',  tag:'comando', code:`top · htop\nInstantánea de procesos y recursos.` },
+  { id:'c-kill', name:'kill', tag:'comando', code:`kill PID\nTermina un proceso. kill 1 nunca funciona (¡ni debería!).` },
+  { id:'c-uname',name:'uname',tag:'comando', code:`uname [-a]\nInformación del kernel.` },
+  { id:'c-neofetch',name:'neofetch',tag:'comando', code:`neofetch · fastfetch\nPresentación del sistema con logo.` },
+  { id:'c-man',  name:'man',  tag:'comando', code:`man comando\nMuestra esta documentación (guardada en Google Sheets).` },
+  { id:'c-tree', name:'tree', tag:'comando', code:`tree [ruta]\nÁrbol de directorios.` },
+  { id:'c-chmod',name:'chmod',tag:'comando', code:`chmod 755 archivo\nCambia permisos (octal). afecta a ls -l.` },
+  { id:'c-help', name:'help', tag:'comando', code:`help [comando]\nLista los comandos disponibles de este simulador.` }
+];
+
+/* ═══ 2 · ESTADO ═══════════════════════════════════════════ */
+let MODULES = [], BLOCKS = {}, queue = [], syncing = false;
+let connected = false, connLabel = '', connDetail = '';
+let diagDone = false, diagRunning = false, dlgAutoShown = false;
+
+let FS = {};                    // ruta → {type, content, mtime, mode, owner, sys}
+let tombstones = {};            // ruta → iso (borrados; evita re-crear desde Sheets)
+let dirtyFiles = new Set();     // rutas a subir a Sheets
+let history = [], histIdx = -1;
+let session = { user:null, root:false, loggedIn:false, cwd:HOME, pass:SUDO_PASS, sudoOk:false, env:{}, pkgs:new Set(['bash','coreutils','filesystem','pacman','linux-cachyos','networkmanager','plasma','konsole','sddm']), booted:false };
+let services = { 'sshd':'inactive', 'NetworkManager':'active', 'bluetooth':'inactive', 'cups':'inactive' };
+let bootT0 = Date.now();
+
+const $   = s => document.querySelector(s);
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const nowISO = () => new Date().toISOString();
+const refreshIcons = () => { if(window.lucide) lucide.createIcons(); };
+const isDraftOp = op => op.action==='saveBlock' && op.block && op.block.id==='__draft__';
+const term = $('#term'), outEl = $('#out'), inLine = $('#inLine'), cin = $('#cin'), inPrompt = $('#inPrompt');
+
+/* ═══ 3 · SISTEMA DE ARCHIVOS VIRTUAL ══════════════════════ */
+function normPath(p){
+  if(!p) return null;
+  if(p === '~') p = HOME;
+  else if(p.startsWith('~/')) p = HOME + p.slice(1);
+  if(!p.startsWith('/')) p = (session.cwd === '/' ? '' : session.cwd) + '/' + p;
+  const parts = p.split('/').filter(x => x && x !== '.');
+  const st = [];
+  for(const s of parts){ if(s === '..') st.pop(); else st.push(s); }
+  return '/' + st.join('/');
+}
+const parentOf = p => { const i = p.lastIndexOf('/'); return i <= 0 ? '/' : p.slice(0, i); };
+const baseOf   = p => p === '/' ? '/' : p.slice(p.lastIndexOf('/') + 1);
+
+function getNode(p){ return FS[p] || null; }
+function isDir(p){ const n = FS[p]; return !!n && n.type === 'dir'; }
+function isUserPath(p){ return !FS[p]?.sys && p !== '/' && !isSystemPath(p); }
+function isSystemPath(p){
+  return p === '/' || /^\/(bin|sbin|etc|usr|var|opt|proc|lib|root)(\/|$)/.test(p) && !p.startsWith('/var/tmp');
+}
+function canWrite(p){
+  if(session.root) return true;
+  if(p.startsWith(HOME + '/') || p === HOME || p.startsWith('/tmp/')) return true;
+  return false;
+}
+function canRead(p){
+  if(session.root) return true;
+  if(p === '/root' || p.startsWith('/root/')) return false;
+  return true;
+}
+function touchNode(p, data){
+  FS[p] = Object.assign({ mtime: nowISO() }, FS[p], data, { mtime: nowISO() });
+  if(isUserPath(p)){ dirtyFiles.add(p); saveFSSoon(); }
+}
+function writeFile(p, content){
+  const par = parentOf(p);
+  if(!isDir(par)) return { err: `cat: ${par}: No existe el directorio` };
+  const n = getNode(p);
+  if(n && n.type === 'dir') return { err: `${p}: Es un directorio` };
+  touchNode(p, { type:'file', content:String(content), owner: session.root ? 'root' : USER });
+  return { ok:true };
+}
+function makeDir(p){
+  if(getNode(p)) return { err: `mkdir: no se puede crear el directorio «${p}»: El archivo ya existe` };
+  if(!canWrite(p)) return { err: `mkdir: no se puede crear el directorio «${p}»: Permiso denegado` };
+  touchNode(p, { type:'dir', owner: session.root ? 'root' : USER });
+  return { ok:true };
+}
+function removeNode(p, recursive){
+  const n = getNode(p);
+  if(!n) return { err: `rm: no se puede borrar '${p}': No existe el archivo` };
+  if(n.type === 'dir' && !recursive){
+    if(Object.keys(FS).some(k => k.startsWith(p + '/')))
+      return { err: `rm: no se puede borrar '${p}': Es un directorio (usa -r)` };
+  }
+  if(!canWrite(p)) return { err: `rm: no se puede borrar '${p}': Permiso denegado` };
+  const victims = [p, ...Object.keys(FS).filter(k => k.startsWith(p + '/'))];
+  victims.forEach(v => {
+    if(!FS[v]?.sys){
+      tombstones[v] = nowISO();
+      if(FS[v] && !FS[v].sys) pushOp({ action:'deleteBlock', sheet:SHEET, id: 'f' + v });
+      dirtyFiles.delete(v);
+    }
+    delete FS[v];
+  });
+  saveFS();
+  return { ok:true };
+}
+function copyNode(src, dst){
+  const n = getNode(src);
+  if(!n) return { err: `cp: no se puede evaluar '${src}': No existe el archivo` };
+  if(n.type === 'dir') return { err: `cp: -r no especificado; omitiendo el directorio '${src}'` };
+  let target = dst;
+  if(isDir(dst)) target = (dst === '/' ? '' : dst) + '/' + baseOf(src);
+  const w = writeFile(target, n.content);
+  return w.err ? w : { ok:true };
+}
+function moveNode(src, dst){
+  const n = getNode(src);
+  if(!n) return { err: `mv: no se puede evaluar '${src}': No existe el archivo` };
+  let target = dst;
+  if(isDir(dst)) target = (dst === '/' ? '' : dst) + '/' + baseOf(src);
+  if(getNode(target) && getNode(target).type === 'dir' && !isDir(src))
+    return { err: `mv: el destino '${dst}' es un directorio` };
+  const kids = Object.keys(FS).filter(k => k.startsWith(src + '/'));
+  FS[target] = Object.assign({}, n, { mtime: nowISO() });
+  kids.forEach(k => { FS[target + k.slice(src.length)] = FS[k]; delete FS[k]; });
+  if(!n.sys && FS[target] && !FS[target].sys){ dirtyFiles.add(target); }
+  delete FS[src];
+  if(!n.sys){ tombstones[src] = nowISO(); pushOp({ action:'deleteBlock', sheet:SHEET, id: 'f' + src }); dirtyFiles.delete(src); }
+  saveFS();
+  return { ok:true };
+}
+function seedSystem(){
+  const mk = (p, d) => { FS[p] = { type:'dir', sys:true, owner:'root', mtime: nowISO(), ...d }; };
+  ['/', '/bin','/sbin','/etc','/usr','/usr/bin','/usr/share','/var','/var/log','/opt','/proc','/lib','/root','/tmp','/home']
+    .forEach(p => { if(!FS[p]) mk(p); });
+  const wf = (p, c) => { if(!FS[p]) FS[p] = { type:'file', content:c, sys:true, owner:'root', mtime: nowISO(), mode:'644' }; };
+  wf('/etc/os-release', 'NAME="CachyOS"\nPRETTY_NAME="CachyOS"\nID=cachyos\nID_LIKE=arch\nVERSION_ID=v2024.06\nKERNEL=6.9.3-1-cachyos\n');
+  wf('/etc/hostname', HOST + '\n');
+  wf('/etc/passwd', 'root:x:0:0:root:/root:/bin/bash\n' + USER + ':x:1000:1000:Cachy User:' + HOME + ':/bin/bash\n');
+  wf('/etc/shadow', 'root:!:19700:0:99999:7:::\n' + USER + ':$6$…:19700:0:99999:7:::\n');
+  wf('/proc/cpuinfo', 'model name\t: AMD Ryzen 7 (simulado)\ncpu MHz\t\t: 4600.000\n');
+  wf('/proc/version', 'Linux version 6.9.3-1-cachyos (simulador BLOCKLAB)\n');
+  wf('/var/log/pacman.log', '[2024-06-01] sistema inicializado (simulado)\n');
+  [HOME, HOME+'/Escritorio', HOME+'/Documentos', HOME+'/Descargas', HOME+'/Imágenes', HOME+'/Música', HOME+'/Vídeos']
+    .forEach(p => { if(!FS[p]) FS[p] = { type:'dir', owner:USER, mtime: nowISO() }; });
+  if(!FS[HOME + '/.bashrc'])
+    FS[HOME + '/.bashrc'] = { type:'file', owner:USER, mtime: nowISO(),
+      content:'# ~/.bashrc de ' + USER + '\n# Edítame con: nano ~/.bashrc\nalias ll="ls -l"\nalias update="sudo pacman -Syu"\n' };
+  if(!FS[HOME + '/README.md'])
+    FS[HOME + '/README.md'] = { type:'file', owner:USER, mtime: nowISO(),
+      content:'# Bienvenido a la terminal CachyOS (simulada)\n\n· Todo archivo que crees aquí se guarda en Google Sheets.\n· Contraseña de sudo/su: 1234\n· Prueba: neofetch · ls -la · nano Documentos/nota.txt\n· pacman -S firefox (solo simula el proceso)\n· help para ver todos los comandos\n' };
+}
+function saveFS(){
+  try{
+    const nodes = {};
+    for(const [p, n] of Object.entries(FS)) if(!n.sys)
+      nodes[p] = { type:n.type, content:n.content||'', mtime:n.mtime, mode:n.mode, owner:n.owner };
+    localStorage.setItem(LS_FS, JSON.stringify(nodes));
+    localStorage.setItem(LS_DEL, JSON.stringify(tombstones));
+    localStorage.setItem(LS_PKGS, JSON.stringify([...session.pkgs]));
+  }catch(e){}
+}
+let fsT = null;
+function saveFSSoon(){ clearTimeout(fsT); fsT = setTimeout(saveFS, 600); }
+function loadFS(){
+  seedSystem();
+  try{
+    tombstones = JSON.parse(localStorage.getItem(LS_DEL) || '{}');
+    const nodes = JSON.parse(localStorage.getItem(LS_FS) || '{}');
+    for(const [p, n] of Object.entries(nodes)) FS[p] = Object.assign({ sys:false }, n);
+    session.pkgs = new Set(JSON.parse(localStorage.getItem(LS_PKGS) || 'null') || [...session.pkgs]);
+  }catch(e){}
+}
+let pushFT = null;
+function scheduleFilePush(){ clearTimeout(pushFT); pushFT = setTimeout(pushDirtyFiles, 2200); }
+function pushDirtyFiles(){
+  if(!dirtyFiles.size) return;
+  for(const p of dirtyFiles){
+    const n = FS[p]; if(!n || n.sys) { dirtyFiles.delete(p); continue; }
+    pushOp({ action:'saveBlock', sheet:SHEET,
+      block:{ id:'f' + p, name:p, tag:(n.type==='dir'?'directorio':'archivo'), code:n.content||'',
+              createdAt:(n.created||nowISO()), updatedAt:n.mtime } });
+  }
+  dirtyFiles.clear();
+}
+
+/* ═══ 4 · CACHÉ / COLA / RED (idéntico al resto) ═══════════ */
+function saveCache(){ try{ localStorage.setItem(LS_DB, JSON.stringify({modules:MODULES, blocks:BLOCKS, ts:nowISO()})); }catch(e){} }
+function loadCache(){
+  try{
+    const d = JSON.parse(localStorage.getItem(LS_DB)||'null');
+    if(d){ MODULES = d.modules||[]; BLOCKS = d.blocks||{}; return true; }
+  }catch(e){}
+  return false;
+}
+const saveQueue = () => { try{ localStorage.setItem(LS_Q, JSON.stringify(queue)); }catch(e){} };
+const loadQueue = () => { try{ queue = JSON.parse(localStorage.getItem(LS_Q)||'[]'); }catch(e){ queue=[]; } };
+
+function renderConn(){
+  const pend = queue.filter(op => !isDraftOp(op)).length;
+  const qb = $('#qb');
+  qb.hidden = !pend; qb.textContent = '↑' + pend;
+  const dot = $('#stDot'), txt = $('#stTxt');
+  $('#stPill').title = connDetail || '';
+  if(connected){ txt.textContent='Conectado'; dot.className='dot ok'; return; }
+  if(syncing){ txt.textContent='Conectando…'; dot.className='dot busy'; return; }
+  txt.textContent = connLabel || 'En espera';
+  dot.className = 'dot ' + (connLabel ? 'err' : '');
+}
+function toast(msg, kind){
+  const t = document.createElement('div');
+  t.className = 'toast' + (kind==='err'?' err':'');
+  t.innerHTML = `<i data-lucide="${kind==='err'?'alert-triangle':'check'}"></i><span>${esc(msg)}</span>`;
+  $('#toasts').appendChild(t); refreshIcons();
+  setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity .25s'; setTimeout(()=>t.remove(),260); }, 4200);
+}
+
+let jsonpSeq = 0, jsonpChain = Promise.resolve();
+function jsonpRaw(action, params, ms){
+  return new Promise((res, rej)=>{
+    const cb = '__bl_' + (++jsonpSeq) + '_' + Date.now();
+    const s  = document.createElement('script');
+    let settled = false;
+    const finish = (ok, val) => {
+      if(settled) return;
+      settled = true;
+      setTimeout(()=>{ try{ delete window[cb]; }catch(e){} s.remove(); }, 45000);
+      ok ? res(val) : rej(val);
+    };
+    window[cb] = d => finish(true, d);
+    const to = setTimeout(()=>finish(false, new Error('timeout')), ms);
+    s.onerror = () => finish(false, new Error('corb-o-red'));
+    const q = new URLSearchParams(Object.assign({ action, callback:cb, _:Date.now() }, params));
+    s.src = API_URL + '?' + q.toString();
+    document.head.appendChild(s);
+  });
+}
+function jsonpGet(action, params={}){
+  const run = () => jsonpRaw(action, params, 25000);
+  const p = jsonpChain.then(run, run);
+  jsonpChain = p.then(()=>{}, ()=>{});
+  return p;
+}
+async function sendNoCors(op){
+  op.lastTry = Date.now(); op.tries = (op.tries||0) + 1;
+  try{ await fetch(API_URL, { method:'POST', mode:'no-cors', body: JSON.stringify(op) }); return true; }
+  catch(e){ return false; }
+}
+let syncT = null;
+function scheduleSync(ms=3500){ clearTimeout(syncT); syncT = setTimeout(sync, ms); }
+function pushOp(op){
+  op.lastTry = 0;
+  queue.push(op); saveQueue(); renderConn();
+  sendNoCors(op).then(()=>scheduleSync(3500));
+}
+function retryPending(){
+  if(!queue.length) return;
+  const now = Date.now();
+  let re = false;
+  queue.forEach(op => { if(now - (op.lastTry||0) > 20000){ sendNoCors(op); re = true; } });
+  saveQueue();
+  if(re) scheduleSync(4000);
+}
+function isConfirmed(op, data){
+  const B = data.blocks || {};
+  if(op.action==='saveBlock'){
+    const arr = B[op.sheet]; if(!arr) return false;
+    const r = arr.find(b=>b.id===(op.block&&op.block.id));
+    return !!r && r.code === op.block.code;
+  }
+  if(op.action==='deleteBlock'){
+    const arr = B[op.sheet];
+    return !arr || !arr.some(b=>b.id===op.id);
+  }
+  return true;
+}
+function reconcileOps(data){
+  if(!queue.length) return;
+  const confirmedOps = queue.filter(op => isConfirmed(op, data));
+  if(!confirmedOps.length) return;
+  queue = queue.filter(op => !isConfirmed(op, data));
+  saveQueue();
+  toast('Guardado en Sheets ✓');
+  renderConn();
+}
+
+/* ═══ 5 · SYNC (monta archivos desde Sheets) ═══════════════ */
+const normBlock = o => ({ id:String(o.id||''), name:String(o.name||''), tag:String(o.tag||''),
+  code:(o.code==null?'':String(o.code)), createdAt:String(o.createdAt||''), updatedAt:String(o.updatedAt||'') });
+
+async function sync(){
+  if(syncing) return;
+  syncing = true; $('#btnSync').classList.add('spin');
+  if(!connected) renderConn();
+  try{
+    const data = await jsonpGet('bootstrap', { m: SHEET });
+    if(!data || !data.ok){
+      const e = new Error((data && data.error) || 'respuesta inválida'); e.srv = true; throw e;
+    }
+    connected = true; connLabel=''; connDetail=''; diagDone=false;
+    if(data.modules && data.modules.length) MODULES = data.modules;
+
+    const remote = ((data.blocks||{})[SHEET] || []).map(normBlock);
+    BLOCKS[SHEET] = remote;
+    saveCache();
+
+    /* archivos/directorios remotos → FS (Sheets manda si es más nuevo) */
+    for(const b of remote){
+      if(b.tag !== 'archivo' && b.tag !== 'directorio') continue;
+      const p = b.name; if(!p || !p.startsWith('/')) continue;
+      const tb = tombstones[p];
+      if(tb && b.updatedAt && b.updatedAt <= tb){ pushOp({action:'deleteBlock', sheet:SHEET, id:b.id}); continue; }
+      const local = FS[p];
+      if(!local || (!local.sys && (!local.mtime || (b.updatedAt && b.updatedAt > local.mtime)))){
+        FS[p] = { type: b.tag === 'directorio' ? 'dir' : 'file',
+                  content: b.tag === 'directorio' ? '' : b.code,
+                  owner: USER, mtime: b.updatedAt || nowISO(), sys:false };
+      }
+    }
+    /* locales sucios → subir */
+    for(const p of Object.keys(FS)){
+      const n = FS[p];
+      if(!n.sys && !remote.some(b => b.name === p)) dirtyFiles.add(p);
+    }
+    saveFS(); pushDirtyFiles();
+    reconcileOps(data);
+    retryPending();
+    seedDict();
+    renderDict();
+  }catch(err){
+    if(!connected){
+      if(err && err.srv){ connLabel='Error servidor'; connDetail='El script responde pero falla: ' + err.message; }
+      else if(!diagDone) diagnose();
+    }
+  }finally{
+    syncing = false; $('#btnSync').classList.remove('spin'); renderConn();
+  }
+}
+async function diagnose(){
+  if(diagRunning) return;
+  diagRunning = true; diagDone = true;
+  connLabel='Diagnosticando…'; connDetail=''; renderConn();
+  try{
+    const p = await jsonpGet('ping');
+    if(p && p.ok){ connLabel='Ajuste fino'; connDetail='El script responde; el bootstrap falló por otra causa.'; }
+    else { connLabel='Error servidor'; connDetail='Actualiza a Code.gs v2 y crea «Nueva versión».'; }
+  }catch(e){
+    connLabel = 'Login o versión vieja';
+    connDetail = 'La URL no devuelve JavaScript. Sigue los 4 pasos del panel (Code.gs v2 + setup + acceso Cualquiera).';
+    openConnDlg(true);
+  }
+  diagRunning = false; renderConn();
+}
+function openConnDlg(auto){
+  if(auto && dlgAutoShown) return;
+  if(auto) dlgAutoShown = true;
+  openDlg($('#dlgDict')); // reutiliza: muestra el diccionario con el estado en el título
+}
+setInterval(()=>{ if(!connected) sync(); else retryPending(); }, 25000);
+window.addEventListener('online', ()=>{ if(!connected) sync(); else { retryPending(); scheduleSync(500); } });
+
+/* ═══ 6 · SEMILLAS del diccionario ═════════════════════════ */
+function seedDict(){
+  if(localStorage.getItem(LS_SEEDED)) return;
+  const have = new Set((BLOCKS[SHEET]||[]).map(b=>b.id));
+  const t = nowISO();
+  SEED.forEach(s=>{
+    if(!have.has(s.id)){
+      (BLOCKS[SHEET] = BLOCKS[SHEET]||[]).push(Object.assign({createdAt:t, updatedAt:t}, s));
+      pushOp({action:'saveBlock', sheet:SHEET, block:Object.assign({createdAt:t, updatedAt:t}, s)});
+    }
+  });
+  saveCache();
+  localStorage.setItem(LS_SEEDED,'1');
+}
+const dict = () => (BLOCKS[SHEET] || (BLOCKS[SHEET] = [])).filter(b => b.tag === 'comando');
+
+/* ═══ 7 · SALIDA DE TERMINAL ═══════════════════════════════ */
+function C(cls, t){ return `<span class="c-${cls}">${esc(t)}</span>`; }
+function print(html, cls){
+  const d = document.createElement('div');
+  d.className = 'ln' + (cls ? ' ' + cls : '');
+  d.innerHTML = html || '&nbsp;';
+  outEl.appendChild(d);
+}
+function printText(text, cls){
+  String(text).split('\n').forEach(l => print(esc(l), cls));
+}
+function printMultiline(htmlWithNL){ String(htmlWithNL).split('\n').forEach(l => print(l)); }
+function scrollBottom(){ term.scrollTop = term.scrollHeight; }
+
+function cwdDisplay(){
+  if(session.cwd === HOME) return '~';
+  if(session.cwd.startsWith(HOME + '/')) return '~' + session.cwd.slice(HOME.length);
+  return session.cwd;
+}
+function promptHTML(){
+  if(!session.loggedIn) return '';
+  if(session.root)
+    return C('red','[root@' + HOST + ' ' + cwdDisplay() + ']') + C('dim','# ');
+  return C('green','[' + session.user + '@' + HOST + ' ' + cwdDisplay() + ']') + C('dim','$ ');
+}
+function showInput(mode, promptHTMLStr){
+  inLine.hidden = false;
+  inPrompt.innerHTML = promptHTMLStr;
+  cin.type = mode === 'password' ? 'password' : 'text';
+  cin.value = '';
+  scrollBottom(); cin.focus();
+}
+function hideInput(){ inLine.hidden = true; }
+
+/* ═══ 8 · EJECUTOR + COMANDOS ══════════════════════════════ */
+function tokenize(str){
+  const toks = []; let cur = '', q = null;
+  for(const ch of str){
+    if(q){ if(ch === q) q = null; else cur += ch; }
+    else if(ch === '"' || ch === "'") q = ch;
+    else if(/\s/.test(ch)){ if(cur){ toks.push(cur); cur=''; } }
+    else cur += ch;
+  }
+  if(cur) toks.push(cur);
+  return toks;
+}
+function splitPipeline(toks){
+  const segs = [[]];
+  let redirect = null;
+  for(let i = 0; i < toks.length; i++){
+    const t = toks[i];
+    if(t === '|'){ segs.push([]); continue; }
+    if(t === '>' || t === '>>'){ redirect = { mode:t, file: toks[i+1] || '' }; i++; continue; }
+    segs[segs.length-1].push(t);
+  }
+  return { segs, redirect };
+}
+function resolveArgs(args){
+  // expandir $VAR
+  return args.map(a => a.replace(/\$(\w+)/g, (m, v) => {
+    if(v === 'HOME') return HOME;
+    if(v === 'PWD') return session.cwd;
+    if(v === 'USER' || v === 'LOGNAME') return session.root ? 'root' : session.user || USER;
+    if(v === 'SHELL') return '/bin/bash';
+    if(v === 'PATH') return '/usr/local/bin:/usr/bin:/bin';
+    return session.env[v] ?? '';
+  }));
+}
+function fmtSize(n){
+  if(n >= 1048576) return (n/1048576).toFixed(1) + 'M';
+  if(n >= 1024) return (n/1024).toFixed(1) + 'K';
+  return String(n);
+}
+function listDir(path, args){
+  const n = getNode(path);
+  if(!n) return { err: `ls: no se puede acceder a '${path}': No existe el archivo o el directorio` };
+  if(n.type === 'file') return { out: baseOf(path) };
+  if(!canRead(path)) return { err: `ls: no se puede abrir el directorio '${path}': Permiso denegado` };
+  const showAll = args.includes('-a') || args.includes('-la') || args.includes('-al');
+  const long = args.includes('-l') || args.includes('-la') || args.includes('-al');
+  const kids = Object.keys(FS)
+    .filter(k => k !== path && parentOf(k) === path)
+    .filter(k => showAll || !baseOf(k).startsWith('.'))
+    .sort((a,b) => a.localeCompare(b, 'es', {sensitivity:'base'}));
+  if(!kids.length && !long) return { out:'' };
+  if(!long){
+    return { out: kids.map(k => isDir(k) ? C('blue', baseOf(k) + '/') : (FS[k].type==='link' ? C('mag', baseOf(k)) : esc(baseOf(k)))).join('  ') };
+  }
+  const lines = ['total ' + kids.length];
+  for(const k of kids){
+    const kn = FS[k];
+    const perms = (isDir(k) ? 'd' : kn.type==='link' ? 'l' : '-') + (kn.mode === '777' ? 'rwxrwxrwx' : kn.mode === '600' ? 'rw-------' : isDir(k) ? 'rwxr-xr-x' : 'rw-r--r--');
+    const size = kn.type === 'dir' ? 4096 : (kn.content || '').length;
+    const d = new Date(kn.mtime || nowISO());
+    const fecha = d.toLocaleDateString('es',{day:'2-digit',month:'short'}) + ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+    let name = isDir(k) ? C('blue', baseOf(k)) : (kn.type==='link' ? C('mag', baseOf(k)) : esc(baseOf(k)));
+    if(kn.type === 'link') name += ' ' + C('dim','-> ' + (kn.target||'?'));
+    lines.push(`${perms} 1 ${esc(kn.owner||USER)} ${esc(kn.owner||USER)} ${String(fmtSize(size)).padStart(6)} ${fecha} ${name}`);
+  }
+  return { out: lines.join('\n') };
+}
+function readTarget(args, flags){
+  // devuelve {stdin} del primer archivo que exista en args
+  const files = args.filter(a => !a.startsWith('-'));
+  if(!files.length) return { stdin };
+  const p = normPath(files[0]);
+  const n = getNode(p);
+  if(!n) return { err: `No existe el archivo: ${p}` };
+  if(n.type === 'dir') return { err: `${p}: Es un directorio` };
+  return { stdin: n.content || '', usedPath: p };
+}
+let stdin = '';
+
+const CMDS = {
+  help(args){
+    if(args[0]){
+      const c = CMDS[args[0]] ? args[0] : null;
+      if(!c) return C('red', `help: no hay ayuda para '${args[0]}'`);
+      return C('green', args[0]) + '\n' + esc((dict().find(b=>b.name===args[0])||{}).code || 'Sin documentación. Añádela al diccionario.');
+    }
+    return C('yellow','── COMANDOS DEL SIMULADOR ──────────────────────') + '\n' +
+      C('blue','archivos:  ') + 'ls cd pwd mkdir rm cp mv touch cat nano echo tree find grep wc head tail sort stat ln chmod' + '\n' +
+      C('blue','sistema:   ') + 'sudo su whoami id uname hostname neofetch uptime date cal free df ps top htop kill pkill systemctl reboot shutdown poweroff' + '\n' +
+      C('blue','paquetes:  ') + 'pacman (-S -R -Syu -Ss -Q) yay' + '\n' +
+      C('blue','shell:     ') + 'clear history echo export env alias which man help exit logout cowsay' + '\n' +
+      C('dim','· Tab completa comandos y rutas · ↑↓ historial · pipes con | · redirección > >>');
+  },
+  pwd(){ return session.cwd; },
+  ls(args){ return listDir(normPath(args.find(a => !a.startsWith('-')) || session.cwd), args); },
+  cd(args){
+    const p = normPath(args[0] || HOME);
+    const n = getNode(p);
+    if(!n) return C('red', `cd: ${args[0]}: No existe el archivo o el directorio`);
+    if(n.type !== 'dir') return C('red', `cd: ${args[0]}: No es un directorio`);
+    if(!canRead(p)) return C('red', `cd: ${args[0]}: Permiso denegado`);
+    session.cwd = p;
+  },
+  mkdir(args){
+    const flags = args.filter(a => a.startsWith('-')).join('');
+    const targets = args.filter(a => !a.startsWith('-'));
+    if(!targets.length) return C('red','mkdir: falta un operando');
+    for(const t of targets){
+      let p = normPath(t);
+      if(flags.includes('p')){
+        const parts = p.split('/').filter(Boolean);
+        let acc = '';
+        for(const s of parts){
+          acc += '/' + s;
+          if(!getNode(acc)){ const r = makeDir(acc); if(r.err && !flags.includes('p')) return C('red', r.err); }
+        }
+      } else {
+        if(!isDir(parentOf(p))) return C('red', `mkdir: no se puede crear el directorio «${t}»: No existe el directorio`);
+        const r = makeDir(p); if(r.err) return C('red', r.err);
+      }
+    }
+  },
+  rmdir(args){
+    const p = normPath(args[0] || '');
+    if(!p) return C('red','rmdir: falta un operando');
+    if(!isDir(p)) return C('red', `rmdir: '${p}': No es un directorio`);
+    if(Object.keys(FS).some(k => k.startsWith(p + '/'))) return C('red', `rmdir: '${p}': El directorio no está vacío`);
+    return removeNode(p, false).err ? C('red', removeNode(p,false).err) : undefined;
+  },
+  touch(args){
+    if(!args[0]) return C('red','touch: falta un operando');
+    for(const t of args){
+      const p = normPath(t);
+      if(!isDir(parentOf(p))) return C('red', `touch: no se puede tocar '${t}': No existe el archivo o el directorio`);
+      if(!canWrite(p)) return C('red', `touch: no se puede tocar '${t}': Permiso denegado`);
+      if(!getNode(p)) writeFile(p, '');
+      else touchNode(p, {});
+    }
+  },
+  rm(args){
+    const flags = args.filter(a => a.startsWith('-')).join('');
+    const targets = args.filter(a => !a.startsWith('-'));
+    if(!targets.length) return C('red','rm: falta un operando');
+    if(targets.some(t => ['/', '/*', '/etc', '/usr'].includes(normPath(t)) && flags.includes('r')))
+      return C('red','🛡  rm -rf / está bloqueado — la broma clásica no se ejecuta en el simulador.');
+    for(const t of targets){
+      const r = removeNode(normPath(t), flags.includes('r'));
+      if(r.err && !flags.includes('f')) return C('red', r.err);
+    }
+  },
+  cp(args){
+    const flags = args.filter(a => a.startsWith('-')).join('');
+    const rest = args.filter(a => !a.startsWith('-'));
+    if(rest.length < 2) return C('red','cp: falta el archivo de destino');
+    const src = normPath(rest[0]), dst = normPath(rest[1]);
+    const n = getNode(src);
+    if(!n) return C('red', `cp: no se puede evaluar '${rest[0]}': No existe el archivo o el directorio`);
+    if(n.type === 'dir'){
+      if(!flags.includes('r')) return C('red', `cp: -r no especificado; omitiendo el directorio '${rest[0]}'`);
+      if(!canWrite(dst)) return C('red','cp: Permiso denegado');
+      touchNode(dst, { type:'dir', owner: session.root?'root':USER });
+      Object.keys(FS).filter(k => k.startsWith(src + '/')).forEach(k => {
+        const t = dst + k.slice(src.length);
+        if(FS[k].type === 'dir') touchNode(t, { type:'dir', owner: session.root?'root':USER });
+        else { FS[t] = Object.assign({}, FS[k], { mtime: nowISO() }); dirtyFiles.add(t); }
+      });
+      saveFS(); return;
+    }
+    const r = copyNode(src, dst);
+    if(r.err) return C('red', r.err);
+  },
+  mv(args){
+    const rest = args.filter(a => !a.startsWith('-'));
+    if(rest.length < 2) return C('red','mv: falta el archivo de destino');
+    const r = moveNode(normPath(rest[0]), normPath(rest[1]));
+    if(r.err) return C('red', r.err);
+  },
+  cat(args){
+    if(!args.length) return stdin || '';
+    let all = [];
+    for(const f of args){
+      const p = normPath(f);
+      const n = getNode(p);
+      if(!n) return C('red', `cat: ${f}: No existe el archivo o el directorio`);
+      if(n.type === 'dir') return C('red', `cat: ${f}: Es un directorio`);
+      if(!canRead(p)) return C('red', `cat: ${f}: Permiso denegado`);
+      if(n.type === 'link') { const t = getNode(n.target); all.push(t ? (t.content||'') : ''); }
+      else all.push(n.content || '');
+    }
+    return all.join('\n');
+  },
+  echo(args){ return args.join(' '); },
+  wc(args){
+    const flags = args.filter(a => a.startsWith('-')).join('');
+    const r = readTarget(args.filter(a => a !== 'wc'), stdin);
+    if(r.err) return C('red', 'wc: ' + r.err);
+    const t = r.stdin || '';
+    const l = t.split('\n').filter((x,i,a) => i < a.length-1 || x !== '').length;
+    const w = t.split(/\s+/).filter(Boolean).length;
+    const c = t.length;
+    if(flags.includes('l')) return String(l);
+    if(flags.includes('w')) return String(w);
+    if(flags.includes('c')) return String(c);
+    return `${l} ${w} ${c}`;
+  },
+  head(args){
+    const nFlag = args.indexOf('-n');
+    const count = nFlag >= 0 ? parseInt(args[nFlag+1]) || 10 : 10;
+    const r = readTarget(args.filter(a => a !== '-n' && !(nFlag>=0 && a === args[nFlag+1])), stdin);
+    if(r.err) return C('red', 'head: ' + r.err);
+    return (r.stdin || '').split('\n').slice(0, count).join('\n');
+  },
+  tail(args){
+    const nFlag = args.indexOf('-n');
+    const count = nFlag >= 0 ? parseInt(args[nFlag+1]) || 10 : 10;
+    const r = readTarget(args.filter(a => a !== '-n' && !(nFlag>=0 && a === args[nFlag+1])), stdin);
+    if(r.err) return C('red', 'tail: ' + r.err);
+    const lines = (r.stdin || '').split('\n');
+    return lines.slice(Math.max(0, lines.length - count)).join('\n');
+  },
+  sort(args){
+    const rev = args.includes('-r');
+    const r = readTarget(args.filter(a => !a.startsWith('-')), stdin);
+    if(r.err) return C('red', 'sort: ' + r.err);
+    const s = (r.stdin || '').split('\n').sort((a,b)=>a.localeCompare(b,'es'));
+    return (rev ? s.reverse() : s).join('\n');
+  },
+  grep(args){
+    const flags = args.filter(a => a.startsWith('-')).join('');
+    const rest = args.filter(a => !a.startsWith('-'));
+    if(!rest.length) return C('red','grep: falta el patrón');
+    const pat = rest[0];
+    const r = readTarget(rest.slice(1), stdin);
+    if(r.err) return C('red', 'grep: ' + r.err);
+    const re = new RegExp(pat.replace(/[.*+?^${}()|[\]\\]/g, m => '\\' + (m === '*' ? '*' : m)).replace(/\\\.\*/g, '.*').replace(/\\\?/g, '.'), flags.includes('i') ? 'i' : '');
+    return (r.stdin || '').split('\n').map((line, i) => {
+      if(!line) return null;
+      const m = line.match(re);
+      if(!m || m[0] === '') return null;
+      const pre = flags.includes('n') ? C('green', (i+1) + ':') : '';
+      return pre + esc(line.slice(0, m.index)) + C('red', m[0]) + esc(line.slice(m.index + m[0].length));
+    }).filter(Boolean).join('\n');
+  },
+  find(args){
+    let path = session.cwd, pat = null;
+    for(let i = 0; i < args.length; i++){
+      if(args[i] === '-name') pat = args[i+1];
+      else if(!args[i].startsWith('-')) path = normPath(args[i]);
+    }
+    if(!getNode(path)) return C('red', `find: '${path}': No existe el archivo o el directorio`);
+    const re = pat ? new RegExp('^' + pat.replace(/[.+^${}()|[\]\\]/g,'\\$&').replace(/\*/g,'.*').replace(/\?/g,'.') + '$', 'i') : null;
+    const hits = Object.keys(FS).filter(k => (k === path || k.startsWith(path + '/')) && (!re || re.test(baseOf(k))));
+    return hits.map(h => {
+      const rel = h === path ? path : (path === '/' ? h : h.slice(path.length + 1));
+      return '.' + (rel.startsWith('/') ? '' : '/') + rel;
+    }).sort().join('\n');
+  },
+  tree(args){
+    const root = normPath(args[0] || session.cwd);
+    if(!isDir(root)) return C('red', `tree: ${args[0]||''}: No es un directorio`);
+    const lines = [C('blue', root)];
+    let dirs = 0, files = 0;
+    function walk(dir, prefix){
+      const kids = Object.keys(FS).filter(k => parentOf(k) === dir)
+        .sort((a,b)=> (isDir(b)-isDir(a)) || a.localeCompare(b,'es'));
+      kids.forEach((k, i) => {
+        const last = i === kids.length - 1;
+        lines.push(prefix + (last ? '└── ' : '├── ') + (isDir(k) ? C('blue', baseOf(k)) : esc(baseOf(k))));
+        if(isDir(k)){ dirs++; walk(k, prefix + (last ? '    ' : '│   ')); } else files++;
+      });
+    }
+    walk(root, '');
+    lines.push('', C('dim', `${dirs} directorios, ${files} archivos`));
+    return lines.join('\n');
+  },
+  stat(args){
+    const p = normPath(args[0] || '');
+    const n = getNode(p);
+    if(!n) return C('red', `stat: no se puede evaluar '${args[0]}': No existe el archivo o el directorio`);
+    const size = n.type === 'dir' ? 4096 : (n.content||'').length;
+    return `  File: ${p}\n  Size: ${size}\t\tType: ${n.type === 'dir' ? 'directory' : n.type}\nModify: ${(n.mtime||'').replace('T',' ').slice(0,19)}\nAccess: (0${n.mode || (n.type==='dir'?'755':'644')})  Uid: ( ${(n.owner||USER)==='root'?0:1000}/${n.owner||USER} )`;
+  },
+  du(args){ 
+    const p = normPath(args.find(a=>!a.startsWith('-')) || session.cwd);
+    let total = 0;
+    Object.keys(FS).forEach(k => { if(k === p || k.startsWith(p + '/')) total += (FS[k].content||'').length + 4096; });
+    return `${fmtSize(Math.max(4096,total))}\t${p}`;
+  },
+  df(){
+    return 'Sistema de archivos  Tamaño Usado Disp. Uso% Montado en\n' +
+      '/dev/sda2            234G    38G  184G  18% /\n' +
+      'tmpfs                 16G   2,1M   16G   1% /tmp\n' +
+      '/dev/sda1            511M    45M  467M   9% /boot (simulado)';
+  },
+  free(){
+    return '               total        usado       libre   compartido  buff/cache  disponible\n' +
+      'Mem:            15Gi       4,2Gi       8,1Gi       312Mi       3,7Gi        11Gi\n' +
+      'Swap:           8,0Gi          0B       8,0Gi (simulado)';
+  },
+  ln(args){
+    const si = args.indexOf('-s');
+    const rest = args.filter(a => a !== '-s');
+    if(si < 0) return C('red','ln: este simulador solo soporta enlaces simbólicos: ln -s destino enlace');
+    if(rest.length < 2) return C('red','ln: falta un operando');
+    const target = normPath(rest[0]), link = normPath(rest[1]);
+    if(!canWrite(parentOf(link))) return C('red','ln: Permiso denegado');
+    FS[link] = { type:'link', target, owner: session.root?'root':USER, mtime: nowISO() };
+    if(isUserPath(link)){ dirtyFiles.add(link); saveFSSoon(); }
+  },
+  chmod(args){
+    const rest = args.filter(a => !a.startsWith('-'));
+    if(rest.length < 2) return C('red','chmod: falta un operando');
+    const mode = rest[0], p = normPath(rest[1]);
+    const n = getNode(p);
+    if(!n) return C('red', `chmod: no se puede acceder a '${rest[1]}': No existe el archivo o el directorio`);
+    if(!canWrite(p)) return C('red', `chmod: cambiando permisos de '${rest[1]}': Operación no permitida`);
+    if(!/^[0-7]{3,4}$/.test(mode)) return C('red', `chmod: modo inválido '${mode}' (usa octal, ej. 755)`);
+    n.mode = mode.slice(-3); n.mtime = nowISO();
+    if(isUserPath(p)) saveFSSoon();
+  },
+  whoami(){ return session.root ? 'root' : (session.user || USER); },
+  id(){
+    const u = session.root ? 'root' : USER;
+    return `uid=${session.root?0:1000}(${u}) gid=${session.root?0:1000}(${u}) grupos=${session.root?0:1000}(${u}),wheel,disk,audio,video`;
+  },
+  uname(args){
+    if(args.includes('-a')) return 'Linux ' + HOST + ' 6.9.3-1-cachyos #1 SMP PREEMPT_DYNAMIC x86_64 GNU/Linux';
+    return 'Linux';
+  },
+  hostname(){ return HOST; },
+  uptime(){
+    const s = Math.floor((Date.now() - bootT0) / 1000);
+    const h = Math.floor(s/3600), m = Math.floor((s%3600)/60);
+    return ' ' + new Date().toLocaleTimeString('es') + '  activo ' + h + ':' + String(m).padStart(2,'0') + ',  1 usuario,  carga media: 0,42, 0,31, 0,28';
+  },
+  date(){ return new Date().toLocaleString('es', {weekday:'long', year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit'}); },
+  cal(){
+    const now = new Date(), y = now.getFullYear(), m = now.getMonth();
+    const nom = now.toLocaleDateString('es',{month:'long'});
+    const first = new Date(y, m, 1).getDay();
+    const days = new Date(y, m+1, 0).getDate();
+    let out = (nom + ' ' + y).padStart(20) + '\n' + 'do lu ma mi ju vi sá\n';
+    let row = '   '.repeat(first);
+    for(let d = 1; d <= days; d++){
+      row += String(d).padStart(2) + ' ';
+      if((first + d) % 7 === 0){ out += row + '\n'; row = ''; }
+    }
+    if(row) out += row;
+    return out;
+  },
+  env(){
+    return Object.entries(Object.assign({
+      SHELL:'/bin/bash', SESSION:'tty1', USER: session.root?'root':USER,
+      HOME: session.root?'/root':HOME, PWD:session.cwd, PATH:'/usr/local/bin:/usr/bin:/bin', LANG:'es_ES.UTF-8', TERM:'blocklab-term'
+    }, session.env)).map(([k,v])=>k+'='+v).join('\n');
+  },
+  export(args){
+    args.forEach(a => {
+      const i = a.indexOf('=');
+      if(i > 0) session.env[a.slice(0,i)] = a.slice(i+1);
+    });
+  },
+  alias(args){
+    if(!args.length)
+      return 'alias ll="ls -l"\nalias la="ls -a"\nalias update="sudo pacman -Syu"\nalias grep="grep --color=auto"';
+    return 'alias: este simulador no crea alias nuevos (prueba a editar ~/.bashrc con nano)';
+  },
+  which(args){
+    const c = args[0];
+    if(!c) return C('red','which: falta un operando');
+    return CMDS[c] ? '/usr/bin/' + c : C('red', `which: no ${c} en (/usr/local/bin:/usr/bin:/bin)`);
+  },
+  man(args){
+    const c = args[0];
+    if(!c) return C('red','¿Qué página de manual quieres?');
+    const e = dict().find(b => b.name === c);
+    if(!e) return C('red', `No hay entrada de manual para ${c}`) + '\n' + C('dim','(las man pages viven en la hoja «'+SHEET+'» de Sheets — añádelas desde el diccionario)');
+    return C('bold', c.toUpperCase() + '(1)') + '\n\n' + esc(e.code) + '\n\n' + C('dim','── documentación servida desde Google Sheets ──');
+  },
+  history(){
+    return history.map((h, i) => String(i+1).padStart(4) + '  ' + esc(h)).join('\n');
+  },
+  clear(){ outEl.innerHTML = ''; },
+  nano(args){
+    if(!args[0]) return C('red','nano: falta el nombre del archivo · ej.: nano Documentos/nota.txt');
+    const p = normPath(args[0]);
+    if(!canWrite(p) && getNode(p)) return C('red','nano: Permiso denegado');
+    if(!isDir(parentOf(p))) return C('red', `nano: ${args[0]}: No existe el directorio`);
+    openNano(p);
+  },
+  vi(args){ return C('yellow',':wq!') + '\n' + C('dim','En este simulador tu editor es nano — es la tradición de las distros amigables. Prueba: nano ' + (args[0]||'archivo.txt')); },
+  vim(args){ return CMDS.vi(args); },
+  less(args){ return CMDS.cat(args); },
+  more(args){ return CMDS.cat(args); },
+  whoami2(){ return session.user; },
+  ps(args){
+    const procs = processList();
+    if(args.includes('aux') || args.includes('-e')){
+      return 'USER   PID  %CPU %MEM    VSZ   RSS TTY      STAT START   COMMAND\n' +
+        procs.map(p => `${(p.user||'root').padEnd(6)} ${String(p.pid).padEnd(4)} ${String(p.cpu).padStart(4)} ${String(p.mem).padStart(4)} ${String(p.vsz).padStart(6)} ${String(p.rss).padStart(5)} ?        Ss   10:02  ${p.cmd}`).join('\n');
+    }
+    return '   PID TTY          TIME CMD\n  ' + procs.slice(-2).map(p => p.pid + ' pts/0    00:00:00 ' + p.cmd.split(' ').pop()).join('\n  ');
+  },
+  top(){ return CMDS.htop(); },
+  htop(){
+    const procs = processList();
+    const up = CMDS.uptime();
+    return C('green','⚡ htop (instantánea) ── ') + up + '\n' +
+      C('dim','  1  [||||||||||          38,2%]  Tareas: ' + procs.length + ', 163 thr; 1 ejecutando') + '\n' +
+      C('dim','  2  [||||                 21,8%]  Mem: 4,2G/15,9G') + '\n' +
+      '  PID USER      CPU%  MEM%  COMANDO\n' +
+      procs.map(p => `  ${String(p.pid).padEnd(4)} ${(p.user||'root').padEnd(9)} ${String(p.cpu).padStart(4)}  ${String(p.mem).padStart(4)}  ${p.cmd}`).join('\n') +
+      '\n' + C('dim','(instantánea estática para aprender — no se refresca)');
+  },
+  kill(args){
+    const pid = parseInt(args.filter(a=>!a.startsWith('-'))[0]);
+    if(!pid) return C('red','kill: falta el PID · mira los PIDs con ps aux');
+    if(pid === 1) return C('red','kill: (1) - Operación no permitida') + '\n' + C('dim','Didáctico: systemd (PID 1) no se puede matar, es el padre de todo.');
+    const p = processList().find(x => x.pid === pid);
+    if(!p) return C('red', `kill: (${pid}) - No existe ese proceso`);
+    if(p.protected) return C('red', `kill: (${pid}) - Operación no permitida`);
+    return C('dim', `señal SIGTERM enviada a ${p.cmd} (${pid}) (simulado)`);
+  },
+  pkill(args){
+    const name = args[0];
+    if(!name) return C('red','pkill: falta el nombre del proceso');
+    const hits = processList().filter(p => p.cmd.includes(name));
+    if(!hits.length) return C('dim','pkill: ningún proceso coincide');
+    return 'señal enviada a: ' + hits.map(h => h.pid).join(', ') + ' (simulado)';
+  },
+  systemctl(args){
+    const sub = args[0];
+    if(!sub){
+      return 'UNIT                 LOAD   ACTIVE   SUB     DESCRIPTION\n' +
+        Object.entries(services).map(([k,v]) => `${k.padEnd(20)} loaded ${v.padEnd(8)} ${v==='active'?'running':'dead '}   servicio (simulado)`).join('\n');
+    }
+    const svc = (args[1] || '').replace('.service','');
+    if(sub === 'status'){
+      if(!(svc in services)) return C('red', `Unit ${svc}.service could not be found.`);
+      const st = services[svc];
+      return `● ${svc}.service - servicio simulado\n     Loaded: loaded (/usr/lib/systemd/system/${svc}.service; ${st==='active'?'enabled':'disabled'})\n     Active: ${C(st==='active'?'green':'dim', st==='active'?'active (running)':'inactive (dead)')} since ${new Date().toLocaleTimeString('es')}`;
+    }
+    if(['start','stop','restart','enable','disable'].includes(sub)){
+      if(!svc || !(svc in services)) return C('red', `Unit ${svc}.service could not be found.`);
+      if(!session.root) return C('red', `Failed to ${sub} ${svc}.service: Access denied`) + '\n' + C('dim','Prueba: sudo systemctl ' + sub + ' ' + svc);
+      if(sub === 'start' || sub === 'restart') services[svc] = 'active';
+      if(sub === 'stop') services[svc] = 'inactive';
+      return C('dim', `${svc}.service: ${sub} ok (simulado)`);
+    }
+    return C('red', 'systemctl: subcomando no soportado: ' + sub);
+  },
+  async pacman(args){
+    const flags = args.filter(a => a.startsWith('-')).join('');
+    const rest = args.filter(a => !a.startsWith('-'));
+    const OK = s => C('green', s);
+    if(flags.includes('S') && flags.includes('y') && flags.includes('u')){
+      print(C('dim',':: Sincronizando bases de datos de paquetes...'));
+      await progressLine(' core       ');
+      await progressLine(' extra      ');
+      print(OK(':: Iniciando actualización completa del sistema...'));
+      await progressLine(' linux-cachyos ');
+      await progressLine(' pacman     ');
+      print(OK(' hay actualizaciones disponibles ') + C('dim','(simulado — el sistema no cambia)'));
+      return;
+    }
+    if(flags.includes('S') && rest.length){
+      const pkg = rest[0];
+      const info = PKGDB[pkg];
+      if(!info) return C('red', `error: no se ha encontrado el paquete: ${pkg}`);
+      print(C('dim',':: Resolviendo dependencias...'));
+      print(C('dim',':: Buscando conflictos entre paquetes...'));
+      print('');
+      print(`Paquetes (1) ${pkg}-${info.v}`);
+      print('');
+      print(`Tamaño total de la descarga:   ${info.s}`);
+      print(`Tamaño total instalado:        ${info.i}`);
+      print('');
+      const ans = await ask(':: ¿Continuar con la instalación? [S/n] ');
+      if(ans && !ans.toLowerCase().startsWith('s')){ print(C('dim','Cancelado.')); return; }
+      await progressLine(` ${pkg}-${info.v}   `);
+      print(C('dim','(1/1) verificando las claves del depósito      ') + C('green','[######################] 100%'));
+      print(C('dim','(1/1) instalando ' + pkg + '                       ') + C('green','[######################] 100%'));
+      session.pkgs.add(pkg); saveFS();
+      print('');
+      print(C('yellow','╭─ AVISO DIDÁCTICO ────────────────────────────────'));
+      print(C('yellow','│ Nada se instaló de verdad: este es un simulador'));
+      print(C('yellow','│ para aprender el flujo de pacman. En tu CachyOS'));
+      print(C('yellow','│ real, ese comando SÍ instalaría el paquete.'));
+      print(C('yellow','╰──────────────────────────────────────────────────'));
+      return;
+    }
+    if(flags.includes('R') && rest.length){
+      const pkg = rest[0];
+      if(!session.pkgs.has(pkg)) return C('red', `error: no se ha encontrado el paquete: ${pkg} (no está «instalado» en la simulación)`);
+      const ans = await ask(':: ¿Continuar con la desinstalación? [S/n] ');
+      if(ans && !ans.toLowerCase().startsWith('s')){ print(C('dim','Cancelado.')); return; }
+      print(C('dim','(1/1) eliminando ' + pkg + '    ') + C('green','[######################] 100%'));
+      session.pkgs.delete(pkg); saveFS();
+      print(C('yellow','Desinstalación simulada — solo el proceso, como pediste.'));
+      return;
+    }
+    if(flags.includes('S') && flags.includes('s')){
+      const q = (rest[0] || '').toLowerCase();
+      const hits = Object.entries(PKGDB).filter(([k,v]) => k.includes(q) || v.d.toLowerCase().includes(q));
+      if(!hits.length) return C('dim','No hay coincidencias.');
+      return hits.map(([k,v]) => C('green','extra/') + esc(k) + ' ' + C('blue', v.v) + '  ' + C('dim','[' + (session.pkgs.has(k)?'instalado':'no instalado') + ']') + '\n    ' + esc(v.d)).join('\n');
+    }
+    if(flags.includes('Q')){
+      return [...session.pkgs].sort().map(p => p + ' ' + ((PKGDB[p]||{}).v || '1.0.0')).join('\n');
+    }
+    return C('red','pacman: usa -S instalar · -R quitar · -Syu actualizar · -Ss buscar · -Q listar') + '\n' + C('dim','man pacman para detalles');
+  },
+  yay(args){ return CMDS.pacman(args); },
+  neofetch(){ return CMDS.fastfetch(); },
+  fastfetch(){
+    const logo = [
+      '███████╗',
+      '██╔════╝',
+      '██║  ███╗',
+      '██║   ██║',
+      '╚██████╔╝',
+      ' ╚═════╝ '
+    ];
+    const up = Math.floor((Date.now() - bootT0)/60000);
+    const info = [
+      C('green', (session.root?'root':USER) + '@' + HOST),
+      C('dim','─────────────────────────'),
+      C('green','OS') + ': CachyOS x86_64 (simulador)',
+      C('green','Kernel') + ': Linux 6.9.3-1-cachyos',
+      C('green','Uptime') + ': ' + up + ' mins',
+      C('green','Shell') + ': bash 5.2',
+      C('green','DE') + ': KDE Plasma 6 (mencionado)',
+      C('green','WM') + ': kwin',
+      C('green','Terminal') + ': blocklab-term',
+      C('green','CPU') + ': AMD Ryzen 7 (simulado)',
+      C('green','Memory') + ': ' + ((performance.memory ? (performance.memory.usedJSHeapSize/1048576).toFixed(0) : 4200)) + 'MiB / 15936MiB'
+    ];
+    const rows = Math.max(logo.length, info.length);
+    const lines = [];
+    for(let i = 0; i < rows; i++) lines.push((logo[i] || '         ').padEnd(12) + (info[i] || ''));
+    return lines.join('\n');
+  },
+  cowsay(args){
+    const msg = args.join(' ') || '¡Aprende Linux escribiendo!';
+    const l = msg.length;
+    return ' ' + '_'.repeat(l+2) + '\n< ' + esc(msg) + ' >\n ' + '-'.repeat(l+2) +
+      '\n        \\   ^__^\n         \\  (oo)\\_______\n            (__)\\       )\\/\\\n                ||----w |\n                ||     ||';
+  },
+  ping(args){
+    const host = args.find(a=>!a.startsWith('-')) || 'localhost';
+    return 'PING ' + host + ' (127.0.0.1) 56(84) bytes of data.\n' +
+      [1,2,3].map(i => '64 bytes from ' + host + ': icmp_req=' + i + ' ttl=64 time=' + (Math.random()*0.4+0.03).toFixed(3) + ' ms').join('\n') +
+      '\n\n--- ' + host + ' ping statistics ---\n3 packets transmitted, 3 received, 0% packet loss (red simulada)';
+  },
+  reboot(){ return doReboot(); },
+  shutdown(args){ return doShutdown(); },
+  poweroff(){ return doShutdown(); },
+  logout(){ return doLogout(); },
+  exit(){ return doLogout(); },
+  sudo(args){ /* manejado antes de llegar aquí */ },
+  su(args){ /* manejado antes de llegar aquí */ },
+  passwd(args){
+    return C('dim','Este simulador mantiene la contraseña fija en 1234 (no hay persistencia de credenciales).');
+  }
+};
+
+const PKGDB = {
+  firefox:  { v:'128.0-1',      d:'Navegador web de Mozilla',           s:'62,4 MiB', i:'218 MiB' },
+  git:      { v:'2.45.2-1',     d:'Sistema de control de versiones',    s:'5,9 MiB',  i:'30 MiB'  },
+  vim:      { v:'9.1.0500-1',   d:'Editor Vi mejorado',                 s:'2,1 MiB',  i:'10 MiB'  },
+  htop:     { v:'3.3.0-1',      d:'Monitor interactivo de procesos',    s:'0,1 MiB',  i:'0,4 MiB' },
+  inkscape: { v:'1.3.2-3',      d:'Editor de gráficos vectoriales SVG', s:'25,1 MiB', i:'110 MiB' },
+  gimp:     { v:'2.10.38-2',    d:'Editor de imágenes GNU',             s:'23,8 MiB', i:'102 MiB' },
+  vlc:      { v:'3.0.21-2',     d:'Reproductor multimedia',             s:'19,2 MiB', i:'88 MiB'  },
+  kate:     { v:'24.05-1',      d:'Editor de texto avanzado de KDE',    s:'5,2 MiB',  i:'25 MiB'  },
+  code:     { v:'1.90.0-1',     d:'Visual Studio Code (OSS build)',     s:'92,3 MiB', i:'350 MiB' },
+  tree:     { v:'2.1.1-2',      d:'Lista directorios en forma de árbol',s:'0,05 MiB', i:'0,1 MiB' },
+  cowsay:   { v:'3.8.4-1',      d:'Una vaca que dice cosas',            s:'0,02 MiB', i:'0,05 MiB'},
+    'base-devel': { v:'1-1',  d:'Herramientas básicas de compilación', s:'0,1 MiB', i:'120 MiB' },
+};
+function processList(){
+  const list = [
+    { pid:1,    cmd:'/sbin/init splash', user:'root', cpu:0.0, mem:0.2, vsz:16704, rss:9800, protected:true },
+    { pid:2,    cmd:'[kthreadd]', user:'root', cpu:0.0, mem:0.0, vsz:0, rss:0, protected:true },
+    { pid:420,  cmd:'/usr/bin/NetworkManager --no-daemon', user:'root', cpu:0.1, mem:0.4, vsz:61200, rss:21400 },
+    { pid:512,  cmd:'/usr/bin/sddm', user:'root', cpu:0.2, mem:0.8, vsz:98000, rss:41000 },
+    { pid:733,  cmd:'/usr/bin/plasmashell', user:USER, cpu:3.8, mem:4.1, vsz:1240000, rss:653000 },
+    { pid:748,  cmd:'kwin_wayland', user:USER, cpu:2.1, mem:2.2, vsz:890000, rss:351000 }
+  ];
+  if(session.pkgs.has('firefox'))
+    list.push({ pid:1024, cmd:'/usr/lib/firefox/firefox', user:USER, cpu:12.4, mem:9.8, vsz:3100000, rss:1560000 });
+  list.push({ pid:1088, cmd:'-bash', user:session.root?'root':USER, cpu:0.0, mem:0.1, vsz:8200, rss:5200 });
+  list.push({ pid:1120, cmd:'blocklab-term', user:USER, cpu:0.3, mem:0.5, vsz:42000, rss:26000 });
+  return list;
+}
+/* barra de progreso animada estilo pacman */
+function progressLine(label){
+  return new Promise(res => {
+    const d = document.createElement('div');
+    d.className = 'ln';
+    outEl.appendChild(d);
+    let pct = 0;
+    const iv = setInterval(()=>{
+      pct = Math.min(100, pct + 9 + Math.random()*14);
+      const bars = Math.round(pct/100*22);
+      const size = (Math.random()*4+1).toFixed(1);
+      d.innerHTML = esc(label) + String(size).padStart(6) + ' MiB  ' + C('dim', (Math.random()*9+2).toFixed(1) + ' MiB/s') + ' ' + C('dim','00:0' + Math.floor(Math.random()*5)) + ' ' + C('green','[' + '#'.repeat(bars) + '-'.repeat(22-bars) + ']') + ' ' + Math.round(pct) + '%';
+      scrollBottom();
+      if(pct >= 100){ clearInterval(iv); setTimeout(res, 90); }
+    }, 60);
+  });
+}
+
+/* ═══ 9 · EJECUCIÓN DE LÍNEA ═══════════════════════════════ */
+async function execLine(raw){
+  const line = raw.trim();
+  print(promptHTML() + esc(raw));
+  if(!line) return;
+  history.push(raw);
+  try{ localStorage.setItem(LS_HIST, JSON.stringify(history.slice(-200))); }catch(e){}
+  histIdx = history.length;
+
+  /* sudo / su requieren contraseña antes de tokenizar */
+  const toks0 = tokenize(line);
+  let toks = toks0;
+  let asRoot = session.root;
+  if(toks[0] === 'sudo'){
+    if(toks.length < 2){ printText('uso: sudo <comando>', 'dim'); return; }
+    if(toks[1] === '-i' || toks[1] === '-s' || toks[1] === 'su'){
+      const ok = await ensureRoot('sudo');
+      if(!ok) return;
+      if(toks[1] !== 'su'){ session.root = true; printText('Ya eres root. exit para volver.', 'dim'); return; }
+      toks = toks.slice(2);
+      asRoot = true;
+      if(!toks.length){ session.root = true; return; }
+    } else {
+      const ok = await ensureRoot('sudo');
+      if(!ok) return;
+      toks = toks.slice(1);
+      asRoot = true;
+    }
+  } else if(toks[0] === 'su'){
+    const target = toks[1];
+    if(target && target !== 'root'){
+      printText('su: cambiando a ' + target + ' (en el simulador solo root/cachy)', 'dim');
+      session.root = false; session.user = USER;
+      return;
+    }
+    if(session.root){ printText('Ya eres root.', 'dim'); return; }
+    const ok = await ensureRoot('su');
+    if(!ok) return;
+    session.root = true;
+    printText('root@' + HOST + ':~#  (exit para volver a ' + USER + ')', 'dim');
+    return;
+  }
+
+  const { segs, redirect } = splitPipeline(toks);
+  let data = '';
+  for(let s = 0; s < segs.length; s++){
+    const seg = segs[s];
+    if(!seg.length) continue;
+    const cmd = seg[0], args = resolveArgs(seg.slice(1));
+    stdin = data;
+    if(!(cmd in CMDS)){
+      if(asRoot && !session.root) session.root = false;
+      print(C('red', cmd + ': orden no encontrada') + '\n' + C('dim', '¿Quisiste decir: ' + suggest(cmd) + ' ? · help para la lista'));
+      return;
+    }
+    const prevRoot = session.root;
+    if(asRoot) session.root = true;
+    try{
+      const r = await CMDS[cmd](args);
+      if(typeof r === 'string') data = r;
+      else if(s === segs.length-1 && typeof r !== 'string' && r !== undefined) data = '';
+    }catch(e){
+      print(C('red', cmd + ': error interno: ' + esc(e.message)));
+    }
+    session.root = prevRoot;
+    if(s < segs.length-1 && typeof data !== 'string') data = '';
+  }
+  if(redirect && redirect.file){
+    const p = normPath(redirect.file);
+    if(!canWrite(p)){ print(C('red', '-bash: ' + redirect.file + ': Permiso denegado')); return; }
+    if(!isDir(parentOf(p))){ print(C('red', '-bash: ' + redirect.file + ': No existe el directorio')); return; }
+    const w = writeFile(p, redirect.mode === '>>' ? ((getNode(p)||{}).content || '') + (data ? data + '\n' : '\n') : (data ? data + '\n' : '\n'));
+    if(w.err) print(C('red', w.err));
+    scheduleFilePush();
+    return;
+  }
+  if(typeof data === 'string' && data !== '') printMultiline(data);
+}
+function suggest(word){
+  const keys = Object.keys(CMDS);
+  const lw = word.toLowerCase();
+  const hit = keys.find(k => k.startsWith(lw.slice(0,2)));
+  return hit || keys.slice(0,4).join(', ');
+}
+function ensureRoot(mode){
+  if(session.root) return Promise.resolve(true);
+  if(session.sudoOk){ return Promise.resolve(true); }
+  return new Promise(res => {
+    print(C('dim','[sudo] contraseña de ' + USER + ':'));
+    showInput('password', C('dim','> '));
+    pendingInput = val => {
+      print(C('dim','••••'));
+      if(val === SUDO_PASS){ session.sudoOk = true; res(true); }
+      else {
+        print(C('red', (mode === 'su' ? 'su: Autenticación fallida' : 'sudo: 1 intento de contraseña incorrecto')));
+        print(C('dim','Pista didáctica: la contraseña del simulador es 1234'));
+        res(false);
+      }
+    };
+  });
+}
+
+/* ═══ 10 · INPUT LOOP (historial, Tab, Ctrl) ═══════════════ */
+let pendingInput = null;      // callback para password/preguntas interactivas
+let inputMode = 'normal';     // normal | password | ask
+let askResolve = null;
+
+function mainPrompt(){
+  if(!session.loggedIn) return;
+  hideInput();
+  showInput('normal', promptHTML());
+}
+cin.addEventListener('keydown', async e => {
+  /* interacciones activas (sudo, pacman [S/n], login…) */
+  if(pendingInput){
+    if(e.key === 'Enter'){
+      e.preventDefault();
+      const val = cin.value; cin.value = '';
+      const cb = pendingInput; pendingInput = null; inputMode = 'normal';
+      cb(val);
+    }
+    return;
+  }
+  if(e.key === 'Enter'){
+    e.preventDefault();
+    const val = cin.value; cin.value = '';
+    hideInput();
+    await execLine(val);
+    mainPrompt();
+    return;
+  }
+  if(e.key === 'ArrowUp'){
+    e.preventDefault();
+    if(histIdx > 0){ histIdx--; cin.value = history[histIdx] || ''; }
+    return;
+  }
+  if(e.key === 'ArrowDown'){
+    e.preventDefault();
+    if(histIdx < history.length - 1){ histIdx++; cin.value = history[histIdx] || ''; }
+    else { histIdx = history.length; cin.value = ''; }
+    return;
+  }
+  if(e.key === 'Tab'){
+    e.preventDefault();
+    tabComplete();
+    return;
+  }
+  if(e.ctrlKey && e.key === 'l'){ e.preventDefault(); outEl.innerHTML = ''; mainPrompt(); return; }
+  if(e.ctrlKey && e.key === 'c'){
+    e.preventDefault();
+    print(promptHTML() + esc(cin.value) + C('red','^C'));
+    cin.value = '';
+    return;
+  }
+  if(e.ctrlKey && e.key === 'u'){ e.preventDefault(); cin.value = ''; return; }
+});
+function tabComplete(){
+  const val = cin.value;
+  const before = val.slice(0, cin.selectionStart);
+  const m = before.match(/(\S*)$/);
+  const word = m ? m[1] : '';
+  const isFirst = before.trim().split(/\s+/).length <= 1 && !before.endsWith(' ');
+  let candidates = [];
+  if(isFirst){
+    candidates = Object.keys(CMDS).concat(Object.keys(PKGDB)).filter(c => c.startsWith(word));
+  } else {
+    const dirPart = word.includes('/') ? word.slice(0, word.lastIndexOf('/')) : '';
+    const base = word.slice(word.lastIndexOf('/') + 1);
+    const dirAbs = normPath(dirPart || '.');
+    candidates = Object.keys(FS)
+      .filter(k => parentOf(k) === dirAbs && baseOf(k).startsWith(base))
+      .map(k => baseOf(k) + (isDir(k) ? '/' : ''))
+      .map(c => (dirPart ? dirPart + '/' : '') + c);
+  }
+  if(!candidates.length) return;
+  const common = candidates.reduce((a,b) => {
+    let i = 0; while(i < a.length && i < b.length && a[i] === b[i]) i++; return a.slice(0,i);
+  });
+  if(common.length > word.length){
+    cin.value = val.slice(0, cin.selectionStart - word.length) + common + val.slice(cin.selectionStart);
+    return;
+  }
+  if(candidates.length === 1){
+    cin.value = val.slice(0, cin.selectionStart - word.length) + candidates[0] + ' ' + val.slice(cin.selectionStart);
+    return;
+  }
+  /* ambiguo: listar */
+  print(promptHTML() + esc(val));
+  printText(candidates.join('  '), 'dim');
+  mainPrompt();
+  cin.value = val;
+  cin.setSelectionRange(before.length, before.length);
+}
+term.addEventListener('click', () => { if(!inLine.hidden || session.loggedIn) cin.focus(); });
+
+/* ═══ 11 · NANO ════════════════════════════════════════════ */
+let nanoPath = null, nanoOpen = false, nanoDirty = false, nanoAsking = false;
+function openNano(p){
+  nanoPath = p;
+  const n = getNode(p);
+  $('#nanoTitle').textContent = 'GNU nano 7.2   ·   ' + p + (n ? '' : '  (Nuevo archivo)');
+  $('#nanoTA').value = n ? (n.content || '') : '';
+  nanoDirty = false; nanoOpen = true; nanoAsking = false;
+  $('#nanoStatus').textContent = n ? 'Editando archivo existente · Ctrl+O guarda (también a Sheets)' : 'Archivo nuevo · Ctrl+O guarda (también a Sheets)';
+  $('#nano').hidden = false;
+  $('#nanoTA').focus();
+  hideInput();
+}
+function closeNano(){
+  $('#nano').hidden = true;
+  nanoOpen = false;
+  mainPrompt();
+}
+function nanoSave(){
+  const w = writeFile(nanoPath, $('#nanoTA').value);
+  if(w.err){ $('#nanoStatus').textContent = 'ERROR: ' + w.err; return; }
+  scheduleFilePush();
+  nanoDirty = false;
+  const lines = $('#nanoTA').value.split('\n').length;
+  $('#nanoStatus').textContent = 'Guardado en ' + nanoPath + ' (' + lines + ' líneas) — subiendo a Sheets…';
+  toast('Archivo guardado: ' + baseOf(nanoPath));
+}
+ $('#nanoTA').addEventListener('keydown', e => {
+  if(e.key === 'Tab'){
+    e.preventDefault();
+    const ta = e.target;
+    ta.setRangeText('    ', ta.selectionStart, ta.selectionEnd, 'end');
+    nanoDirty = true;
+    return;
+  }
+  if(e.ctrlKey && (e.key === 'o' || e.key === 'O')){ e.preventDefault(); if(!nanoAsking) nanoSave(); return; }
+  if(e.ctrlKey && (e.key === 'g' || e.key === 'G')){
+    e.preventDefault();
+    $('#nanoStatus').textContent = 'Atajos: Ctrl+O guardar · Ctrl+X salir · Ctrl+K cortar línea · Tab sangría';
+    return;
+  }
+  if(e.ctrlKey && (e.key === 'k' || e.key === 'K')){
+    e.preventDefault();
+    const ta = e.target;
+    const v = ta.value, pos = ta.selectionStart;
+    let ls = v.lastIndexOf('\n', pos - 1) + 1;
+    let le = v.indexOf('\n', pos); if(le < 0) le = v.length; else le += 1;
+    ta.value = v.slice(0, ls) + v.slice(le);
+    ta.selectionStart = ta.selectionEnd = ls;
+    nanoDirty = true;
+    return;
+  }
+  if(e.ctrlKey && (e.key === 'x' || e.key === 'X')){
+    e.preventDefault();
+    if(nanoDirty && !nanoAsking){
+      nanoAsking = true;
+      $('#nanoStatus').innerHTML = '¿Guardar cambios antes de salir?  <b>Y</b> = sí · <b>N</b> = no · <b>Esc</b> = volver al editor';
+      const askKey = ev => {
+        if(ev.key.toLowerCase() === 'y'){ nanoSave(); nanoAsking = false; document.removeEventListener('keydown', askKey); closeNano(); }
+        else if(ev.key.toLowerCase() === 'n'){ nanoAsking = false; document.removeEventListener('keydown', askKey); closeNano(); }
+        else if(ev.key === 'Escape'){ nanoAsking = false; document.removeEventListener('keydown', askKey); $('#nanoStatus').textContent = 'Continúa editando'; }
+      };
+      document.addEventListener('keydown', askKey);
+    } else {
+      closeNano();
+    }
+    return;
+  }
+});
+ $('#nanoTA').addEventListener('input', () => { nanoDirty = true; });
+
+/* ═══ 12 · BOOT / LOGIN / POWER ════════════════════════════ */
+async function bootSequence(){
+  outEl.innerHTML = '';
+  session.loggedIn = false; session.root = false; session.user = null;
+  session.sudoOk = false; session.cwd = HOME;
+  bootT0 = Date.now();
+  hideInput();
+  const lines = [
+    ['CachyOS Linux · kernel 6.9.3-1-cachyos  (simulador BLOCKLAB)', 'dim', 300],
+    ['[  OK  ] Started Journal Service.', '', 90],
+    ['[  OK  ] Mounted /home.', '', 70],
+    ['[  OK  ] Started Network Manager.', '', 90],
+    ['[  OK  ] Reached target Graphical Interface.', '', 70],
+    ['[  OK  ] Started CachyOS Welcome.', '', 110],
+    ['', '', 150],
+    ['CachyOS 6.9  ·  tty1', '', 150],
+    ['', '', 100]
+  ];
+  let skip = false;
+  const skipper = () => { skip = true; };
+  document.addEventListener('keydown', skipper, { once:true });
+  term.addEventListener('pointerdown', skipper, { once:true });
+  for(const [t, cls, d] of lines){
+    printText(t, cls);
+    scrollBottom();
+    if(!skip) await new Promise(r => setTimeout(r, d));
+  }
+  document.removeEventListener('keydown', skipper);
+  session.loggedIn = false;
+  loginPrompt();
+}
+function loginPrompt(){
+  print(C('green', HOST + ' login: ') + C('dim','(escribe «cachy» · pista: contraseña 1234)'));
+  showInput('normal', C('green', HOST + ' login: '));
+  pendingInput = val => {
+    const u = (val || 'cachy').trim() || 'cachy';
+    if(u !== USER){
+      print(C('red','Login incorrecto') + '\n');
+      loginPrompt();
+      return;
+    }
+    session.user = u;
+    print(C('dim','Password:'));
+    showInput('password', C('dim','Password: '));
+    let tries = 0;
+    pendingInput = function check(val){
+      if(val === SUDO_PASS){
+        session.loggedIn = true;
+        print('');
+        print(C('green','Bienvenido a CachyOS') + '  ' + C('dim','·  ~/README.md tiene una guía rápida'));
+        print(C('dim','Comandos para empezar: help · neofetch · ls -la · nano Documentos/nota.txt'));
+        print(C('dim','sudo/su contraseña: 1234 · los archivos que crees se guardan en Google Sheets'));
+        print('');
+        mainPrompt();
+      } else {
+        tries++;
+        print(C('red','Login incorrecto'));
+        if(tries >= 3){ print(C('dim','Pista: la contraseña es 1234')); tries = 0; }
+        showInput('password', C('dim','Password: '));
+        pendingInput = check;
+      }
+    };
+  };
+}
+function doLogout(){
+  if(session.root){
+    session.root = false;
+    printText('exit');
+    return undefined;
+  }
+  session.loggedIn = false;
+  printText('logout');
+  loginPrompt();
+  return undefined;
+}
+async function doReboot(){
+  printText('');
+  print(C('dim','[  OK  ] Stopped target Graphical Interface.'));
+  await new Promise(r=>setTimeout(r,250));
+  print(C('dim','[  OK  ] Unmounted /home.'));
+  await new Promise(r=>setTimeout(r,250));
+  print(C('dim','Rebooting...'));
+  await new Promise(r=>setTimeout(r,500));
+  bootSequence();
+  return undefined;
+}
+async function doShutdown(){
+  printText('');
+  print(C('dim','[  OK  ] Stopped CachyOS Welcome.'));
+  await new Promise(r=>setTimeout(r,250));
+  print(C('dim','[  OK  ] Reached target Power-Off.'));
+  await new Promise(r=>setTimeout(r,400));
+  hideInput();
+  const pw = $('#power');
+  pw.hidden = false;
+  pw.innerHTML = 'El sistema se ha detenido.<br><br>' + C('dim','Pulsa ENTER (o haz clic) para encender de nuevo.');
+  const on = () => { pw.hidden = true; document.removeEventListener('keydown', on); pw.removeEventListener('click', on); bootSequence(); };
+  setTimeout(()=>{ document.addEventListener('keydown', on); pw.addEventListener('click', on); }, 400);
+  return undefined;
+}
+
+/* ═══ 13 · DICCIONARIO (diálogo) ═══════════════════════════ */
+function renderDict(){
+  const q = ($('#q2').value||'').trim().toLowerCase();
+  let arr = dict().slice().sort((a,b)=>a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+  if(q) arr = arr.filter(e => (e.name+' '+(e.tag||'')).toLowerCase().includes(q));
+  const pend = new Set(queue.filter(o=>o.action==='saveBlock' && o.sheet===SHEET && o.block).map(o=>o.block.id));
+  $('#dictCount').textContent = dict().length + ' comandos · hoja ' + SHEET +
+    (pend.size ? ' · ↑' + pend.size + ' por subir' : (connected ? ' · todo en Sheets' : ''));
+  let html = '', letter = null;
+  for(const e of arr){
+    const L = (e.name.charAt(0)||'#').toUpperCase();
+    if(L!==letter){ letter = L; html += `<div class="dl-l">${esc(L)}</div>`; }
+    const one = String(e.code||'').replace(/\s+/g,' ').slice(0,52);
+    html += `<div class="drow" data-id="${esc(e.id)}">
+      <div class="d-main">
+        <div class="t"><strong>${esc(e.name)}</strong>${e.tag?`<span class="tag">${esc(e.tag)}</span>`:''}${pend.has(e.id)?'<span class="tag pend">↑</span>':''}</div>
+        <code class="d-c">${esc(one)}${String(e.code||'').length>52?'…':''}</code>
+      </div>
+      <div class="d-acts">
+        <button class="iconbtn sm" data-a="ins" title="Escribir en la terminal"><i data-lucide="corner-down-left"></i></button>
+        <button class="iconbtn sm" data-a="edit" title="Editar"><i data-lucide="pencil"></i></button>
+        <button class="iconbtn sm danger" data-a="del" title="Eliminar"><i data-lucide="trash-2"></i></button>
+      </div>
+    </div>`;
+  }
+  $('#dictList').innerHTML = html || '<div class="d-empty">Nada coincide con la búsqueda.</div>';
+  refreshIcons();
+}
+ $('#dictList').addEventListener('click', e=>{
+  const btn = e.target.closest('[data-a]'); if(!btn) return;
+  const row = btn.closest('.drow'); const b = dict().find(x=>x.id===row.dataset.id);
+  if(!b) return;
+  const a = btn.dataset.a;
+  if(a==='ins'){ $('#dlgDict').close(); cin.value = b.name; cin.focus(); }
+  else if(a==='edit') openSnip(b);
+  else if(a==='del') armConfirm(btn, ()=>deleteSnip(b.id));
+});
+let editSnipId = null;
+function openSnip(entry){
+  editSnipId = entry ? entry.id : null;
+  $('#snipTitle').textContent = entry ? 'Editar entrada' : 'Nueva entrada';
+  const f = $('#fmSnip');
+  f.id.value = entry ? entry.id : '';
+  f.name.value = entry ? entry.name : '';
+  f.tag.value = entry ? (entry.tag||'') : '';
+  f.code.value = entry ? (entry.code||'') : '';
+  $('#dlgDict').close();
+  $('#dlgSnip').showModal(); refreshIcons();
+  setTimeout(()=>f.name.focus(), 60);
+}
+ $('#btnNewSnip').addEventListener('click', ()=>openSnip(null));
+ $('#fmSnip').addEventListener('submit', e=>{
+  e.preventDefault();
+  const f = e.target;
+  const b = {
+    id: f.id.value || 'c-'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),
+    name: f.name.value.trim(), tag: f.tag.value.trim() || 'comando', code: f.code.value
+  };
+  const arr = BLOCKS[SHEET] || (BLOCKS[SHEET] = []);
+  const i = arr.findIndex(x=>x.id===b.id);
+  if(i<0){ b.createdAt = nowISO(); arr.push(b); } else arr[i] = Object.assign({}, arr[i], b);
+  saveCache(); renderDict();
+  pushOp({action:'saveBlock', sheet:SHEET, block:b});
+  toast('"' + b.name + '" guardada — ' + (connected ? 'subiendo a Sheets' : 'en cola'));
+  f.closest('dialog').close();
+});
+function deleteSnip(id){
+  const arr = BLOCKS[SHEET] || [];
+  const b = arr.find(x=>x.id===id); if(!b) return;
+  BLOCKS[SHEET] = arr.filter(x=>x.id!==id);
+  saveCache(); renderDict();
+  toast('Entrada "'+b.name+'" eliminada');
+  pushOp({action:'deleteBlock', sheet:SHEET, id});
+}
+function armConfirm(btn, fn){
+  if(btn.dataset.armed){ delete btn.dataset.armed; fn(); return; }
+  btn.dataset.armed='1'; btn.dataset.html = btn.innerHTML;
+  btn.classList.add('armed'); btn.textContent='¿Seguro?';
+  setTimeout(()=>{
+    if(!btn.isConnected || !btn.dataset.armed) return;
+    delete btn.dataset.armed; btn.classList.remove('armed');
+    btn.innerHTML = btn.dataset.html; refreshIcons();
+  }, 2600);
+}
+
+/* ═══ 14 · BOTONES ═════════════════════════════════════════ */
+ $('#btnDict').addEventListener('click', ()=>{ renderDict(); $('#dlgDict').showModal(); refreshIcons(); });
+function manualSync(){
+  diagDone = false;
+  sync().then(()=>{
+    if(!connected && connDetail) print(C('red','sync: ') + esc(connDetail));
+  });
+}
+ $('#btnSync').addEventListener('click', manualSync);
+ $('#stPill').addEventListener('click', ()=>{ if(!connected) manualSync(); });
+ $('#btnWipe').addEventListener('click', e=>{
+  armConfirm(e.currentTarget, ()=>{
+    for(const p of Object.keys(FS)){
+      if(!FS[p].sys){ tombstones[p] = nowISO(); pushOp({action:'deleteBlock', sheet:SHEET, id:'f'+p}); delete FS[p]; }
+    }
+    dirtyFiles.clear();
+    try{ localStorage.removeItem(LS_FS); }catch(err){}
+    session.pkgs = new Set(['bash','coreutils','filesystem','pacman','linux-cachyos','networkmanager','plasma','konsole','sddm']);
+    saveFS();
+    bootSequence();
+    toast('Home formateada — archivos borrados también en Sheets');
+  });
+});
+document.querySelectorAll('dialog').forEach(d=>{
+  d.addEventListener('click', e => { if(e.target===d) d.close(); });
+  d.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', ()=>d.close()));
+});
+ $('#q2').addEventListener('input', renderDict);
+
+/* ═══ 15 · ARRANQUE ════════════════════════════════════════ */
+(function init(){
+  loadQueue();
+  loadCache();
+  loadFS();
+  seedDict();
+  try{ history = JSON.parse(localStorage.getItem(LS_HIST) || '[]'); }catch(e){ history = []; }
+  renderConn();
+  refreshIcons();
+  sync();
+  bootSequence();
+})();
+</script>
+</body>
+</html>

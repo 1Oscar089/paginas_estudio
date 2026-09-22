@@ -44,7 +44,6 @@ i[data-lucide]{display:inline-flex}
 .spin svg{animation:rot 1s linear infinite}
 @keyframes rot{to{transform:rotate(360deg)}}
 
-/* ═══ Cabecera (papel sobre tinta) ═════════════════════════ */
 header{flex:none;background:var(--bg);color:var(--ink);border-bottom:2px solid var(--acc)}
 .h-in{max-width:1500px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 14px}
 .brand{font:700 14px/1 var(--mono);letter-spacing:.12em;white-space:nowrap}
@@ -64,24 +63,28 @@ header{flex:none;background:var(--bg);color:var(--ink);border-bottom:2px solid v
 .qb{font:700 10px/1 var(--mono);color:var(--acc);border:1.5px solid var(--acc);padding:4px 6px}
 @media(max-width:640px){#stTxt{display:none}.btn .lbl{display:none}}
 
-/* ═══ Terminal ═════════════════════════════════════════════ */
 #term{flex:1;min-height:0;overflow-y:auto;padding:14px 16px 20px;cursor:text}
 #term::-webkit-scrollbar{width:12px}
 #term::-webkit-scrollbar-thumb{background:rgba(237,231,216,.22)}
 .ln{white-space:pre-wrap;word-break:break-word;min-height:20px}
 .ln.dim{color:var(--tmut)}
-.u{color:var(--tgreen);font-weight:700}
-.p{color:var(--tblue);font-weight:700}
-.s{color:var(--tmut)}
 .c-red{color:var(--tred)} .c-green{color:var(--tgreen)} .c-blue{color:var(--tblue)}
 .c-yellow{color:var(--tyellow)} .c-mag{color:var(--tmag)} .c-dim{color:var(--tmut)}
-.c-bold{font-weight:700} .c-ink{color:var(--term);background:var(--tyellow);padding:0 4px}
-.okmark{color:var(--tgreen);font-weight:700}
+.c-bold{font-weight:700}
 
 #inLine{display:flex;align-items:baseline;gap:0}
 #inPrompt{white-space:pre}
 #cin{flex:1;min-width:60px;background:transparent;border:none;outline:none;
   color:var(--tpaper);caret-color:var(--acc);font:inherit;padding:0}
+
+/* ═══ Popup de autocompletado (estilo fish) ════════════════ */
+#sug{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:4px 0 6px}
+#sug .sug-note{align-self:center;font:700 9px/1 var(--mono);color:var(--tmut);
+  letter-spacing:.08em;text-transform:uppercase;margin-right:2px}
+#sug button{border:1px solid rgba(237,231,216,.35);background:transparent;color:var(--tpaper);
+  font:500 12.5px/1 var(--mono);padding:8px 10px;border-radius:5px;cursor:pointer;touch-action:manipulation}
+#sug button:active{background:var(--tpaper);color:var(--term)}
+#sug button.path{color:var(--tblue);border-color:rgba(111,181,224,.55)}
 
 /* ═══ Barra de teclas especiales (pantallas táctiles) ═══════ */
 #keybar{flex:none;display:flex;gap:6px;padding:8px 10px 10px;overflow-x:auto;
@@ -93,10 +96,9 @@ header{flex:none;background:var(--bg);color:var(--ink);border-bottom:2px solid v
 .kbtn:active{background:var(--tpaper);color:var(--term)}
 .kbtn.sticky{background:var(--acc);border-color:var(--acc);color:#fff}
 .kbtn.wide{min-width:70px}
-/* en PC con ratón/teclado físico no hace falta */
 @media (hover:hover) and (pointer:fine){#keybar{display:none}}
 
-/* ═══ nano (editor de la terminal) ═════════════════════════ */
+/* ═══ nano ═════════════════════════════════════════════════ */
 #nano{position:fixed;inset:0;z-index:60;background:var(--term);display:flex;flex-direction:column;font:inherit}
 .nano-top{flex:none;display:flex;justify-content:space-between;gap:12px;padding:8px 14px;
   background:var(--bg);color:var(--ink);font-weight:700;font-size:12px;border-bottom:2px solid var(--acc)}
@@ -107,20 +109,15 @@ header{flex:none;background:var(--bg);color:var(--ink);border-bottom:2px solid v
   background:var(--bg);color:var(--ink)}
 .nano-bar{flex:none;display:flex;gap:0;flex-wrap:wrap;background:var(--bg);color:var(--ink);
   border-top:1.5px solid var(--ink);font-size:11px}
-.nano-bar span{padding:7px 10px}
 .nano-bar b{display:inline-block;background:var(--ink);color:var(--bg);padding:1px 6px;margin-right:5px;border-radius:2px}
-/* nano: botones de la barra inferior clickeables */
 .nano-bar .nbtn{border:none;background:none;color:var(--ink);font:inherit;font-size:11px;
   padding:7px 10px;cursor:pointer;display:inline-flex;align-items:center;touch-action:manipulation}
-.nano-bar .nbtn b{display:inline-block;background:var(--ink);color:var(--bg);padding:1px 6px;margin-right:5px;border-radius:2px}
 .nano-bar .nbtn:active{background:var(--ink);color:var(--bg)}
 .nano-bar .nbtn:active b{background:var(--acc)}
 
-/* ═══ Boot / power ═════════════════════════════════════════ */
 #power{position:fixed;inset:0;z-index:70;background:#000;color:var(--tgreen);
   display:flex;align-items:center;justify-content:center;font:400 14px/1.8 var(--mono);text-align:center;padding:20px}
 
-/* ═══ Diálogos / toasts (papel) ════════════════════════════ */
 dialog{border:2px solid var(--ink);background:var(--card);color:var(--ink);
   box-shadow:7px 7px 0 var(--ink);padding:0;width:min(600px,94vw);margin:auto;font:400 13px/1.6 var(--mono)}
 dialog::backdrop{background:rgba(20,18,15,.7)}
@@ -186,10 +183,10 @@ dialog::backdrop{background:rgba(20,18,15,.7)}
 </header>
 
 <div id="term"><div id="out"></div>
+  <div id="sug" hidden></div>
   <div id="inLine" hidden><span id="inPrompt"></span><input id="cin" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="terminal"></div>
 </div>
 
-<!-- Barra de teclas especiales (solo se muestra en pantallas táctiles) -->
 <div id="keybar">
   <button class="kbtn" data-mod="ctrl">Ctrl</button>
   <button class="kbtn" data-mod="alt">Alt</button>
@@ -206,7 +203,6 @@ dialog::backdrop{background:rgba(20,18,15,.7)}
   <button class="kbtn wide" data-act="enter">⏎</button>
 </div>
 
-<!-- nano -->
 <div id="nano" hidden>
   <div class="nano-top"><span id="nanoTitle">GNU nano 7.2</span><span class="ver">BLOCKLAB nano</span></div>
   <textarea id="nanoTA" spellcheck="false" autocapitalize="off"></textarea>
@@ -221,7 +217,6 @@ dialog::backdrop{background:rgba(20,18,15,.7)}
 
 <div id="power" hidden></div>
 
-<!-- Diccionario -->
 <dialog id="dlgDict">
   <div class="dlg-head">
     <div><h3>Diccionario · man pages</h3><small id="dictCount">—</small></div>
@@ -236,7 +231,6 @@ dialog::backdrop{background:rgba(20,18,15,.7)}
   </div>
 </dialog>
 
-<!-- Entrada -->
 <dialog id="dlgSnip">
   <form id="fmSnip" method="dialog">
     <div class="dlg-head">
@@ -274,15 +268,14 @@ const SHEET     = 'cachyos';
 const LS_DB     = 'blocklab.db.v1';
 const LS_Q      = 'blocklab.queue.v1';
 const LS_SEEDED = 'blocklab.cachyos.seeds.v1';
-const LS_FS     = 'blocklab.fs.cachyos.v1';     // archivos de usuario
-const LS_DEL    = 'blocklab.fs.cachyos.del.v1'; // tumbas (borrados)
+const LS_FS     = 'blocklab.fs.cachyos.v1';
+const LS_DEL    = 'blocklab.fs.cachyos.del.v1';
 const LS_HIST   = 'blocklab.fs.cachyos.hist.v1';
 const LS_PKGS   = 'blocklab.fs.cachyos.pkgs.v1';
 
 const USER = 'cachy', HOST = 'localhost', HOME = '/home/' + USER;
 const SUDO_PASS = '1234';
 
-/* Man pages semilla → hoja «cachyos», tag 'comando'. man <cmd> las lee. */
 const SEED = [
   { id:'c-ls',   name:'ls',   tag:'comando', code:`ls [-l] [-a] [ruta]\nLista archivos. -l formato largo, -a incluye ocultos.` },
   { id:'c-cd',   name:'cd',   tag:'comando', code:`cd [ruta] · cd .. · cd ~\nCambia de directorio. cd sin argumentos va a /home/cachy.` },
@@ -316,22 +309,23 @@ let MODULES = [], BLOCKS = {}, queue = [], syncing = false;
 let connected = false, connLabel = '', connDetail = '';
 let diagDone = false, diagRunning = false, dlgAutoShown = false;
 
-let FS = {};                    // ruta → {type, content, mtime, mode, owner, sys}
-let tombstones = {};            // ruta → iso (borrados; evita re-crear desde Sheets)
-let dirtyFiles = new Set();     // rutas a subir a Sheets
+let FS = {}, tombstones = {}, dirtyFiles = new Set();
 let history = [], histIdx = -1;
 let session = { user:null, root:false, loggedIn:false, cwd:HOME, sudoOk:false, env:{},
-                pkgs:new Set(['bash','coreutils','filesystem','pacman','linux-cachyos','networkmanager','plasma','konsole','sddm']),
-                booted:false };
+                pkgs:new Set(['bash','coreutils','filesystem','pacman','linux-cachyos','networkmanager','plasma','konsole','sddm']) };
 let services = { 'sshd':'inactive', 'NetworkManager':'active', 'bluetooth':'inactive', 'cups':'inactive' };
 let bootT0 = Date.now();
+
+/* popup de autocompletado */
+let sugItems = [], sugWord = '', sugStart = 0;
 
 const $   = s => document.querySelector(s);
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const nowISO = () => new Date().toISOString();
 const refreshIcons = () => { if(window.lucide) lucide.createIcons(); };
 const isDraftOp = op => op.action==='saveBlock' && op.block && op.block.id==='__draft__';
-const term = $('#term'), outEl = $('#out'), inLine = $('#inLine'), cin = $('#cin'), inPrompt = $('#inPrompt');
+const term = $('#term'), outEl = $('#out'), inLine = $('#inLine'), cin = $('#cin'),
+      inPrompt = $('#inPrompt'), sugEl = $('#sug');
 
 /* ═══ 3 · SISTEMA DE ARCHIVOS VIRTUAL ══════════════════════ */
 function normPath(p){
@@ -349,10 +343,10 @@ const baseOf   = p => p === '/' ? '/' : p.slice(p.lastIndexOf('/') + 1);
 
 function getNode(p){ return FS[p] || null; }
 function isDir(p){ const n = FS[p]; return !!n && n.type === 'dir'; }
-function isUserPath(p){ return !FS[p]?.sys && p !== '/' && !isSystemPath(p); }
 function isSystemPath(p){
   return p === '/' || (/^\/(bin|sbin|etc|usr|var|opt|proc|lib|root)(\/|$)/.test(p) && !p.startsWith('/var/tmp'));
 }
+function isUserPath(p){ return !!FS[p] && !FS[p].sys && p !== '/' && !isSystemPath(p); }
 function canWrite(p){
   if(session.root) return true;
   if(p.startsWith(HOME + '/') || p === HOME || p.startsWith('/tmp/')) return true;
@@ -427,16 +421,18 @@ function moveNode(src, dst){
   return { ok:true };
 }
 
-/* Carpetas estándar de CachyOS — siempre presentes en el home */
+/* Carpetas estándar de CachyOS — siempre presentes y subidas a Sheets */
 function ensureHomeDirs(){
+  let nuevas = false;
   [HOME+'/Escritorio', HOME+'/Documentos', HOME+'/Descargas', HOME+'/Imágenes', HOME+'/Música', HOME+'/Vídeos']
-    .forEach(p => { if(!FS[p]) FS[p] = { type:'dir', owner:USER, mtime: nowISO() }; });
+    .forEach(p => {
+      if(!FS[p]){ FS[p] = { type:'dir', owner:USER, mtime: nowISO() }; dirtyFiles.add(p); nuevas = true; }
+    });
+  if(nuevas){ saveFSSoon(); }
 }
-
 function seedSystem(){
-  const mk = (p) => { if(!FS[p]) FS[p] = { type:'dir', sys:true, owner:'root', mtime: nowISO() }; };
   ['/', '/bin','/sbin','/etc','/usr','/usr/bin','/usr/share','/var','/var/log','/opt','/proc','/lib','/root','/tmp','/home']
-    .forEach(mk);
+    .forEach(p => { if(!FS[p]) FS[p] = { type:'dir', sys:true, owner:'root', mtime: nowISO() }; });
   const wf = (p, c) => { if(!FS[p]) FS[p] = { type:'file', content:c, sys:true, owner:'root', mtime: nowISO(), mode:'644' }; };
   wf('/etc/os-release', 'NAME="CachyOS"\nPRETTY_NAME="CachyOS"\nID=cachyos\nID_LIKE=arch\nVERSION_ID=v2024.06\nKERNEL=6.9.3-1-cachyos\n');
   wf('/etc/hostname', HOST + '\n');
@@ -450,8 +446,7 @@ function seedSystem(){
       content:'# ~/.bashrc de ' + USER + '\n# Edítame con: nano ~/.bashrc\nalias ll="ls -l"\nalias update="sudo pacman -Syu"\n' };
   if(!FS[HOME + '/README.md'])
     FS[HOME + '/README.md'] = { type:'file', owner:USER, mtime: nowISO(),
-      content:'# Bienvenido a la terminal CachyOS (simulada)\n\n· Todo archivo que crees aquí se guarda en Google Sheets.\n· Contraseña de sudo/su: 1234\n· Prueba: neofetch · ls -la · nano Documentos/nota.txt\n· pacman -S firefox (solo simula el proceso)\n· help para ver todos los comandos\n' };
-  ensureHomeDirs();
+      content:'# Bienvenido a la terminal CachyOS (simulada)\n\n· Todo archivo que crees aquí se guarda en Google Sheets.\n· Contraseña de sudo/su: 1234\n· Prueba: neofetch · ls -la · nano Documentos/nota.txt\n· pacman -S firefox (solo simula el proceso)\n· help para ver todos los comandos\n· Tab autocompleta comandos y rutas\n' };
 }
 function saveFS(){
   try{
@@ -466,7 +461,7 @@ function saveFS(){
 let fsT = null;
 function saveFSSoon(){
   clearTimeout(fsT);
-  fsT = setTimeout(()=>{ saveFS(); pushDirtyFiles(); }, 600);   // guarda local Y sube a Sheets
+  fsT = setTimeout(()=>{ saveFS(); pushDirtyFiles(); }, 600);
 }
 function loadFS(){
   seedSystem();
@@ -491,7 +486,7 @@ function pushDirtyFiles(){
   dirtyFiles.clear();
 }
 
-/* ═══ 4 · CACHÉ / COLA / RED (idéntico al resto) ═══════════ */
+/* ═══ 4 · CACHÉ / COLA / RED ═══════════════════════════════ */
 function saveCache(){ try{ localStorage.setItem(LS_DB, JSON.stringify({modules:MODULES, blocks:BLOCKS, ts:nowISO()})); }catch(e){} }
 function loadCache(){
   try{
@@ -521,7 +516,6 @@ function toast(msg, kind){
   $('#toasts').appendChild(t); refreshIcons();
   setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity .25s'; setTimeout(()=>t.remove(),260); }, 4200);
 }
-
 let jsonpSeq = 0, jsonpChain = Promise.resolve();
 function jsonpRaw(action, params, ms){
   return new Promise((res, rej)=>{
@@ -591,7 +585,7 @@ function reconcileOps(data){
   renderConn();
 }
 
-/* ═══ 5 · SYNC (monta archivos desde Sheets) ═══════════════ */
+/* ═══ 5 · SYNC ═════════════════════════════════════════════ */
 const normBlock = o => ({ id:String(o.id||''), name:String(o.name||''), tag:String(o.tag||''),
   code:(o.code==null?'':String(o.code)), createdAt:String(o.createdAt||''), updatedAt:String(o.updatedAt||'') });
 
@@ -611,7 +605,6 @@ async function sync(){
     BLOCKS[SHEET] = remote;
     saveCache();
 
-    /* archivos/directorios remotos → FS (Sheets manda si es más nuevo) */
     for(const b of remote){
       if(b.tag !== 'archivo' && b.tag !== 'directorio') continue;
       const p = b.name; if(!p || !p.startsWith('/')) continue;
@@ -624,7 +617,6 @@ async function sync(){
                   owner: USER, mtime: b.updatedAt || nowISO(), sys:false };
       }
     }
-    /* locales nuevos → subir */
     for(const p of Object.keys(FS)){
       const n = FS[p];
       if(!n.sys && !remote.some(b => b.name === p)) dirtyFiles.add(p);
@@ -653,14 +645,14 @@ async function diagnose(){
     else { connLabel='Error servidor'; connDetail='Actualiza a Code.gs v2 y crea «Nueva versión».'; }
   }catch(e){
     connLabel = 'Login o versión vieja';
-    connDetail = 'La URL no devuelve JavaScript. Sigue los 4 pasos del panel (Code.gs v2 + setup + acceso Cualquiera).';
+    connDetail = 'La URL no devuelve JavaScript. Sigue los 4 pasos (Code.gs v2 + setup + acceso Cualquiera).';
   }
   diagRunning = false; renderConn();
 }
 setInterval(()=>{ if(!connected) sync(); else retryPending(); }, 25000);
 window.addEventListener('online', ()=>{ if(!connected) sync(); else { retryPending(); scheduleSync(500); } });
 
-/* ═══ 6 · SEMILLAS del diccionario ═════════════════════════ */
+/* ═══ 6 · SEMILLAS ═════════════════════════════════════════ */
 function seedDict(){
   if(localStorage.getItem(LS_SEEDED)) return;
   const have = new Set((BLOCKS[SHEET]||[]).map(b=>b.id));
@@ -676,7 +668,7 @@ function seedDict(){
 }
 const dict = () => (BLOCKS[SHEET] || (BLOCKS[SHEET] = [])).filter(b => b.tag === 'comando');
 
-/* ═══ 7 · SALIDA DE TERMINAL ═══════════════════════════════ */
+/* ═══ 7 · SALIDA ═══════════════════════════════════════════ */
 function C(cls, t){ return `<span class="c-${cls}">${esc(t)}</span>`; }
 function print(html, cls){
   const d = document.createElement('div');
@@ -684,9 +676,7 @@ function print(html, cls){
   d.innerHTML = html || '&nbsp;';
   outEl.appendChild(d);
 }
-function printText(text, cls){
-  String(text).split('\n').forEach(l => print(esc(l), cls));
-}
+function printText(text, cls){ String(text).split('\n').forEach(l => print(esc(l), cls)); }
 function printMultiline(htmlWithNL){ String(htmlWithNL).split('\n').forEach(l => print(l)); }
 function scrollBottom(){ term.scrollTop = term.scrollHeight; }
 
@@ -706,11 +696,12 @@ function showInput(mode, promptHTMLStr){
   inPrompt.innerHTML = promptHTMLStr;
   cin.type = mode === 'password' ? 'password' : 'text';
   cin.value = '';
+  hideSug();
   scrollBottom(); cin.focus();
 }
-function hideInput(){ inLine.hidden = true; }
+function hideInput(){ inLine.hidden = true; hideSug(); }
 
-/* ═══ 8 · EJECUTOR + COMANDOS ══════════════════════════════ */
+/* ═══ 8 · COMANDOS ═════════════════════════════════════════ */
 function tokenize(str){
   const toks = []; let cur = '', q = null;
   for(const ch of str){
@@ -755,25 +746,40 @@ function listDir(path, args){
   if(!canRead(path)) return { err: `ls: no se puede abrir el directorio '${path}': Permiso denegado` };
   const showAll = args.includes('-a') || args.includes('-la') || args.includes('-al');
   const long = args.includes('-l') || args.includes('-la') || args.includes('-al');
-  const kids = Object.keys(FS)
+  let entries = Object.keys(FS)
     .filter(k => k !== path && parentOf(k) === path)
-    .filter(k => showAll || !baseOf(k).startsWith('.'))
-    .sort((a,b) => a.localeCompare(b, 'es', {sensitivity:'base'}));
-  if(!kids.length && !long) return { out:'' };
-  if(!long){
-    return { out: kids.map(k => isDir(k) ? C('blue', baseOf(k) + '/') : (FS[k].type==='link' ? C('mag', baseOf(k)) : esc(baseOf(k)))).join('  ') };
+    .sort((a,b) => a.localeCompare(b, 'es', {sensitivity:'base'}))
+    .map(k => ({ name: baseOf(k), node: FS[k] }));
+  if(showAll){
+    const pp = parentOf(path);
+    entries = [
+      { name:'.', node:n },
+      { name:'..', node: FS[pp] || { type:'dir', owner:'root', mtime:n.mtime } },
+      ...entries
+    ];
+  } else {
+    entries = entries.filter(e => !e.name.startsWith('.'));
   }
-  const lines = ['total ' + kids.length];
-  for(const k of kids){
-    const kn = FS[k];
-    const perms = (isDir(k) ? 'd' : kn.type==='link' ? 'l' : '-') + (kn.mode === '777' ? 'rwxrwxrwx' : kn.mode === '600' ? 'rw-------' : isDir(k) ? 'rwxr-xr-x' : 'rw-r--r--');
+  if(!entries.length && !long) return { out:'' };
+  if(!long){
+    return { out: entries.map(e =>
+      e.node.type === 'dir' ? C('blue', e.name + '/')
+      : (e.node.type === 'link' ? C('mag', e.name) : esc(e.name))
+    ).join('  ') };
+  }
+  const fmtRow = (name, kn) => {
+    const perms = (kn.type === 'dir' ? 'd' : kn.type === 'link' ? 'l' : '-') +
+      (kn.mode === '777' ? 'rwxrwxrwx' : kn.mode === '600' ? 'rw-------' : kn.type === 'dir' ? 'rwxr-xr-x' : 'rw-r--r--');
     const size = kn.type === 'dir' ? 4096 : (kn.content || '').length;
     const d = new Date(kn.mtime || nowISO());
-    const fecha = d.toLocaleDateString('es',{day:'2-digit',month:'short'}) + ' ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
-    let name = isDir(k) ? C('blue', baseOf(k)) : (kn.type==='link' ? C('mag', baseOf(k)) : esc(baseOf(k)));
-    if(kn.type === 'link') name += ' ' + C('dim','-> ' + (kn.target||'?'));
-    lines.push(`${perms} 1 ${esc(kn.owner||USER)} ${esc(kn.owner||USER)} ${String(fmtSize(size)).padStart(6)} ${fecha} ${name}`);
-  }
+    const fecha = d.toLocaleDateString('es',{day:'2-digit',month:'short'}) + ' ' +
+      String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+    let nm = kn.type === 'dir' ? C('blue', name) : (kn.type === 'link' ? C('mag', name) : esc(name));
+    if(kn.type === 'link') nm += ' ' + C('dim','-> ' + (kn.target || '?'));
+    return `${perms} 1 ${esc(kn.owner || USER)} ${esc(kn.owner || USER)} ${String(fmtSize(size)).padStart(6)} ${fecha} ${nm}`;
+  };
+  const lines = ['total ' + entries.length];
+  for(const e of entries) lines.push(fmtRow(e.name, e.node));
   return { out: lines.join('\n') };
 }
 function readTarget(args){
@@ -816,7 +822,6 @@ function processList(){
   list.push({ pid:1120, cmd:'blocklab-term', user:USER, cpu:0.3, mem:0.5, vsz:42000, rss:26000 });
   return list;
 }
-/* barra de progreso animada estilo pacman */
 function progressLine(label){
   return new Promise(res => {
     const d = document.createElement('div');
@@ -837,8 +842,7 @@ function progressLine(label){
 const CMDS = {
   help(args){
     if(args[0]){
-      const c = CMDS[args[0]] ? args[0] : null;
-      if(!c) return C('red', `help: no hay ayuda para '${args[0]}'`);
+      if(!CMDS[args[0]]) return C('red', `help: no hay ayuda para '${args[0]}'`);
       return C('green', args[0]) + '\n' + esc((dict().find(b=>b.name===args[0])||{}).code || 'Sin documentación. Añádela al diccionario.');
     }
     return C('yellow','── COMANDOS DEL SIMULADOR ──────────────────────') + '\n' +
@@ -846,7 +850,7 @@ const CMDS = {
       C('blue','sistema:   ') + 'sudo su whoami id uname hostname neofetch uptime date cal free df ps top htop kill pkill systemctl reboot shutdown poweroff' + '\n' +
       C('blue','paquetes:  ') + 'pacman (-S -R -Syu -Ss -Q) yay' + '\n' +
       C('blue','shell:     ') + 'clear history echo export env alias which man help exit logout cowsay ping' + '\n' +
-      C('dim','· Tab completa comandos y rutas · ↑↓ historial · pipes con | · redirección > >>');
+      C('dim','· Tab/autocomplete sugiere comandos y rutas · ↑↓ historial · pipes | · redirección > >>');
   },
   pwd(){ return session.cwd; },
   ls(args){ return listDir(normPath(args.find(a => !a.startsWith('-')) || session.cwd), args); },
@@ -863,7 +867,7 @@ const CMDS = {
     const targets = args.filter(a => !a.startsWith('-'));
     if(!targets.length) return C('red','mkdir: falta un operando');
     for(const t of targets){
-      let p = normPath(t);
+      const p = normPath(t);
       if(flags.includes('p')){
         const parts = p.split('/').filter(Boolean);
         let acc = '';
@@ -1146,7 +1150,7 @@ const CMDS = {
     if(!isDir(parentOf(p))) return C('red', `nano: ${args[0]}: No existe el directorio`);
     openNano(p);
   },
-  vi(args){ return C('yellow',':wq!') + '\n' + C('dim','En este simulador tu editor es nano — es la tradición de las distros amigables. Prueba: nano ' + (args[0]||'archivo.txt')); },
+  vi(args){ return C('yellow',':wq!') + '\n' + C('dim','En este simulador tu editor es nano. Prueba: nano ' + (args[0]||'archivo.txt')); },
   vim(args){ return CMDS.vi(args); },
   less(args){ return CMDS.cat(args); },
   more(args){ return CMDS.cat(args); },
@@ -1209,15 +1213,14 @@ const CMDS = {
   async pacman(args){
     const flags = args.filter(a => a.startsWith('-')).join('');
     const rest = args.filter(a => !a.startsWith('-'));
-    const OK = s => C('green', s);
     if(flags.includes('S') && flags.includes('y') && flags.includes('u')){
       print(C('dim',':: Sincronizando bases de datos de paquetes...'));
       await progressLine(' core       ');
       await progressLine(' extra      ');
-      print(OK(':: Iniciando actualización completa del sistema...'));
+      print(C('green',':: Iniciando actualización completa del sistema...'));
       await progressLine(' linux-cachyos ');
       await progressLine(' pacman     ');
-      print(OK(' hay actualizaciones disponibles ') + C('dim','(simulado — el sistema no cambia)'));
+      print(C('green',' hay actualizaciones disponibles ') + C('dim','(simulado — el sistema no cambia)'));
       return;
     }
     if(flags.includes('S') && rest.length){
@@ -1253,7 +1256,7 @@ const CMDS = {
       if(ans && !ans.toLowerCase().startsWith('s')){ print(C('dim','Cancelado.')); return; }
       print(C('dim','(1/1) eliminando ' + pkg + '    ') + C('green','[######################] 100%'));
       session.pkgs.delete(pkg); saveFS();
-      print(C('yellow','Desinstalación simulada — solo el proceso, como pediste.'));
+      print(C('yellow','Desinstalación simulada — solo el proceso.'));
       return;
     }
     if(flags.includes('S') && flags.includes('s')){
@@ -1270,14 +1273,7 @@ const CMDS = {
   yay(args){ return CMDS.pacman(args); },
   neofetch(){ return CMDS.fastfetch(); },
   fastfetch(){
-    const logo = [
-      '███████╗',
-      '██╔════╝',
-      '██║  ███╗',
-      '██║   ██║',
-      '╚██████╔╝',
-      ' ╚═════╝ '
-    ];
+    const logo = ['███████╗','██╔════╝','██║  ███╗','██║   ██║','╚██████╔╝',' ╚═════╝ '];
     const up = Math.floor((Date.now() - bootT0)/60000);
     const info = [
       C('green', (session.root?'root':USER) + '@' + HOST),
@@ -1315,12 +1311,13 @@ const CMDS = {
   logout(){ return doLogout(); },
   exit(){ return doLogout(); },
   passwd(args){
-    return C('dim','Este simulador mantiene la contraseña fija en 1234 (no hay persistencia de credenciales).');
+    return C('dim','Este simulador mantiene la contraseña fija en 1234.');
   }
 };
 
-/* ═══ 9 · EJECUCIÓN DE LÍNEA ═══════════════════════════════ */
+/* ═══ 9 · EJECUCIÓN ════════════════════════════════════════ */
 async function execLine(raw){
+  hideSug();
   const line = raw.trim();
   print(promptHTML() + esc(raw));
   if(!line) return;
@@ -1374,13 +1371,20 @@ async function execLine(raw){
     }
     const prevRoot = session.root;
     if(asRoot) session.root = true;
-    try{
-      const r = await CMDS[cmd](args);
-      if(typeof r === 'string') data = r;
-    }catch(e){
+    let r;
+    try{ r = await CMDS[cmd](args); }
+    catch(e){
+      session.root = prevRoot;
       print(C('red', cmd + ': error interno: ' + esc(e.message)));
+      return;
     }
     session.root = prevRoot;
+    /* LOS COMANDOS PUEDEN DEVOLVER string u objeto {out}/{err} */
+    if(typeof r === 'string') data = r;
+    else if(r && typeof r === 'object'){
+      if(r.err){ print(C('red', r.err)); return; }
+      if(typeof r.out === 'string') data = r.out;
+    }
     if(s < segs.length-1 && typeof data !== 'string') data = '';
   }
   if(redirect && redirect.file){
@@ -1390,7 +1394,6 @@ async function execLine(raw){
     const prev = (getNode(p)||{}).content || '';
     const w = writeFile(p, redirect.mode === '>>' ? prev + (data ? data + '\n' : '\n') : (data ? data + '\n' : '\n'));
     if(w.err) print(C('red', w.err));
-    scheduleFilePush();
     return;
   }
   if(typeof data === 'string' && data !== '') printMultiline(data);
@@ -1426,7 +1429,81 @@ function ask(question){
   });
 }
 
-/* ═══ 10 · INPUT LOOP (historial, Tab, Ctrl, sticky keys) ══ */
+/* ═══ 10 · POPUP DE AUTOCOMPLETADO ═════════════════════════
+   Primera palabra → comandos (diccionario + sistema + paquetes).
+   Resto → rutas del sistema de archivos (carpetas con «/»).   ══ */
+function computeSug(){
+  if(pendingInput || !session.loggedIn || nanoOpen || !inLine.hidden === false){ /* noop */ }
+  if(pendingInput || !session.loggedIn || typeof nanoOpen !== 'undefined' && nanoOpen){ hideSug(); return; }
+  const val = cin.value;
+  const before = val.slice(0, cin.selectionStart);
+  const m = before.match(/(\S*)$/);
+  const word = m ? m[1] : '';
+  if(!word){ hideSug(); return; }
+  const isFirst = before.trim().length === 0 || before.trim() === word; // solo primer token
+  let items = [], isPath = false;
+  if(isFirst){
+    const lw = word.toLowerCase();
+    items = [...new Set([...Object.keys(CMDS), ...Object.keys(PKGDB)])]
+      .filter(c => c.startsWith(lw)).sort().slice(0,8);
+  } else {
+    isPath = true;
+    const dirPart = word.includes('/') ? word.slice(0, word.lastIndexOf('/')) : '';
+    const base = word.slice(word.lastIndexOf('/') + 1);
+    const dirAbs = normPath(dirPart || '.');
+    if(isDir(dirAbs) && canRead(dirAbs)){
+      items = Object.keys(FS)
+        .filter(k => parentOf(k) === dirAbs && baseOf(k).startsWith(base))
+        .sort((a,b)=>a.localeCompare(b,'es'))
+        .map(k => (dirPart ? dirPart + '/' : '') + baseOf(k) + (isDir(k) ? '/' : ''))
+        .slice(0,8);
+    }
+  }
+  if(!items.length){ hideSug(); return; }
+  sugItems = items; sugWord = word; sugStart = cin.selectionStart - word.length;
+  sugEl.innerHTML = (items.length > 1 ? '<span class="sug-note">tab / toca</span>' : '') +
+    items.map((it, i) =>
+      `<button type="button" data-i="${i}" class="${isPath || it.endsWith('/') ? 'path' : ''}">${esc(it)}</button>`
+    ).join('');
+  sugEl.hidden = false;
+}
+function hideSug(){ sugEl.hidden = true; sugItems = []; }
+function acceptSug(i, addSpace){
+  const it = sugItems[i]; if(it == null) return;
+  const val = cin.value;
+  const after = val.slice(sugStart + sugWord.length);
+  const ins = it + (addSpace && !it.endsWith('/') ? ' ' : '');
+  cin.value = val.slice(0, sugStart) + ins + after;
+  const np = sugStart + ins.length;
+  cin.setSelectionRange(np, np);
+  hideSug(); cin.focus();
+}
+sugEl.addEventListener('click', e=>{
+  const b = e.target.closest('button[data-i]'); if(!b) return;
+  acceptSug(+b.dataset.i, true);
+});
+cin.addEventListener('input', ()=>{ computeSug(); });
+
+function tabComplete(){
+  computeSug();
+  if(!sugItems.length){ hideSug(); return; }
+  const common = sugItems.reduce((a,b)=>{
+    let i = 0; while(i < a.length && i < b.length && a[i] === b[i]) i++; return a.slice(0,i);
+  });
+  if(common.length > sugWord.length){
+    const val = cin.value;
+    const after = val.slice(sugStart + sugWord.length);
+    cin.value = val.slice(0, sugStart) + common + after;
+    const np = sugStart + common.length;
+    cin.setSelectionRange(np, np);
+    sugWord = common;
+    return;
+  }
+  if(sugItems.length === 1) acceptSug(0, true);
+  /* varios con prefijo ya completo → el popup queda abierto para elegir */
+}
+
+/* ═══ 11 · INPUT LOOP ══════════════════════════════════════ */
 let pendingInput = null;
 
 function mainPrompt(){
@@ -1435,7 +1512,6 @@ function mainPrompt(){
   showInput('normal', promptHTML());
 }
 cin.addEventListener('keydown', async e => {
-  /* Ctrl/Alt pegajosos desde la keybar táctil */
   if(sticky.ctrl || sticky.alt){
     const k = e.key.toLowerCase();
     if(sticky.ctrl && (k==='c' || k==='l' || k==='u')){
@@ -1443,6 +1519,7 @@ cin.addEventListener('keydown', async e => {
       if(k==='c'){ print(promptHTML() + esc(cin.value) + C('red','^C')); cin.value=''; }
       if(k==='l'){ outEl.innerHTML=''; }
       if(k==='u'){ cin.value=''; }
+      hideSug();
       return;
     }
     clearSticky();
@@ -1458,6 +1535,11 @@ cin.addEventListener('keydown', async e => {
   }
   if(e.key === 'Enter'){
     e.preventDefault();
+    if(!sugEl.hidden && sugItems.length){
+      const word = cin.value.slice(sugStart, cin.selectionStart);
+      if(!sugItems.includes(word)){ acceptSug(0, true); return; }   // completa y espera
+    }
+    hideSug();
     const val = cin.value; cin.value = '';
     hideInput();
     await execLine(val);
@@ -1465,12 +1547,12 @@ cin.addEventListener('keydown', async e => {
     return;
   }
   if(e.key === 'ArrowUp'){
-    e.preventDefault();
+    e.preventDefault(); hideSug();
     if(histIdx > 0){ histIdx--; cin.value = history[histIdx] || ''; }
     return;
   }
   if(e.key === 'ArrowDown'){
-    e.preventDefault();
+    e.preventDefault(); hideSug();
     if(histIdx < history.length - 1){ histIdx++; cin.value = history[histIdx] || ''; }
     else { histIdx = history.length; cin.value = ''; }
     return;
@@ -1480,21 +1562,18 @@ cin.addEventListener('keydown', async e => {
     tabComplete();
     return;
   }
-  if(e.ctrlKey && e.key === 'l'){ e.preventDefault(); outEl.innerHTML = ''; mainPrompt(); return; }
+  if(e.key === 'Escape'){ hideSug(); return; }
+  if(e.ctrlKey && e.key === 'l'){ e.preventDefault(); outEl.innerHTML = ''; hideSug(); return; }
   if(e.ctrlKey && e.key === 'c'){
     e.preventDefault();
     print(promptHTML() + esc(cin.value) + C('red','^C'));
-    cin.value = '';
+    cin.value = ''; hideSug();
     return;
   }
-  if(e.ctrlKey && e.key === 'u'){ e.preventDefault(); cin.value = ''; return; }
+  if(e.ctrlKey && e.key === 'u'){ e.preventDefault(); cin.value = ''; hideSug(); return; }
 });
 
-/* ═══ BARRA DE TECLAS ESPECIALES (táctil) ═══════════════════
-   Ctrl/Alt/Shift son "pegajosas": se tocan una vez y la
-   siguiente tecla (del teclado del teléfono o de esta barra)
-   se combina con ellas. Ej.: tocar Ctrl y luego la C del
-   teclado = Ctrl+C (interrumpir). */
+/* ═══ Barra de teclas especiales (táctil) ═══════════════════ */
 const sticky = { ctrl:false, alt:false, shift:false };
 function refreshSticky(){
   document.querySelectorAll('#keybar .kbtn[data-mod]').forEach(b =>
@@ -1509,68 +1588,38 @@ function insertAtCursor(t){
  $('#keybar').addEventListener('click', e=>{
   const b = e.target.closest('.kbtn'); if(!b) return;
   if(b.dataset.mod){ sticky[b.dataset.mod] = !sticky[b.dataset.mod]; refreshSticky(); cin.focus(); return; }
+  if(pendingInput && b.dataset.act !== 'enter') return;
   const act = b.dataset.act;
   if(act === 'enter'){
     if(pendingInput){ const v = cin.value; cin.value=''; const cb = pendingInput; pendingInput = null; clearSticky(); cb(v); }
-    else if(session.loggedIn){ const v = cin.value; cin.value=''; hideInput(); clearSticky(); execLine(v).then(mainPrompt); }
-  }
-  else if(act === 'tab'){ if(!pendingInput) tabComplete(); }
-  else if(act === 'up'){ if(!pendingInput && histIdx > 0){ histIdx--; cin.value = history[histIdx] || ''; } }
-  else if(act === 'down'){
-    if(!pendingInput){
-      if(histIdx < history.length - 1){ histIdx++; cin.value = history[histIdx] || ''; }
-      else { histIdx = history.length; cin.value = ''; }
+    else if(session.loggedIn){
+      if(!sugEl.hidden && sugItems.length){
+        const word = cin.value.slice(sugStart, cin.selectionStart);
+        if(!sugItems.includes(word)){ acceptSug(0, true); clearSticky(); return; }
+      }
+      const v = cin.value; cin.value=''; hideInput(); clearSticky();
+      execLine(v).then(mainPrompt);
     }
   }
-  else if(act === 'space') insertAtCursor(' ');
+  else if(act === 'tab'){ if(!pendingInput) tabComplete(); }
+  else if(act === 'up'){ hideSug(); if(histIdx > 0){ histIdx--; cin.value = history[histIdx] || ''; } }
+  else if(act === 'down'){
+    hideSug();
+    if(histIdx < history.length - 1){ histIdx++; cin.value = history[histIdx] || ''; }
+    else { histIdx = history.length; cin.value = ''; }
+  }
+  else if(act === 'space'){ insertAtCursor(' '); computeSug(); }
   else if(b.dataset.ch !== undefined){
     let c = b.dataset.ch;
     if(sticky.shift) c = c.toUpperCase();
-    insertAtCursor(c);
+    insertAtCursor(c); computeSug();
   }
   if(!b.dataset.mod) clearSticky();
   cin.focus();
 });
-
-function tabComplete(){
-  const val = cin.value;
-  const before = val.slice(0, cin.selectionStart);
-  const m = before.match(/(\S*)$/);
-  const word = m ? m[1] : '';
-  const isFirst = before.trim().split(/\s+/).length <= 1 && !before.endsWith(' ');
-  let candidates = [];
-  if(isFirst){
-    candidates = Object.keys(CMDS).concat(Object.keys(PKGDB)).filter(c => c.startsWith(word));
-  } else {
-    const dirPart = word.includes('/') ? word.slice(0, word.lastIndexOf('/')) : '';
-    const base = word.slice(word.lastIndexOf('/') + 1);
-    const dirAbs = normPath(dirPart || '.');
-    candidates = Object.keys(FS)
-      .filter(k => parentOf(k) === dirAbs && baseOf(k).startsWith(base))
-      .map(k => baseOf(k) + (isDir(k) ? '/' : ''))
-      .map(c => (dirPart ? dirPart + '/' : '') + c);
-  }
-  if(!candidates.length) return;
-  const common = candidates.reduce((a,b) => {
-    let i = 0; while(i < a.length && i < b.length && a[i] === b[i]) i++; return a.slice(0,i);
-  });
-  if(common.length > word.length){
-    cin.value = val.slice(0, cin.selectionStart - word.length) + common + val.slice(cin.selectionStart);
-    return;
-  }
-  if(candidates.length === 1){
-    cin.value = val.slice(0, cin.selectionStart - word.length) + candidates[0] + ' ' + val.slice(cin.selectionStart);
-    return;
-  }
-  print(promptHTML() + esc(val));
-  printText(candidates.join('  '), 'dim');
-  mainPrompt();
-  cin.value = val;
-  cin.setSelectionRange(before.length, before.length);
-}
 term.addEventListener('click', () => { if(!inLine.hidden || session.loggedIn) cin.focus(); });
 
-/* ═══ 11 · NANO (teclado + botones táctiles) ═══════════════ */
+/* ═══ 12 · NANO ════════════════════════════════════════════ */
 let nanoPath = null, nanoOpen = false, nanoDirty = false, nanoAsking = false;
 function openNano(p){
   nanoPath = p;
@@ -1635,7 +1684,6 @@ function nanoExit(){
   if(e.ctrlKey && (e.key === 'k' || e.key === 'K')){ e.preventDefault(); cutNanoLine(); return; }
   if(e.ctrlKey && (e.key === 'x' || e.key === 'X')){ e.preventDefault(); nanoExit(); return; }
 });
-/* Barra inferior de nano: clickeable en móvil */
 document.querySelectorAll('.nano-bar .nbtn').forEach(b => {
   b.addEventListener('click', ()=>{
     if(nanoAsking) return;
@@ -1649,7 +1697,7 @@ document.querySelectorAll('.nano-bar .nbtn').forEach(b => {
 });
  $('#nanoTA').addEventListener('input', () => { nanoDirty = true; });
 
-/* ═══ 12 · BOOT / LOGIN / POWER ════════════════════════════ */
+/* ═══ 13 · BOOT / LOGIN / POWER ════════════════════════════ */
 async function bootSequence(){
   ensureHomeDirs();
   outEl.innerHTML = '';
@@ -1701,7 +1749,7 @@ function loginPrompt(){
         print('');
         print(C('green','Bienvenido a CachyOS') + '  ' + C('dim','·  ~/README.md tiene una guía rápida'));
         print(C('dim','Comandos para empezar: help · neofetch · ls -la · nano Documentos/nota.txt'));
-        print(C('dim','sudo/su contraseña: 1234 · los archivos que crees se guardan en Google Sheets'));
+        print(C('dim','sudo/su contraseña: 1234 · Tab autocompleta · los archivos se guardan en Sheets'));
         print('');
         mainPrompt();
       } else {
@@ -1751,7 +1799,7 @@ async function doShutdown(){
   return undefined;
 }
 
-/* ═══ 13 · DICCIONARIO (diálogo) ═══════════════════════════ */
+/* ═══ 14 · DICCIONARIO ═════════════════════════════════════ */
 function renderDict(){
   const q = ($('#q2').value||'').trim().toLowerCase();
   let arr = dict().slice().sort((a,b)=>a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
@@ -1784,7 +1832,7 @@ function renderDict(){
   const row = btn.closest('.drow'); const b = dict().find(x=>x.id===row.dataset.id);
   if(!b) return;
   const a = btn.dataset.a;
-  if(a==='ins'){ $('#dlgDict').close(); cin.value = b.name; cin.focus(); }
+  if(a==='ins'){ $('#dlgDict').close(); cin.value = b.name; cin.focus(); computeSug(); }
   else if(a==='edit') openSnip(b);
   else if(a==='del') armConfirm(btn, ()=>deleteSnip(b.id));
 });
@@ -1836,7 +1884,7 @@ function armConfirm(btn, fn){
   }, 2600);
 }
 
-/* ═══ 14 · BOTONES ═════════════════════════════════════════ */
+/* ═══ 15 · BOTONES ═════════════════════════════════════════ */
  $('#btnDict').addEventListener('click', ()=>{ renderDict(); $('#dlgDict').showModal(); refreshIcons(); });
 function manualSync(){
   diagDone = false;
@@ -1866,7 +1914,7 @@ document.querySelectorAll('dialog').forEach(d=>{
 });
  $('#q2').addEventListener('input', renderDict);
 
-/* ═══ 15 · ARRANQUE ════════════════════════════════════════ */
+/* ═══ 16 · ARRANQUE ════════════════════════════════════════ */
 (function init(){
   loadQueue();
   loadCache();

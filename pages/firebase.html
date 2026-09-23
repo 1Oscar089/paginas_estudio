@@ -15,7 +15,6 @@
 :root{
   --bg:#F4F1E9; --card:#FDFBF4; --ink:#1C1915; --mut:#6F675A;
   --line:#DED6C5; --acc:#D6481C; --ok:#3F6B33; --warn:#9A7B1F;
-  --fbyellow:#FFCA28; --fbamber:#F57C00;
   --mono:'JetBrains Mono',monospace; --serif:'Fraunces',serif;
 }
 *{margin:0;padding:0;box-sizing:border-box}
@@ -241,7 +240,6 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
   </section>
 </main>
 
-<!-- Diccionario -->
 <dialog id="dlgDict">
   <div class="dlg-head">
     <div><h3>Diccionario</h3><small id="dictCount">—</small></div>
@@ -256,7 +254,6 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
   </div>
 </dialog>
 
-<!-- Entrada -->
 <dialog id="dlgSnip">
   <form id="fmSnip" method="dialog">
     <div class="dlg-head">
@@ -286,7 +283,6 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
   </form>
 </dialog>
 
-<!-- Consola del proyecto -->
 <dialog id="dlgConsole">
   <div class="dlg-head">
     <div><h3>Consola · blocklab-demo</h3><small id="consCount">—</small></div>
@@ -301,11 +297,10 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
       <button data-t="rules">Reglas</button>
     </div>
     <div class="c-list" id="consBody"></div>
-    <p class="c-note"><b>Nota:</b> cada documento, usuario y archivo de este proyecto simulado vive también como fila en la hoja «firebase» de Google Sheets. Las contraseñas se guardan en texto plano <b>solo en el simulador</b> — Firebase real las guarda con hash.</p>
+    <p class="c-note"><b>Nota:</b> cada documento, usuario y archivo vive también como fila en la hoja «firebase» de Google Sheets. Las contraseñas están en texto plano <b>solo en el simulador</b> — Firebase real las guarda con hash.</p>
   </div>
 </dialog>
 
-<!-- Deploy -->
 <dialog id="dlgDeploy">
   <div class="dlg-head">
     <div><h3>firebase deploy</h3><small>proyecto blocklab-demo (simulado)</small></div>
@@ -321,7 +316,11 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
 <div id="toasts"></div>
 
 <script>
-/* ═══ 1 · CONFIG ═══════════════════════════════════════════ */
+/* ═══ 1 · CONFIG ═══════════════════════════════════════════
+   NOTA: en TODAS las cadenas de este archivo, la etiqueta de
+   cierre de script se escribe \u003c/script> para que ningún
+   copiado/pegado pueda romper este bloque de código. Solo
+   existe UNA etiqueta de cierre literal: la del final.       ══ */
 const API_URL   = 'https://script.google.com/macros/s/AKfycbzSLoucR2yC7X7kKpbeDnQUCNd94-WuVuGyR55CMIrP4hq5f1tgynDDdHumc8iBj8gI9g/exec';
 const SHEET     = 'firebase';
 const LS_DB     = 'blocklab.db.v1';
@@ -333,10 +332,11 @@ const LS_FB     = 'blocklab.fb.db.v1';
 const DRAFT_ID   = '__draft__';
 const DRAFT_NAME = 'BORRADOR · editor';
 
+/* Ejemplo base (el SDK simulado ya está inyectado en el sandbox) */
 const STARTER = `<!-- Proyecto simulado: blocklab-demo
-     El SDK (compat) ya está incluido: NO necesitas <script src="gstatic...">
+     El SDK (compat) ya está incluido: NO agregas el script de gstatic.
      auth · firestore · storage · functions funcionan aquí.
-     Los datos que guardes aparecen en la Consola (botón base de datos)
+     Tus datos aparecen en la Consola (botón base de datos)
      y en la hoja «firebase» de Google Sheets. -->
 
 <div class="card">
@@ -445,9 +445,11 @@ const STARTER = `<!-- Proyecto simulado: blocklab-demo
     });
     document.querySelector('#texto').value = '';
   };
-<\/script>`;
+`;
+/* cierre seguro de la etiqueta script del ejemplo */
+const STARTER_FULL = STARTER + '\u003c/script>';
 
-/* ═══ 2 · SDK SIMULADO (se inyecta ANTES del código del usuario) ══ */
+/* ═══ 2 · SDK SIMULADO (se inyecta en el sandbox) ══════════ */
 const SDK_SRC = `
 'use strict';
 (function(){
@@ -472,7 +474,7 @@ const SDK_SRC = `
     increment: function(n){ return { __sv:'inc', n:Number(n) || 0 }; },
     arrayUnion: function(){ return { __sv:'au', v:Array.prototype.slice.call(arguments) }; },
     arrayRemove: function(){ return { __sv:'ar', v:Array.prototype.slice.call(arguments) }; },
-    delete: function(){ return { __sv:'del' }; }
+    del: function(){ return { __sv:'del' }; }
   };
   function mergeData(prev, data){
     var out = prev ? clone(prev.data) : {};
@@ -515,7 +517,7 @@ const SDK_SRC = `
     onAuthStateChanged: function(cb){ authListeners.push(cb); setTimeout(function(){ cb(authImpl.currentUser); }, 0); },
     createUserWithEmailAndPassword: function(email, pass){
       email = String(email || '').trim().toLowerCase();
-      if(!/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(email)) return Promise.reject(fbErr('auth/invalid-email', 'La dirección de correo electrónico no es válida.'));
+      if(!/^[^@\u005Cs]+@[^@\u005Cs]+\u005C.[^@\u005Cs]+$/.test(email)) return Promise.reject(fbErr('auth/invalid-email', 'La dirección de correo electrónico no es válida.'));
       if(String(pass).length < 6) return Promise.reject(fbErr('auth/weak-password', 'La contraseña debe tener al menos 6 caracteres.'));
       var dup = Object.keys(DB.users).some(function(uid){ return DB.users[uid].email === email; });
       if(dup) return Promise.reject(fbErr('auth/email-already-in-use', 'Ya existe una cuenta con ese correo.'));
@@ -675,7 +677,7 @@ const SDK_SRC = `
         getDownloadURL: function(){
           var s = DB.storage[path];
           if(!s) return Promise.reject(fbErr('storage/object-not-found', 'No existe el objeto ' + path));
-          return Promise.resolve('data:text/plain,' + encodeURIComponent(s.data.slice(0, 80)) + '…');
+          return Promise.resolve('data:text/plain,' + encodeURIComponent(s.data.slice(0, 80)) + '\u2026');
         },
         delete: function(){ delete DB.storage[path]; persist(); return Promise.resolve(); }
       };
@@ -1014,6 +1016,28 @@ window.addEventListener('message', e => {
 });
 
 /* ═══ 7 · SEMILLAS ═════════════════════════════════════════ */
+const SEED = [
+  { id:'fb-init',    name:'initializeApp', tag:'raíz',      code:"firebase.initializeApp({\n  apiKey: 'demo-key',\n  projectId: 'blocklab-demo'\n});" },
+  { id:'fb-auth-up', name:'createUser',    tag:'auth',      code:"auth.createUserWithEmailAndPassword('$0', '123456');" },
+  { id:'fb-auth-in', name:'signIn',        tag:'auth',      code:"auth.signInWithEmailAndPassword('$0', '123456');" },
+  { id:'fb-auth-st', name:'onAuthState',   tag:'auth',      code:"auth.onAuthStateChanged(user => {\n  if (user) {\n    $0\n  }\n});" },
+  { id:'fb-auth-out',name:'signOut',       tag:'auth',      code:'auth.signOut();' },
+  { id:'fb-fs-add',  name:'add',           tag:'firestore', code:"db.collection('$1').add({\n  campo: 'valor',\n  creado: firebase.firestore.FieldValue.serverTimestamp()\n});" },
+  { id:'fb-fs-set',  name:'set',           tag:'firestore', code:"db.collection('$1').doc('id-documento').set({\n  campo: 'valor'\n}, { merge: true });" },
+  { id:'fb-fs-get1', name:'getDoc',        tag:'firestore', code:"const snap = await db.collection('$1').doc('id').get();\nif (snap.exists) {\n  console.log(snap.id, snap.data());\n}" },
+  { id:'fb-fs-getall',name:'getDocs',      tag:'firestore', code:"const snap = await db.collection('$1').get();\nsnap.forEach(doc => {\n  console.log(doc.id, doc.data());\n});" },
+  { id:'fb-fs-query',name:'query',         tag:'firestore', code:"const snap = await db.collection('$1')\n  .where('campo', '==', 'valor')\n  .orderBy('creado', 'desc')\n  .limit(10)\n  .get();" },
+  { id:'fb-fs-snap', name:'onSnapshot',    tag:'firestore', code:"db.collection('$1').onSnapshot(snap => {\n  snap.forEach(doc => console.log(doc.id, doc.data()));\n});" },
+  { id:'fb-fs-upd',  name:'update',        tag:'firestore', code:"db.collection('$1').doc('id').update({\n  campo: 'nuevo-valor'\n});" },
+  { id:'fb-fs-del',  name:'deleteDoc',     tag:'firestore', code:"db.collection('$1').doc('id').delete();" },
+  { id:'fb-fs-inc',  name:'increment',     tag:'firestore', code:'.update({ contador: firebase.firestore.FieldValue.increment(1) })' },
+  { id:'fb-fs-arr',  name:'arrayUnion',    tag:'firestore', code:".update({ etiquetas: firebase.firestore.FieldValue.arrayUnion('$0') })" },
+  { id:'fb-st-put',  name:'putString',     tag:'storage',   code:"const ref = firebase.storage().ref('textos/$0.txt');\nawait ref.putString('contenido del archivo');\nconst url = await ref.getDownloadURL();" },
+  { id:'fb-fn-def',  name:'define función',tag:'functions', code:'<script type="firebase-functions">\n  functions.define(\'saludar\', async (data) => {\n    return { mensaje: \'Hola, \' + data.nombre };\n  });\n\u003c/script>' },
+  { id:'fb-fn-call', name:'httpsCallable', tag:'functions', code:"const saludar = firebase.functions().httpsCallable('saludar');\nconst res = await saludar({ nombre: '$0' });\nconsole.log(res.data.mensaje);" },
+  { id:'fb-host',    name:'deploy',        tag:'hosting',   code:'/* Pulsa el botón DEPLOY de la cabecera:\n   simula "firebase deploy" y publica esta página\n   como index.html del proyecto. */' }
+];
+
 function seedDict(){
   if(localStorage.getItem(LS_SEEDED)) return;
   const have = new Set((BLOCKS[SHEET]||[]).map(b=>b.id));
@@ -1395,7 +1419,7 @@ const AC_CSS_PROPS = {
   'font-family':['system-ui, sans-serif','inherit','monospace','Georgia, serif'],
   'font-size':['14px','1rem','1.2em','clamp(14px,2vw,20px)'],
   'font-style':['normal','italic'], 'font-weight':['400','700','bold','300','600'],
-  gap:['8px','1rem','8px 16px'], grid:[''],
+  gap:['8px','1rem','8px 16px'],
   'grid-template-columns':['repeat(3, 1fr)','auto auto','1fr 2fr','none'],
   'grid-template-rows':['auto','1fr 1fr'], height:['100%','auto','100vh','50px'],
   inset:['0','auto'], 'justify-content':['center','flex-start','flex-end','space-between','space-around'],
@@ -1495,9 +1519,13 @@ const AC_FLAT_FIREBASE = [
 function acContext(){
   const val = ed.value, pos = ed.selectionStart;
   const before = val.slice(0, pos);
+  /* OJO: el cierre de script se busca con \u003c para que este
+     archivo nunca contenga la secuencia literal que rompería el
+     parser HTML. En runtime es idéntico a '</'.                 */
+  const CLOSE_SCRIPT = '\u003c/script>';
   const lastScript = before.lastIndexOf('<script');
   const lastStyle  = before.lastIndexOf('<style');
-  const lastCloseS = before.lastIndexOf('</script>');
+  const lastCloseS = before.lastIndexOf(CLOSE_SCRIPT);
   const lastCloseC = before.lastIndexOf('</style>');
   if(lastScript > lastCloseS) return { kind:'js', word:(before.match(/[A-Za-z0-9_$\u00C0-\u024F.-]+$/) || [''])[0] };
   if(lastStyle > lastCloseC){
@@ -1550,7 +1578,6 @@ function acAttrValItems(attr, w){
   const vals = (AC_ATTR_VALUES[attr] || []).map(v => ({ name:v, tag:'valor', code:v }));
   let extra = [];
   if(attr === 'style') extra = Object.keys(AC_CSS_PROPS).filter(p => p.startsWith(w.toLowerCase())).slice(0,9).map(p => ({ name:p, tag:'css', code:p + ': $0;' }));
-  if(attr === 'class') extra = [{ name:'btn', tag:'clase', code:'btn' }];
   return acFiltered(w, vals.concat(extra));
 }
 function acCssItems(w){
@@ -1779,7 +1806,7 @@ function failNow(msg){
 }
 function buildSrcdoc(markup, banner){
   return '<!DOCTYPE html><html><head><meta charset="utf-8">' +
-    '<script>' + SDK_SRC + '<\/script>' +
+    '<script>' + SDK_SRC + '\u003c/script>' +
     '</head><body>' +
     (banner ? '<div style="position:fixed;top:0;left:0;right:0;z-index:9999;background:#F57C00;color:#fff;font:700 11px/1 system-ui;padding:6px 10px;text-align:center">HOSTING EN VIVO · blocklab-demo.web.app (simulado) · desplegado ' + banner + '</div>' : '') +
     markup + '</body></html>';
@@ -1833,7 +1860,7 @@ function renderConsole(){
     });
   } else if(consTab === 'auth'){
     const us = Object.entries(db.users || {});
-    if(!us.length) html = '<div class="c-empty">Sin usuarios. Regístrate desde tu app (createUserWithEmailAndPassword) — mínimo 6 caracteres de contraseña, como en el Firebase real.</div>';
+    if(!us.length) html = '<div class="c-empty">Sin usuarios. Regístrate desde tu app — mínimo 6 caracteres de contraseña, como en el Firebase real.</div>';
     us.forEach(([uid, u]) => {
       html += `<div class="c-doc"><div class="ci"><b>${esc(u.email)}</b>
         <pre>uid: ${esc(uid)}\ncreado: ${esc((u.createdAt||'').slice(0,19).replace('T',' '))}\ncontraseña (simulada): ${esc(u.pass)}</pre></div>
@@ -2012,8 +2039,8 @@ function manualSync(){
 });
  $('#btnReset').addEventListener('click', e=>{
   armConfirm(e.currentTarget, ()=>{
-    ed.value = STARTER;
-    saveDraftLocal(STARTER);
+    ed.value = STARTER_FULL;
+    saveDraftLocal(STARTER_FULL);
     lastPushedDraft = '';
     pushDraftNow();
     onEdInput();
@@ -2109,7 +2136,11 @@ function armConfirm(btn, fn){
   loadCache();
   seedDict();
   const draft = localStorage.getItem(LS_DRAFT);
-  ed.value = (draft && draft.trim()) ? draft : STARTER;
+  /* GUARDIA: el borrador debe parecer HTML; si quedó envenenado con
+     código JS pegado por error, se descarta y se arranca limpio */
+  const draftOK = draft && draft.trim().startsWith('<');
+  ed.value = draftOK ? draft : STARTER_FULL;
+  if(!draftOK && draft){ try{ localStorage.removeItem(LS_DRAFT); }catch(e){} }
   lastPushedDraft = '';
   rebuildLastRows();
   syncHL(); refreshIcons(); renderConn();

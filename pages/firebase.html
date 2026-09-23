@@ -109,15 +109,17 @@ body.view-pdf .pv{display:flex}
 #hl .b{color:#6E7B8B}
 #hl .c{color:#9A927F;font-style:italic}
 
-.sug{position:absolute;z-index:8;min-width:230px;max-width:330px;max-height:262px;overflow:auto;
+.sug{position:absolute;z-index:8;min-width:250px;max-width:380px;max-height:280px;overflow:auto;
   background:var(--card);border:1.5px solid var(--ink);box-shadow:5px 5px 0 rgba(28,25,21,.18);
   font:400 12px/1.4 var(--mono)}
-.sug button{display:flex;width:100%;align-items:center;gap:8px;padding:9px 11px;border:0;
+.sug button{display:flex;width:100%;align-items:center;gap:8px;padding:8px 11px;border:0;
   background:none;text-align:left;cursor:pointer;font:inherit;color:var(--ink)}
 .sug button b{font-weight:700}
+.sug button .dsc{color:var(--mut);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sug button.on,.sug button:hover{background:var(--ink);color:var(--bg)}
 .sug button.on .tag,.sug button:hover .tag{background:var(--bg);color:var(--ink)}
-.tag{font:700 8.5px/1 var(--mono);letter-spacing:.07em;text-transform:uppercase;padding:3px 6px;background:var(--ink);color:var(--bg)}
+.sug button.on .dsc,.sug button:hover .dsc{color:rgba(244,241,233,.7)}
+.tag{font:700 8.5px/1 var(--mono);letter-spacing:.07em;text-transform:uppercase;padding:3px 6px;background:var(--ink);color:var(--bg);flex:none}
 .tag.pend{background:var(--acc)}
 .sug .newrow{color:var(--acc);font-weight:700;border-top:1px solid var(--line)}
 .sug .newrow:hover{background:var(--acc);color:var(--bg)}
@@ -127,7 +129,6 @@ body.view-pdf .pv{display:flex}
 .pages{flex:1;min-height:0;display:flex;flex-direction:column;padding:12px;background:#E9E4D6}
 #frame{flex:1;min-height:0;width:100%;border:1.5px solid var(--ink);background:#fff;border-radius:3px;
   box-shadow:0 2px 8px rgba(28,25,21,.14)}
-.pv-hint{color:var(--mut);font-size:11.5px;text-align:center;padding:40px 20px}
 
 dialog{border:2px solid var(--ink);background:var(--card);color:var(--ink);
   box-shadow:7px 7px 0 var(--ink);padding:0;width:min(620px,94vw);margin:auto}
@@ -162,7 +163,6 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
 .d-acts{display:flex;gap:5px}
 .d-empty{padding:24px 8px;text-align:center;color:var(--mut);font-size:12px}
 
-/* Consola Firebase */
 .tabs-c{display:flex;border:1.5px solid var(--ink);margin-bottom:12px}
 .tabs-c button{flex:1;padding:10px 2px;font:600 9.5px/1.2 var(--mono);letter-spacing:.05em;text-transform:uppercase;
   background:none;border:none;border-right:1.5px solid var(--ink);color:var(--mut);cursor:pointer}
@@ -301,7 +301,7 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
       <button data-t="rules">Reglas</button>
     </div>
     <div class="c-list" id="consBody"></div>
-    <p class="c-note"><b>Nota:</b> cada documento, usuario y archivo de este proyecto simulado vive también como fila en la hoja «firebase» de Google Sheets. Las contraseñas se guardan en texto plano <b>solo en el simulador</b> — Firebase real las guarda con hash y nunca debes hacerlo a mano.</p>
+    <p class="c-note"><b>Nota:</b> cada documento, usuario y archivo de este proyecto simulado vive también como fila en la hoja «firebase» de Google Sheets. Las contraseñas se guardan en texto plano <b>solo en el simulador</b> — Firebase real las guarda con hash.</p>
   </div>
 </dialog>
 
@@ -324,12 +324,12 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
 /* ═══ 1 · CONFIG ═══════════════════════════════════════════ */
 const API_URL   = 'https://script.google.com/macros/s/AKfycbzSLoucR2yC7X7kKpbeDnQUCNd94-WuVuGyR55CMIrP4hq5f1tgynDDdHumc8iBj8gI9g/exec';
 const SHEET     = 'firebase';
-const LS_DB     = 'blocklab.db.v1';        // caché de bloques (dict + draft)
+const LS_DB     = 'blocklab.db.v1';
 const LS_Q      = 'blocklab.queue.v1';
 const LS_DRAFT  = 'blocklab.draft.firebase.v1';
 const LS_DRAFT_T= 'blocklab.draft.firebase.t';
 const LS_SEEDED = 'blocklab.firebase.seeds.v1';
-const LS_FB     = 'blocklab.fb.db.v1';     // base del proyecto simulado
+const LS_FB     = 'blocklab.fb.db.v1';
 const DRAFT_ID   = '__draft__';
 const DRAFT_NAME = 'BORRADOR · editor';
 
@@ -447,28 +447,6 @@ const STARTER = `<!-- Proyecto simulado: blocklab-demo
   };
 <\/script>`;
 
-const SEED = [
-  { id:'fb-init',    name:'initializeApp', tag:'raíz',      code:`firebase.initializeApp({\n  apiKey: 'demo-key',\n  projectId: 'blocklab-demo'\n});` },
-  { id:'fb-auth-up', name:'createUser',    tag:'auth',      code:`auth.createUserWithEmailAndPassword('$0', '123456')` },
-  { id:'fb-auth-in', name:'signIn',        tag:'auth',      code:`auth.signInWithEmailAndPassword('$0', '123456')` },
-  { id:'fb-auth-st', name:'onAuthState',   tag:'auth',      code:`auth.onAuthStateChanged(user => {\n  if (user) {\n    $0\n  }\n});` },
-  { id:'fb-auth-out',name:'signOut',       tag:'auth',      code:`auth.signOut();` },
-  { id:'fb-fs-add',  name:'add',           tag:'firestore', code:`db.collection('$0').add({\n  campo: 'valor',\n  creado: firebase.firestore.FieldValue.serverTimestamp()\n});` },
-  { id:'fb-fs-set',  name:'set',           tag:'firestore', code:`db.collection('$1').doc('id-documento').set({\n  campo: 'valor'\n}, { merge: true });` },
-  { id:'fb-fs-get1', name:'getDoc',        tag:'firestore', code:`const snap = await db.collection('$1').doc('id').get();\nif (snap.exists) {\n  console.log(snap.id, snap.data());\n}` },
-  { id:'fb-fs-getall',name:'getDocs',      tag:'firestore', code:`const snap = await db.collection('$1').get();\nsnap.forEach(doc => {\n  console.log(doc.id, doc.data());\n});` },
-  { id:'fb-fs-query',name:'query',         tag:'firestore', code:`const snap = await db.collection('$1')\n  .where('campo', '==', 'valor')\n  .orderBy('creado', 'desc')\n  .limit(10)\n  .get();` },
-  { id:'fb-fs-snap', name:'onSnapshot',    tag:'firestore', code:`db.collection('$1').onSnapshot(snap => {\n  snap.forEach(doc => console.log(doc.id, doc.data()));\n});` },
-  { id:'fb-fs-upd',  name:'update',        tag:'firestore', code:`db.collection('$1').doc('id').update({\n  campo: 'nuevo-valor'\n});` },
-  { id:'fb-fs-del',  name:'deleteDoc',     tag:'firestore', code:`db.collection('$1').doc('id').delete();` },
-  { id:'fb-fs-inc',  name:'increment',     tag:'firestore', code:`.update({ contador: firebase.firestore.FieldValue.increment(1) })` },
-  { id:'fb-fs-arr',  name:'arrayUnion',    tag:'firestore', code:`.update({ etiquetas: firebase.firestore.FieldValue.arrayUnion('$0') })` },
-  { id:'fb-st-put',  name:'putString',     tag:'storage',   code:`const ref = firebase.storage().ref('textos/$0.txt');\nawait ref.putString('contenido del archivo');\nconst url = await ref.getDownloadURL();` },
-  { id:'fb-fn-def',  name:'define función',tag:'functions', code:`<script type="firebase-functions">\n  functions.define('saludar', async (data) => {\n    return { mensaje: 'Hola, ' + data.nombre };\n  });\n<\/script>` },
-  { id:'fb-fn-call', name:'httpsCallable', tag:'functions', code:`const saludar = firebase.functions().httpsCallable('saludar');\nconst res = await saludar({ nombre: '$0' });\nconsole.log(res.data.mensaje);` },
-  { id:'fb-host',    name:'deploy',        tag:'hosting',   code:`/* Pulsa el botón DEPLOY de la cabecera:\n   simula "firebase deploy" y publica esta página\n   como index.html del proyecto. */` }
-];
-
 /* ═══ 2 · SDK SIMULADO (se inyecta ANTES del código del usuario) ══ */
 const SDK_SRC = `
 'use strict';
@@ -577,7 +555,7 @@ const SDK_SRC = `
       set: function(data, opts){
         var c = DB.collections[col] || (DB.collections[col] = {});
         var prev = c[id];
-        var merged = (opts && opts.merge && prev) ? mergeData(prev, data) : mergeData(null, Object.assign({}, prev && prev.data, {}));
+        var merged;
         if(opts && opts.merge && prev) merged = mergeData(prev, data);
         else merged = mergeData({ data: Object.assign({}, prev && prev.data) }, data);
         c[id] = { data: merged, createdAt: prev ? prev.createdAt : nowISO(), updatedAt: nowISO() };
@@ -617,7 +595,7 @@ const SDK_SRC = `
       parts.forEach(function(p){
         if(p.t === 'where'){
           rows = rows.filter(function(s){
-            var val = s.exists ? getField(s.__d || (s.__d = c[s.id]).data, p.f) : undefined;
+            var val = s.exists ? getField(c[s.id].data, p.f) : undefined;
             switch(p.op){
               case '==': return deepEq(val, p.v);
               case '!=': return !deepEq(val, p.v);
@@ -653,7 +631,7 @@ const SDK_SRC = `
     });
   }
   function makeQuery(col, parts){
-    var warns = parts.filter(function(p){ return p.t === 'where'; }).length && parts.filter(function(p){ return p.t === 'orderBy'; }).length;
+    var warns = parts.some(function(p){ return p.t === 'where'; }) && parts.some(function(p){ return p.t === 'orderBy'; });
     var q = {
       where: function(f, op, v){ return makeQuery(col, parts.concat([{ t:'where', f:f, op:op, v:v }])); },
       orderBy: function(f, dir){ return makeQuery(col, parts.concat([{ t:'orderBy', f:f, dir:dir || 'asc' }])); },
@@ -709,7 +687,7 @@ const SDK_SRC = `
       return function(data){
         var reg = window.__blFunctions || {};
         var fn = reg[name];
-        if(!fn) return Promise.reject(fbErr('functions/not-found', 'La función "' + name + '" no existe. Defínela en un <script type="firebase-functions"> con functions.define("' + name + '", async (data) => { … })'));
+        if(!fn) return Promise.reject(fbErr('functions/not-found', 'La función "' + name + '" no existe. Defínela en un script de tipo firebase-functions con functions.define("' + name + '", async (data) => { ... })'));
         return Promise.resolve().then(function(){ return fn(data == null ? {} : data); })
           .then(function(out){ return { data: out === undefined ? null : out }; });
       };
@@ -765,11 +743,11 @@ const SDK_SRC = `
 
 /* ═══ 3 · ESTADO ═══════════════════════════════════════════ */
 let MODULES = [], BLOCKS = {}, queue = [], syncing = false;
-let seq = 0, libTries = 0;
+let seq = 0;
 let sugItems = [], sugNew = null, sugActive = 0;
 let snipReturn = 'dict';
 let lastRows = {}, fbPushT = null;
-let consTab = 'firestore', deployedView = false;
+let consTab = 'firestore';
 
 let connected = false, connLabel = '', connDetail = '';
 let diagDone = false, diagRunning = false, dlgAutoShown = false;
@@ -896,7 +874,6 @@ const normBlock = o => ({ id:String(o.id||''), name:String(o.name||''), tag:Stri
 function readFB(){ try{ return JSON.parse(localStorage.getItem(LS_FB) || 'null') || { collections:{}, users:{}, session:null, storage:{}, hosting:null }; }catch(e){ return { collections:{}, users:{}, session:null, storage:{}, hosting:null }; } }
 function writeFB(db){ try{ localStorage.setItem(LS_FB, JSON.stringify(db)); }catch(e){} }
 
-/* filas que el proyecto simulado representa (para diffs) */
 function fbRows(db){
   const rows = {};
   Object.entries(db.collections||{}).forEach(([col, docs]) => {
@@ -956,7 +933,6 @@ async function sync(){
     BLOCKS[SHEET] = merged.sort((a,b)=>a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
     saveCache();
 
-    /* Sheets → proyecto simulado: gana el más reciente */
     const db = readFB();
     for(const b of merged){
       if(b.id === DRAFT_ID) continue;
@@ -1018,14 +994,9 @@ async function diagnose(){
   }catch(e){
     connLabel = 'Login o versión vieja';
     connDetail = 'La URL no devuelve JavaScript. Sigue los 4 pasos (Code.gs v2 + setup + acceso Cualquiera).';
-    openConnDlg(true);
+    if(!dlgAutoShown){ dlgAutoShown = true; toast(connDetail, 'err'); }
   }
   diagRunning = false; renderConn();
-}
-function openConnDlg(auto){
-  if(auto && dlgAutoShown) return;
-  if(auto) dlgAutoShown = true;
-  toast(connDetail || 'Sin conexión con Sheets — el proyecto simulado funciona igual, en local.', 'err');
 }
 setInterval(()=>{ if(!connected) sync(); else retryPending(); }, 25000);
 setInterval(()=>{ if(connected) sync(); }, 5*60*1000);
@@ -1038,7 +1009,6 @@ window.addEventListener('message', e => {
   if(d.type === 'error'){ failNow(d.message); }
   if(d.type === 'change'){
     scheduleFbPush();
-    if(!$('#dlgConsole').open && false) {}
     if($('#dlgConsole').open) renderConsole();
   }
 });
@@ -1227,8 +1197,8 @@ const HTML_ELS = new Set(['html','head','body','div','span','p','h1','h2','h3','
   'button','input','label','form','select','option','textarea','section','header','footer','main','nav']);
 const FB_METHODS = new Set(['initializeApp','auth','firestore','functions','storage','collection','doc','add',
   'set','update','delete','get','onSnapshot','where','orderBy','limit','createUserWithEmailAndPassword',
-  'signInWithEmailAndPassword','signOut','onAuthStateChanged','httpsCallable','define','putString',
-  'getDownloadURL','ref','serverTimestamp','increment','arrayUnion','arrayRemove','currentUser','data']);
+  'signInWithEmailAndPassword','signOut','onAuthStateChanged','httpsCallable','putString',
+  'getDownloadURL','serverTimestamp','increment','arrayUnion','arrayRemove','currentUser','data']);
 function jsHl(code){
   return esc(code).replace(
     /(\/\/[^\n]*)|('(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*")|\b(true|false|null|undefined|const|let|var|new|function|return|if|else|for|while|of|in|async|await|try|catch)\b|([A-Za-z_$\u00C0-\u024F][\w$\u00C0-\u024F]*)(?=\s*:)|\.([A-Za-z_$][\w$]*)(?=\s*\()|\b(\d+(?:\.\d+)?)\b|([{}\[\]()])/g,
@@ -1333,20 +1303,319 @@ function syncHL(){
   hl.scrollTop = ed.scrollTop; hl.scrollLeft = ed.scrollLeft;
 }
 
-/* ═══ 12 · AUTOCOMPLETADO ══════════════════════════════════ */
-function currentWord(){
-  const before = ed.value.slice(0, ed.selectionStart);
-  const m = before.match(/[A-Za-z0-9_$\u00C0-\u024F-]+$/);
-  return m ? m[0] : '';
+/* ═══ 12 · AUTOCOMPLETADO MULTI-LENGUAJE ═══════════════════
+   Detecta el CONTEXTO bajo el cursor (HTML / atributo / valor /
+   CSS / JS / tras un punto) y sugiere de las tablas siguientes
+   + tus funciones guardadas en Sheets (prioridad).          ══ */
+const AC_HTML_TAGS = {
+  a:['enlace','href, target, download'], abbr:['abreviatura','title'], address:['dirección de contacto',''],
+  area:['zona de mapa','shape, coords, href'], article:['artículo',''], aside:['contenido lateral',''],
+  audio:['audio','src, controls, autoplay, loop, muted'], b:['negrita',''],
+  base:['URL base (head)','href, target'], bdi:['aislar bidireccional',''], bdo:['dirección de texto','dir'],
+  blockquote:['cita en bloque','cite'], body:['cuerpo del documento',''], br:['salto de línea',''],
+  button:['botón','type, disabled, onclick'], canvas:['lienzo','width, height'],
+  caption:['título de tabla',''], cite:['título de obra',''], code:['código inline',''],
+  col:['columna de tabla','span'], colgroup:['grupo de columnas','span'],
+  data:['valor machine-readable','value'], datalist:['opciones de input','id'], dd:['definición',''],
+  del:['texto eliminado','cite, datetime'], details:['detalles plegables','open'], dfn:['término definido',''],
+  dialog:['diálogo/modal','open'], div:['contenedor','class, id, style'], dl:['lista de definiciones',''],
+  dt:['término',''], em:['énfasis',''], embed:['embebido','src, type'],
+  fieldset:['grupo de campos','disabled'], figcaption:['pie de figura',''], figure:['figura',''],
+  footer:['pie de página',''], form:['formulario','action, method, target'],
+  h1:['título 1',''], h2:['título 2',''], h3:['título 3',''], h4:['título 4',''], h5:['título 5',''], h6:['título 6',''],
+  head:['cabecera',''], header:['encabezado',''], hgroup:['grupo de títulos',''], hr:['línea horizontal',''],
+  html:['raíz del documento','lang, dir'], i:['itálica',''],
+  iframe:['marco inline','src, width, height, sandbox'], img:['imagen','src, alt, width, height, loading, srcset'],
+  input:['campo de entrada','type, name, value, placeholder, required, min, max, step, pattern, checked, disabled, multiple, accept'],
+  ins:['texto insertado','cite, datetime'], kbd:['tecla',''], label:['etiqueta de campo','for'],
+  legend:['leyenda de fieldset',''], li:['elemento de lista','value'],
+  link:['recurso externo (head)','rel, href, type'], main:['contenido principal',''], map:['mapa de imagen','name'],
+  mark:['resaltado',''], meta:['metadatos (head)','charset, name, content, viewport'],
+  meter:['medidor','value, min, max'], nav:['navegación',''], noscript:['alternativa sin JS',''],
+  object:['objeto embebido','data, type'], ol:['lista ordenada','start, reversed'],
+  optgroup:['grupo de opciones','label'], option:['opción','value, selected'], output:['resultado','for'],
+  p:['párrafo',''], picture:['imágenes responsive',''], pre:['preformateado',''],
+  progress:['barra de progreso','value, max'], q:['cita inline','cite'], rp:['paréntesis ruby',''],
+  rt:['anotación ruby',''], ruby:['ruby',''], s:['tachado',''], samp:['salida de programa',''],
+  script:['código JS','src, type, async, defer'], search:['zona de búsqueda',''], section:['sección',''],
+  select:['selector','name, multiple, size, required'], slot:['slot','name'], small:['texto pequeño',''],
+  source:['fuente de media','src, srcset, type'], span:['contenedor inline',''],
+  strong:['importancia',''], style:['estilos CSS','media'], sub:['subíndice',''],
+  summary:['resumen de details',''], sup:['superíndice',''], svg:['vectorial','viewBox, width, height'],
+  table:['tabla',''], tbody:['cuerpo de tabla',''], td:['celda','colspan, rowspan'],
+  template:['plantilla',''], textarea:['área de texto','rows, cols, placeholder, maxlength'],
+  tfoot:['pie de tabla',''], th:['celda de encabezado','colspan, rowspan, scope'], thead:['encabezado de tabla',''],
+  time:['fecha/hora','datetime'], title:['título del documento',''], tr:['fila',''],
+  track:['subtítulos','src, kind, srclang'], u:['subrayado',''], ul:['lista',''],
+  var:['variable',''], video:['video','src, controls, width, height, poster, autoplay, muted, loop, playsinline'],
+  wbr:['corte de palabra','']
+};
+const AC_VOID = new Set(['area','base','br','col','embed','hr','img','input','link','meta','param','source','track','wbr']);
+const AC_GLOBAL_ATTRS = ['class','id','style','title','hidden','data-*','contenteditable','dir','lang','tabindex','draggable','accesskey','spellcheck','autofocus'];
+const AC_ATTR_VALUES = {
+  type:['text','password','email','number','tel','url','search','date','time','datetime-local','month','week','color','checkbox','radio','range','file','hidden','submit','reset','button','image'],
+  target:['_self','_blank','_parent','_top'],
+  rel:['stylesheet','icon','preload','prefetch','preconnect','canonical','alternate','noopener','noreferrer','manifest'],
+  method:['get','post','dialog'],
+  enctype:['application/x-www-form-urlencoded','multipart/form-data','text/plain'],
+  autocomplete:['on','off','name','email','username','new-password','current-password','one-time-code'],
+  inputmode:['text','numeric','decimal','tel','email','url','search'],
+  enterkeyhint:['enter','done','go','next','previous','search','send'],
+  loading:['lazy','eager'], decoding:['async','sync','auto'],
+  dir:['ltr','rtl','auto'], lang:['es','en','pt','fr','de'],
+  crossorigin:['anonymous','use-credentials'],
+  referrerpolicy:['no-referrer','origin','strict-origin','no-referrer-when-downgrade','strict-origin-when-cross-origin'],
+  kind:['subtitles','captions','descriptions','chapters','metadata'],
+  preload:['none','metadata','auto'],
+  sandbox:['allow-scripts','allow-same-origin','allow-forms','allow-modals','allow-popups','allow-top-navigation'],
+  contenteditable:['true','false'], spellcheck:['true','false'], draggable:['true','false'],
+  shape:['rect','circle','poly','default'], scope:['row','col','rowgroup','colgroup']
+};
+const AC_CSS_PROPS = {
+  'align-content':['center','flex-start','flex-end','space-between','stretch'],
+  'align-items':['center','flex-start','flex-end','baseline','stretch'],
+  'align-self':['auto','center','flex-start','flex-end','stretch'],
+  animation:['none','0.3s ease'], 'animation-duration':['0.3s'],
+  background:['#fff','transparent','linear-gradient(90deg,#a,#b)','url()'],
+  'background-color':['#fff','transparent','var(--color)'],
+  'background-image':['linear-gradient(90deg,#a,#b)','url()','none'],
+  'background-size':['cover','contain','auto'], 'background-position':['center','top','left'],
+  border:['1px solid #ccc','none','1px dashed #999'],
+  'border-radius':['4px','50%','999px'],
+  bottom:['0','10px','auto'],
+  'box-shadow':['0 2px 8px rgba(0,0,0,.2)','none'],
+  'box-sizing':['border-box','content-box'],
+  color:['#333','inherit','var(--color)'],
+  cursor:['pointer','default','not-allowed','grab','text','move'],
+  display:['block','flex','grid','inline','inline-block','inline-flex','none','table','contents'],
+  'flex-direction':['row','column','row-reverse','column-reverse'],
+  'flex-wrap':['wrap','nowrap','wrap-reverse'], flex:['1','none','auto','0 1 auto'],
+  'flex-grow':['1','0'], 'flex-shrink':['1','0'], 'flex-basis':['auto','100%'],
+  float:['left','right','none'], font:['inherit'],
+  'font-family':['system-ui, sans-serif','inherit','monospace','Georgia, serif'],
+  'font-size':['14px','1rem','1.2em','clamp(14px,2vw,20px)'],
+  'font-style':['normal','italic'], 'font-weight':['400','700','bold','300','600'],
+  gap:['8px','1rem','8px 16px'], grid:[''],
+  'grid-template-columns':['repeat(3, 1fr)','auto auto','1fr 2fr','none'],
+  'grid-template-rows':['auto','1fr 1fr'], height:['100%','auto','100vh','50px'],
+  inset:['0','auto'], 'justify-content':['center','flex-start','flex-end','space-between','space-around'],
+  'letter-spacing':['normal','1px','0.05em'], 'line-height':['1.4','1','normal','1.6'],
+  'list-style':['none','disc','decimal','inside'], margin:['0','auto','0 auto','10px 20px'],
+  'max-height':['none','100vh','300px'], 'max-width':['none','100%','600px'],
+  'min-height':['0','100vh','200px'], 'min-width':['0','auto','200px'],
+  'object-fit':['cover','contain','fill','none'], opacity:['1','0.5','0'],
+  order:['0','1'], outline:['none','1px solid #333'], overflow:['hidden','auto','scroll','visible'],
+  'overflow-x':['hidden','auto','scroll'], 'overflow-y':['hidden','auto','scroll'],
+  padding:['0','10px','10px 20px'], position:['static','relative','absolute','fixed','sticky'],
+  right:['0','auto','10px'], top:['0','auto','10px'], left:['0','auto','10px'],
+  'text-align':['left','center','right','justify'], 'text-decoration':['none','underline','line-through'],
+  'text-transform':['uppercase','lowercase','capitalize','none'],
+  'text-shadow':['1px 1px 2px rgba(0,0,0,.3)','none'],
+  transform:['none','scale(1.1)','rotate(45deg)','translateY(-4px)','translateX(10px)','scaleX(-1)'],
+  transition:['all .3s ease','none','opacity .2s','transform .3s ease'],
+  'transition-property':['all','opacity','transform'], 'transition-duration':['0.3s','0.2s','1s'],
+  'transition-timing-function':['ease','linear','ease-in','ease-out','ease-in-out','cubic-bezier(.4,0,.2,1)'],
+  'user-select':['none','auto','text'], 'vertical-align':['middle','top','bottom','baseline'],
+  visibility:['visible','hidden'], 'white-space':['normal','nowrap','pre','pre-wrap'],
+  width:['100%','auto','100vw','50%'], 'will-change':['transform','opacity','auto'], 'z-index':['1','0','999','auto']
+};
+const AC_JS_KW = ['const','let','var','function','return','if','else','for','while','do','switch','case','break','continue','new','class','extends','super','this','typeof','instanceof','in','of','try','catch','finally','throw','async','await','yield','import','export','default','from','delete','void','null','undefined','true','false','static'];
+const AC_JS_GLOBALS = {
+  console:['log()','warn()','error()','info()','table()','dir()','time()','timeEnd()','group()','assert()','count()','clear()'],
+  document:['querySelector()','querySelectorAll()','getElementById()','getElementsByClassName()','getElementsByTagName()','createElement()','createTextNode()','addEventListener()','removeEventListener()','body','head','title','documentElement','forms','images','cookie','readyState'],
+  window:['addEventListener()','removeEventListener()','setTimeout()','setInterval()','clearTimeout()','clearInterval()','requestAnimationFrame()','open()','close()','alert()','confirm()','prompt()','location','history','localStorage','sessionStorage','innerWidth','innerHeight','devicePixelRatio','matchMedia()','fetch()','scrollTo()','getComputedStyle()','postMessage()'],
+  Math:['floor()','ceil()','round()','abs()','max()','min()','random()','pow()','sqrt()','trunc()','sign()','PI','E'],
+  JSON:['stringify()','parse()'],
+  Object:['keys()','values()','entries()','assign()','freeze()','fromEntries()','defineProperty()'],
+  Array:['isArray()','from()','of()'],
+  Promise:['all()','allSettled()','race()','resolve()','reject()'],
+  Number:['isInteger()','parseFloat()','parseInt()','isFinite()','isNaN()','MAX_SAFE_INTEGER'],
+  Date:['now()','toLocaleDateString()','toLocaleTimeString()','getFullYear()','getMonth()','getDate()','getHours()','toISOString()','getTime()'],
+  localStorage:['getItem()','setItem()','removeItem()','clear()'],
+  sessionStorage:['getItem()','setItem()','removeItem()','clear()'],
+  location:['href','reload()','assign()','pathname','search','hash','origin'],
+  history:['pushState()','replaceState()','back()','forward()'],
+  navigator:['clipboard','userAgent','onLine','geolocation'],
+  performance:['now()'],
+  URL:['createObjectURL()','revokeObjectURL()'],
+  crypto:['randomUUID()','getRandomValues()'],
+  parseInt:['()'], parseFloat:['()'], isNaN:['()'],
+  setTimeout:['()'], setInterval:['()'], clearTimeout:['()'], clearInterval:['()'],
+  requestAnimationFrame:['()'], structuredClone:['()'], fetch:['()'],
+  alert:['()'], confirm:['()'], prompt:['()']
+};
+const AC_JS_PROTO = {
+  element:['textContent','innerHTML','value','checked','style','classList','className','id','dataset',
+    'appendChild()','removeChild()','remove()','querySelector()','querySelectorAll()',
+    'getAttribute()','setAttribute()','removeAttribute()','hasAttribute()','closest()','matches()',
+    'addEventListener()','focus()','blur()','click()','scrollIntoView()','getBoundingClientRect()'],
+  event:['target','currentTarget','key','code','type','preventDefault()','stopPropagation()','clientX','clientY','detail','data'],
+  array:['push()','pop()','shift()','unshift()','slice()','splice()','concat()','join()','indexOf()','includes()','find()','findIndex()','filter()','map()','forEach()','reduce()','some()','every()','sort()','reverse()','flat()','flatMap()','fill()','at()','length'],
+  string:['split()','slice()','substring()','toUpperCase()','toLowerCase()','trim()','padStart()','padEnd()','replace()','replaceAll()','includes()','indexOf()','startsWith()','endsWith()','repeat()','match()','at()','length'],
+  number:['toFixed()','toString()'],
+  promise:['then()','catch()','finally()'],
+  formdata:['append()','get()','getAll()','has()','delete()','entries()']
+};
+const AC_FIREBASE = {
+  firebase:['initializeApp()','apps','SDK_VERSION'],
+  'firebase.auth()':['createUserWithEmailAndPassword()','signInWithEmailAndPassword()','signInAnonymously()','signOut()','onAuthStateChanged()','currentUser','currentUser.uid','currentUser.email','sendPasswordResetEmail()'],
+  'firebase.firestore()':['collection()','doc()','FieldValue.serverTimestamp()','FieldValue.increment()','FieldValue.arrayUnion()','FieldValue.arrayRemove()','FieldValue.delete()','batch()','runTransaction()'],
+  'collection()':['add()','doc()','where()','orderBy()','limit()','get()','onSnapshot()'],
+  'doc()':['set()','update()','get()','delete()','onSnapshot()','id','data()','exists','ref'],
+  'firebase.storage()':['ref()'],
+  'ref()':['put()','putString()','getDownloadURL()','delete()','child()','listAll()','fullPath'],
+  'firebase.functions()':['httpsCallable()'],
+  'onSnapshot()':['doc.data()','doc.id','doc.ref','doc.exists','snap.docs','snap.size','snap.empty']
+};
+const AC_FLAT_FIREBASE = [
+  { name:'initializeApp', tag:'raíz', code:"firebase.initializeApp({\n  apiKey: 'demo-key',\n  projectId: 'blocklab-demo'\n});" },
+  { name:'onAuthStateChanged', tag:'auth', code:"auth.onAuthStateChanged(user => {\n  if (user) {\n    $0\n  }\n});" },
+  { name:'createUserWithEmailAndPassword', tag:'auth', code:"auth.createUserWithEmailAndPassword('$0', '123456');" },
+  { name:'signInWithEmailAndPassword', tag:'auth', code:"auth.signInWithEmailAndPassword('$0', '123456');" },
+  { name:'signInAnonymously', tag:'auth', code:'auth.signInAnonymously();' },
+  { name:'signOut', tag:'auth', code:'auth.signOut();' },
+  { name:'addDoc', tag:'firestore', code:"db.collection('$1').add({\n  campo: 'valor',\n  creado: firebase.firestore.FieldValue.serverTimestamp()\n});" },
+  { name:'setDoc', tag:'firestore', code:"db.collection('$1').doc('id').set({\n  campo: 'valor'\n}, { merge: true });" },
+  { name:'getDocs', tag:'firestore', code:"const snap = await db.collection('$1').get();\nsnap.forEach(doc => {\n  console.log(doc.id, doc.data());\n});" },
+  { name:'getDoc', tag:'firestore', code:"const snap = await db.collection('$1').doc('id').get();\nif (snap.exists) {\n  console.log(snap.id, snap.data());\n}" },
+  { name:'updateDoc', tag:'firestore', code:"db.collection('$1').doc('id').update({\n  campo: 'nuevo-valor'\n});" },
+  { name:'deleteDoc', tag:'firestore', code:"db.collection('$1').doc('id').delete();" },
+  { name:'onSnapshot', tag:'firestore', code:"db.collection('$1').onSnapshot(snap => {\n  snap.forEach(doc => {\n    console.log(doc.id, doc.data());\n  });\n});" },
+  { name:'where', tag:'firestore', code:".where('$1', '==', '$0')" },
+  { name:'orderBy', tag:'firestore', code:".orderBy('$0', 'desc')" },
+  { name:'limit', tag:'firestore', code:'.limit($0)' },
+  { name:'serverTimestamp', tag:'firestore', code:'firebase.firestore.FieldValue.serverTimestamp()' },
+  { name:'increment', tag:'firestore', code:'firebase.firestore.FieldValue.increment(1)' },
+  { name:'arrayUnion', tag:'firestore', code:"firebase.firestore.FieldValue.arrayUnion('$0')" },
+  { name:'arrayRemove', tag:'firestore', code:"firebase.firestore.FieldValue.arrayRemove('$0')" },
+  { name:'httpsCallable', tag:'functions', code:"const fn = firebase.functions().httpsCallable('$0');\nconst res = await fn({ clave: 'valor' });\nconsole.log(res.data);" },
+  { name:'putString', tag:'storage', code:"const ref = firebase.storage().ref('textos/$0.txt');\nawait ref.putString('contenido del archivo');\nconst url = await ref.getDownloadURL();" }
+];
+
+function acContext(){
+  const val = ed.value, pos = ed.selectionStart;
+  const before = val.slice(0, pos);
+  const lastScript = before.lastIndexOf('<script');
+  const lastStyle  = before.lastIndexOf('<style');
+  const lastCloseS = before.lastIndexOf('</script>');
+  const lastCloseC = before.lastIndexOf('</style>');
+  if(lastScript > lastCloseS) return { kind:'js', word:(before.match(/[A-Za-z0-9_$\u00C0-\u024F.-]+$/) || [''])[0] };
+  if(lastStyle > lastCloseC){
+    const pm = /([\w-]+)\s*:\s*([^;]*)$/.exec(before);
+    if(pm) return { kind:'cssval', prop:pm[1].toLowerCase(), word:(before.match(/[A-Za-z0-9#%().,-]+$/) || [''])[0] };
+    return { kind:'css', word:(before.match(/[A-Za-z0-9_-]+$/) || [''])[0] };
+  }
+  const lt = before.lastIndexOf('<');
+  const gt = before.lastIndexOf('>');
+  if(lt > gt){
+    const tagM = /^<\s*\/?\s*([A-Za-z][\w:-]*)/.exec(before.slice(lt));
+    const tagName = tagM ? tagM[1].toLowerCase() : '';
+    const inner = before.slice(lt + 1);
+    const eqM = /([\w-]+)\s*=\s*(["'])[^"']*?$/.exec(inner);
+    if(eqM) return { kind:'attrval', attr:eqM[1].toLowerCase(), tagName, word:(before.match(/[^"'=\s]+$/) || [''])[0] };
+    if(/\s/.test(inner)) return { kind:'attr', tagName, word:(before.match(/[\w-]+$/) || [''])[0] };
+    return { kind:'tag', word:(before.match(/[A-Za-z][\w:-]*$/) || [''])[0] };
+  }
+  const dotM = /([A-Za-z_$][\w$]*)\.\s*[A-Za-z0-9_$]*$/.exec(before);
+  if(dotM && dotM[0].length > 1) return { kind:'dot', obj:dotM[1], word:dotM[0].split('.').pop() };
+  return { kind:'js', word:(before.match(/[A-Za-z0-9_$\u00C0-\u024F]+$/) || [''])[0] };
 }
-function matches(w){
+function acTagItems(w){
   const lw = w.toLowerCase();
-  const hit = e => e.name.toLowerCase().startsWith(lw) ||
-                   e.name.toLowerCase().split(/\s+/).some(t=>t.startsWith(lw));
-  return dict().filter(hit).sort((a,b)=>{
-    const sa = a.name.toLowerCase().startsWith(lw)?0:1, sb = b.name.toLowerCase().startsWith(lw)?0:1;
-    return sa-sb || a.name.toLowerCase().localeCompare(b.name.toLowerCase());
-  }).slice(0,8);
+  const out = [];
+  Object.keys(AC_HTML_TAGS).forEach(t => {
+    if(t.startsWith(lw)){
+      const info = AC_HTML_TAGS[t];
+      const snippet = AC_VOID.has(t) ? '<' + t + '$0>' : '<' + t + '>\n  $0\n</' + t + '>';
+      out.push({ name:t, tag:'html', code:snippet, desc:info[0] });
+    }
+  });
+  return out.slice(0,9);
+}
+function acAttrItems(tag, w){
+  const lw = w.toLowerCase();
+  const base = AC_GLOBAL_ATTRS.concat(AC_HTML_TAGS[tag] ? AC_HTML_TAGS[tag][1].split(/,\s*/) : []);
+  const seen = new Set(), out = [];
+  base.forEach(a => {
+    a = (a||'').trim(); if(!a) return;
+    if(seen.has(a)) return; seen.add(a);
+    if(a.toLowerCase().startsWith(lw) || (lw.length > 1 && a.toLowerCase().includes(lw))){
+      const vals = AC_ATTR_VALUES[a];
+      out.push({ name:a, tag:'atributo', code: a === 'data-*' ? 'data-$0=""' : a + '="$0"', desc: vals ? '· ' + vals.slice(0,3).join(', ') : '' });
+    }
+  });
+  return out.slice(0,9);
+}
+function acAttrValItems(attr, w){
+  const vals = (AC_ATTR_VALUES[attr] || []).map(v => ({ name:v, tag:'valor', code:v }));
+  let extra = [];
+  if(attr === 'style') extra = Object.keys(AC_CSS_PROPS).filter(p => p.startsWith(w.toLowerCase())).slice(0,9).map(p => ({ name:p, tag:'css', code:p + ': $0;' }));
+  if(attr === 'class') extra = [{ name:'btn', tag:'clase', code:'btn' }];
+  return acFiltered(w, vals.concat(extra));
+}
+function acCssItems(w){
+  const lw = w.toLowerCase();
+  return Object.keys(AC_CSS_PROPS).filter(p => p.startsWith(lw)).slice(0,9).map(p => ({
+    name:p, tag:'css', code:p + ': $0;', desc:'· ' + AC_CSS_PROPS[p].slice(0,3).join(' · ')
+  }));
+}
+function acCssValItems(prop, w){
+  const vals = (AC_CSS_PROPS[prop] || []).map(v => ({ name:v, tag:'valor', code:v }));
+  return acFiltered(w, vals);
+}
+function acDotItems(objName, w){
+  const key = objName.toLowerCase();
+  const table = {
+    document: AC_JS_GLOBALS.document, console: AC_JS_GLOBALS.console,
+    math: AC_JS_GLOBALS.Math, json: AC_JS_GLOBALS.JSON, object: AC_JS_GLOBALS.Object,
+    array: AC_JS_GLOBALS.Array, promise: AC_JS_GLOBALS.Promise, number: AC_JS_GLOBALS.Number,
+    date: AC_JS_GLOBALS.Date, localstorage: AC_JS_GLOBALS.localStorage,
+    sessionstorage: AC_JS_GLOBALS.sessionStorage, location: AC_JS_GLOBALS.location,
+    history: AC_JS_GLOBALS.history, navigator: AC_JS_GLOBALS.navigator,
+    performance: AC_JS_GLOBALS.performance, crypto: AC_JS_GLOBALS.crypto, url: AC_JS_GLOBALS.URL,
+    firebase: AC_FIREBASE.firebase,
+    db: AC_FIREBASE['firebase.firestore()'].concat(['collection()','doc()']),
+    auth: AC_FIREBASE['firebase.auth()'],
+    storage: AC_FIREBASE['firebase.storage()'],
+    functions: AC_FIREBASE['firebase.functions()'],
+    element: AC_JS_PROTO.element, event: AC_JS_PROTO.event,
+    snap: AC_FIREBASE['onSnapshot()'], doc: AC_FIREBASE['doc()'],
+    collection: AC_FIREBASE['collection()'], query: AC_FIREBASE['collection()'],
+    ref: AC_FIREBASE['ref()'], user: AC_FIREBASE['firebase.auth()'],
+    ul: AC_JS_PROTO.array, li: AC_JS_PROTO.element,
+    btn: AC_JS_PROTO.element, input: AC_JS_PROTO.element,
+    str: AC_JS_PROTO.string, text: AC_JS_PROTO.string, arr: AC_JS_PROTO.array, res: AC_JS_PROTO.promise,
+    email: AC_JS_PROTO.string, pass: AC_JS_PROTO.string, texto: AC_JS_PROTO.string
+  };
+  const list = table[key] || AC_JS_PROTO.element;
+  return acFiltered(w, list.map(m => {
+    const mn = m.replace(/\(\)$/, '($0)');
+    return { name: objName + '.' + m, tag:'js', code: objName + '.' + mn };
+  }));
+}
+function acFiltered(prefix, items){
+  const lw = prefix.toLowerCase();
+  return items.filter(x => (x.name||x).toLowerCase().startsWith(lw) ||
+    (lw.length > 1 && (x.name||x).toLowerCase().includes(lw))).slice(0,9);
+}
+function acJsItems(w){
+  const lw = w.toLowerCase();
+  const out = [];
+  dict().forEach(e => { if(e.name.toLowerCase().startsWith(lw) || e.name.toLowerCase().split(/\s+/).some(t=>t.startsWith(lw))) out.push(e); });
+  AC_FLAT_FIREBASE.forEach(e => { if(e.name.toLowerCase().startsWith(lw)) out.push(e); });
+  AC_JS_KW.forEach(k => { if(k.startsWith(lw)) out.push({ name:k, tag:'js', code:k + ' ' }); });
+  Object.keys(AC_JS_GLOBALS).forEach(g => { if(g.toLowerCase().startsWith(lw)) out.push({ name:g, tag:'js', code:g }); });
+  Object.keys(AC_JS_PROTO).forEach(proto => {
+    AC_JS_PROTO[proto].forEach(m => {
+      const mn = m.replace(/\(.*$/,'').replace(/\?.*$/,'');
+      if(mn.toLowerCase().startsWith(lw) && lw.length > 1){
+        const suffix = m.endsWith('()') ? '($0)' : m.includes('(') ? m.slice(m.indexOf('(')) : '';
+        out.push({ name:mn, tag:proto, code:mn + (suffix || '') });
+      }
+    });
+  });
+  const seen = new Set();
+  return out.filter(x => { if(seen.has(x.name)) return false; seen.add(x.name); return true; }).slice(0,9);
 }
 function caretXY(){
   const div = document.createElement('div');
@@ -1360,17 +1629,12 @@ function caretXY(){
   const r = { x:sp.offsetLeft, y:sp.offsetTop, lh:parseFloat(cs.lineHeight)||22 };
   div.remove(); return r;
 }
-function showSug(){
-  const w = currentWord();
-  if(!w){ hideSug(); return; }
-  const list = matches(w);
-  const exact = list.some(e=>e.name.toLowerCase()===w.toLowerCase());
-  const canNew = w.length>=2 && !exact;
+function acShow(list, canNew, newWord){
   if(!list.length && !canNew){ hideSug(); return; }
-  sugItems = list; sugNew = canNew ? w : null; sugActive = 0;
-  sug.innerHTML = list.map((e,i)=>
-      `<button type="button" data-i="${i}" class="${i===0?'on':''}"><b>${esc(e.name)}</b>${e.tag?`<span class="tag">${esc(e.tag)}</span>`:''}</button>`
-    ).join('') + (canNew ? `<button type="button" data-new="1" class="newrow">＋ guardar «${esc(w)}»…</button>` : '');
+  sugItems = list; sugNew = canNew ? newWord : null; sugActive = 0;
+  sug.innerHTML = list.map((e,i) =>
+    `<button type="button" data-i="${i}" class="${i===0?'on':''}"><b>${esc(e.name)}</b>${e.tag?`<span class="tag">${esc(e.tag)}</span>`:''}${e.desc?`<span class="dsc">${esc(e.desc)}</span>`:''}</button>`
+  ).join('') + (canNew ? `<button type="button" data-new="1" class="newrow">＋ guardar «${esc(newWord)}»…</button>` : '');
   sug.hidden = false;
   const c = caretXY();
   let left = c.x - ed.scrollLeft + 2;
@@ -1381,6 +1645,32 @@ function showSug(){
   if(left > maxX) left = Math.max(8, maxX);
   if(top  > maxY) top  = Math.max(8, c.y - ed.scrollTop - sug.offsetHeight - c.lh - 6);
   sug.style.left = left+'px'; sug.style.top = top+'px';
+}
+function showSug(){
+  const ctx = acContext();
+  const w = ctx.word || '';
+  if(ctx.kind === 'dot'){
+    acShow(acDotItems(ctx.obj, w), false, null);
+    return;
+  }
+  if(!w.length){ hideSug(); return; }
+  let list = [], canNew = false;
+  switch(ctx.kind){
+    case 'tag':     list = acTagItems(w); break;
+    case 'attr':    list = acAttrItems(ctx.tagName, w); break;
+    case 'attrval': list = acAttrValItems(ctx.attr, w); break;
+    case 'css':     list = acCssItems(w); break;
+    case 'cssval':  list = acCssValItems(ctx.prop, w); break;
+    case 'js':
+      list = acJsItems(w);
+      canNew = w.length >= 2 && !list.some(e => e.name.toLowerCase() === w.toLowerCase());
+      break;
+    case 'text':
+      list = dict().filter(e => (e.name+' '+(e.tag||'')).toLowerCase().includes(w.toLowerCase())).slice(0,9);
+      canNew = w.length >= 2 && !list.some(e => e.name.toLowerCase() === w.toLowerCase());
+      break;
+  }
+  acShow(list, canNew, w);
 }
 function hideSug(){ sug.hidden = true; sugItems=[]; sugNew=null; sugActive=0; }
 function markActive(){
@@ -1397,12 +1687,14 @@ function moveActive(d){
 function insertSnippet(sn){
   const pos = ed.selectionStart, selEnd = ed.selectionEnd;
   const before = ed.value.slice(0, pos);
-  const m = before.match(/[A-Za-z0-9_$\u00C0-\u024F-]+$/);
-  const start = m ? pos - m[0].length : pos;
+  const ctx = acContext();
+  let start = pos;
+  const wm = before.match(/[A-Za-z0-9_$\u00C0-\u024F.:-]+$/);
+  if(wm) start = pos - wm[0].length;
   const lineStart = ed.value.lastIndexOf('\n', start - 1) + 1;
   const baseIndent = (ed.value.slice(lineStart, start).match(/^[ \t]*/) || [''])[0];
   let code = String(sn.code || '');
-  if(ed.value.charAt(start-1) === '<' && code.charAt(0) === '<') code = code.slice(1);
+  if(ctx.kind === 'tag' && ed.value.charAt(start-1) === '<' && code.charAt(0) === '<') code = code.slice(1);
   code = code.split('\n').map((l, idx) => (idx === 0 || !l.trim()) ? l : baseIndent + l).join('\n');
   let off = code.length;
   const i0 = code.indexOf('$0');
@@ -1494,7 +1786,6 @@ function buildSrcdoc(markup, banner){
 }
 function compile(){
   const mySeq = ++seq;
-  deployedView = false;
   cset('montando…','busy'); tabDot('');
   frame.srcdoc = buildSrcdoc(ed.value, '');
 }
@@ -1529,7 +1820,7 @@ function renderConsole(){
   let html = '';
   if(consTab === 'firestore'){
     const cols = Object.keys(db.collections || {}).sort();
-    if(!cols.length) html = '<div class="c-empty">Sin colecciones todavía. Crea documentos desde tu app (addDoc/setDoc) y aparecerán aquí y en Sheets.</div>';
+    if(!cols.length) html = '<div class="c-empty">Sin colecciones todavía. Crea documentos desde tu app (add/set) y aparecerán aquí y en Sheets.</div>';
     cols.forEach(col => {
       const docs = db.collections[col] || {};
       const n = Object.keys(docs).length;
@@ -1545,7 +1836,7 @@ function renderConsole(){
     if(!us.length) html = '<div class="c-empty">Sin usuarios. Regístrate desde tu app (createUserWithEmailAndPassword) — mínimo 6 caracteres de contraseña, como en el Firebase real.</div>';
     us.forEach(([uid, u]) => {
       html += `<div class="c-doc"><div class="ci"><b>${esc(u.email)}</b>
-        <pre>uid: ${esc(uid)}\ncreado: ${esc((u.createdAt||'').slice(0,19).replace('T',' '))}\ncontraseña (simulada, texto plano): ${esc(u.pass)}</pre></div>
+        <pre>uid: ${esc(uid)}\ncreado: ${esc((u.createdAt||'').slice(0,19).replace('T',' '))}\ncontraseña (simulada): ${esc(u.pass)}</pre></div>
         <button class="iconbtn sm danger" data-del="user" data-uid="${esc(uid)}" title="Eliminar usuario"><i data-lucide="trash-2"></i></button></div>`;
     });
   } else if(consTab === 'storage'){
@@ -1618,7 +1909,6 @@ service cloud.firestore {
 function visitDeployed(){
   const db = readFB();
   if(!(db.hosting && db.hosting.html)){ toast('Primero haz deploy','err'); return; }
-  deployedView = true;
   cset('hosting · ' + hora(db.hosting.deployedAt), 'ok'); tabDot('ok');
   frame.srcdoc = buildSrcdoc(db.hosting.html, (db.hosting.deployedAt||'').slice(11,16));
   $('#dlgDeploy').close();

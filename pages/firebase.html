@@ -1,0 +1,1832 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#F4F1E9">
+<title>BLOCKLAB · firebase</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500..700;1,9..144,400..600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<style>
+:root{
+  --bg:#F4F1E9; --card:#FDFBF4; --ink:#1C1915; --mut:#6F675A;
+  --line:#DED6C5; --acc:#D6481C; --ok:#3F6B33; --warn:#9A7B1F;
+  --fbyellow:#FFCA28; --fbamber:#F57C00;
+  --mono:'JetBrains Mono',monospace; --serif:'Fraunces',serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden;
+  background:var(--bg);color:var(--ink);font:400 14px/1.6 var(--mono)}
+::selection{background:rgba(214,72,28,.25)}
+button,a{font-family:var(--mono)}
+svg{flex:none}
+i[data-lucide]{display:inline-flex}
+.wrap-x{max-width:1400px;width:100%;margin:0 auto}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:38px;padding:8px 12px;
+  font:600 10.5px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;
+  border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;
+  transition:background .15s,color .15s,border-color .15s}
+.btn:hover{background:var(--ink);color:var(--bg)}
+.btn svg{width:14px;height:14px}
+.iconbtn{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;flex:none;
+  border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;transition:all .15s}
+.iconbtn:hover{background:var(--ink);color:var(--bg)}
+.iconbtn.danger:hover{background:var(--acc);border-color:var(--acc);color:var(--bg)}
+.iconbtn.sm{width:28px;height:28px;border-width:1px}
+.iconbtn.sm svg{width:13px;height:13px}
+.iconbtn.armed{width:auto;padding:0 9px;font:700 10px/1 var(--mono);border-color:var(--acc);color:var(--acc)}
+.iconbtn svg{width:15px;height:15px}
+.spin svg{animation:rot 1s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+header{flex:none;border-bottom:1.5px solid var(--ink);background:var(--bg)}
+.h-in{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px}
+.brand{font:700 14px/1 var(--mono);letter-spacing:.12em;white-space:nowrap}
+.brand .star{color:var(--acc)}
+.bsub{color:var(--mut);font-weight:500;letter-spacing:.06em}
+.h-right{display:flex;align-items:center;gap:8px}
+.status{display:inline-flex;align-items:center;gap:7px;font:500 10px/1 var(--mono);letter-spacing:.06em;color:var(--mut);text-transform:uppercase;margin-right:4px;cursor:pointer}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--mut);flex:none}
+.dot.ok{background:var(--ok)} .dot.err{background:var(--acc)}
+.dot.busy{background:var(--warn);animation:pulse 1.2s infinite} .dot.warn{background:var(--warn)}
+@keyframes pulse{50%{opacity:.3}}
+.qb{font:700 10px/1 var(--mono);color:var(--acc);border:1.5px solid var(--acc);padding:4px 6px}
+@media(max-width:720px){#stTxt{display:none}.btn .lbl{display:none}}
+
+.tabs{flex:none;display:flex;border-bottom:1.5px solid var(--ink)}
+.tabs button{flex:1;display:flex;justify-content:center;align-items:center;gap:8px;min-height:46px;
+  font:600 11px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;
+  background:none;border:none;color:var(--mut);cursor:pointer}
+.tabs button + button{border-left:1.5px solid var(--ink)}
+.tabs button.on{background:var(--ink);color:var(--bg)}
+.tabs button svg{width:14px;height:14px}
+.tdot{width:7px;height:7px;border-radius:50%;background:var(--mut)}
+.tdot.ok{background:#7FCB6A}.tdot.err{background:#FF8A5C}
+
+.panes{flex:1;min-height:0;display:grid;grid-template-columns:1fr}
+.pane{display:flex;flex-direction:column;min-height:0;min-width:0}
+.pv{display:none}
+body.view-pdf .ed{display:none}
+body.view-pdf .pv{display:flex}
+@media(min-width:1024px){
+  .tabs{display:none}
+  .panes{grid-template-columns:minmax(0,44%) minmax(0,56%)}
+  .ed,.pv{display:flex!important}
+  .ed{border-right:1.5px solid var(--ink)}
+}
+.pane-head{flex:none;display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:8px 14px;border-bottom:1px solid var(--line);
+  font:600 10px/1 var(--mono);letter-spacing:.12em;color:var(--mut);text-transform:uppercase}
+.pane-head .r{display:flex;align-items:center;gap:8px}
+.saved{font:500 9.5px/1 var(--mono);letter-spacing:.06em;color:var(--mut);text-transform:none}
+
+.ed-wrap{flex:1;min-height:0;position:relative;margin:12px;border:1.5px solid var(--ink);background:var(--card)}
+#hl,#ed{position:absolute;inset:0;margin:0;padding:14px;border:none;outline:none;
+  font:400 13px/1.7 var(--mono);tab-size:2;
+  white-space:pre-wrap;word-wrap:break-word;overflow-wrap:break-word;overflow-y:scroll;overflow-x:hidden}
+#ed{background:transparent;color:transparent;caret-color:var(--ink);resize:none;-webkit-text-fill-color:transparent;
+  scrollbar-width:thin;scrollbar-color:rgba(28,25,21,.3) transparent}
+#ed::-webkit-scrollbar{width:14px}
+#ed::-webkit-scrollbar-thumb{background:rgba(28,25,21,.28)}
+#ed::-webkit-scrollbar-track{background:transparent}
+#hl{background:var(--card);pointer-events:none;color:var(--ink);
+  scrollbar-width:thin;scrollbar-color:transparent transparent}
+#hl::-webkit-scrollbar{width:14px}
+#hl::-webkit-scrollbar-thumb{background:transparent}
+#hl::-webkit-scrollbar-track{background:transparent}
+#hl .e{color:#0F6FA8;font-weight:700}
+#hl .p{color:#A63A0A}
+#hl .s{color:#2F7D2F}
+#hl .n{color:#B07D10}
+#hl .k{color:#8E44AD;font-weight:700}
+#hl .b{color:#6E7B8B}
+#hl .c{color:#9A927F;font-style:italic}
+
+.sug{position:absolute;z-index:8;min-width:230px;max-width:330px;max-height:262px;overflow:auto;
+  background:var(--card);border:1.5px solid var(--ink);box-shadow:5px 5px 0 rgba(28,25,21,.18);
+  font:400 12px/1.4 var(--mono)}
+.sug button{display:flex;width:100%;align-items:center;gap:8px;padding:9px 11px;border:0;
+  background:none;text-align:left;cursor:pointer;font:inherit;color:var(--ink)}
+.sug button b{font-weight:700}
+.sug button.on,.sug button:hover{background:var(--ink);color:var(--bg)}
+.sug button.on .tag,.sug button:hover .tag{background:var(--bg);color:var(--ink)}
+.tag{font:700 8.5px/1 var(--mono);letter-spacing:.07em;text-transform:uppercase;padding:3px 6px;background:var(--ink);color:var(--bg)}
+.tag.pend{background:var(--acc)}
+.sug .newrow{color:var(--acc);font-weight:700;border-top:1px solid var(--line)}
+.sug .newrow:hover{background:var(--acc);color:var(--bg)}
+
+.err{flex:none;margin:10px 12px 0;padding:10px 12px;border:1.5px solid var(--acc);color:var(--acc);
+  background:#FBEFE9;font:500 11px/1.55 var(--mono);max-height:110px;overflow:auto;white-space:pre-wrap}
+.pages{flex:1;min-height:0;display:flex;flex-direction:column;padding:12px;background:#E9E4D6}
+#frame{flex:1;min-height:0;width:100%;border:1.5px solid var(--ink);background:#fff;border-radius:3px;
+  box-shadow:0 2px 8px rgba(28,25,21,.14)}
+.pv-hint{color:var(--mut);font-size:11.5px;text-align:center;padding:40px 20px}
+
+dialog{border:2px solid var(--ink);background:var(--card);color:var(--ink);
+  box-shadow:7px 7px 0 var(--ink);padding:0;width:min(620px,94vw);margin:auto}
+dialog::backdrop{background:rgba(28,25,21,.55)}
+.dlg-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:15px 18px;border-bottom:1.5px solid var(--ink)}
+.dlg-head h3{font:600 20px/1.15 var(--serif)}
+.dlg-head small{display:block;font:500 10px/1.5 var(--mono);letter-spacing:.06em;color:var(--mut);margin-top:4px}
+.dlg-body{padding:16px 18px}
+.dlg-foot{display:flex;justify-content:flex-end;gap:10px;padding:0 18px 18px;flex-wrap:wrap}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:13px}
+.field label{font:700 9px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+.field input,.field textarea{font:400 13px/1.6 var(--mono);padding:10px 12px;min-height:42px;
+  border:1.5px solid var(--ink);background:var(--bg);color:var(--ink);outline:none;width:100%}
+.field input:focus,.field textarea:focus{border-color:var(--acc)}
+.field textarea{min-height:150px;resize:vertical}
+.hint{font:400 10px/1.5 var(--mono);color:var(--mut)}
+.hint code{color:var(--acc);font-weight:700}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:560px){.field-row{grid-template-columns:1fr}}
+
+.d-tools{display:flex;gap:8px;margin-bottom:12px}
+#q2{flex:1;min-width:0;font:500 13px/1 var(--mono);padding:0 4px;min-height:38px;
+  border:none;border-bottom:1.5px solid var(--ink);background:transparent;outline:none}
+#q2:focus{border-color:var(--acc)}
+.d-list{max-height:56vh;overflow:auto;border-top:1.5px solid var(--ink)}
+.dl-l{font:600 11px/1 var(--serif);padding:10px 4px 6px;color:var(--acc);letter-spacing:.1em;position:sticky;top:0;background:var(--card)}
+.drow{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid var(--line)}
+.d-main{flex:1;min-width:0}
+.d-main .t{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.d-main strong{font:700 12.5px/1.3 var(--mono)}
+.d-c{display:block;font:400 10.5px/1.4 var(--mono);color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}
+.d-acts{display:flex;gap:5px}
+.d-empty{padding:24px 8px;text-align:center;color:var(--mut);font-size:12px}
+
+/* Consola Firebase */
+.tabs-c{display:flex;border:1.5px solid var(--ink);margin-bottom:12px}
+.tabs-c button{flex:1;padding:10px 2px;font:600 9.5px/1.2 var(--mono);letter-spacing:.05em;text-transform:uppercase;
+  background:none;border:none;border-right:1.5px solid var(--ink);color:var(--mut);cursor:pointer}
+.tabs-c button:last-child{border-right:none}
+.tabs-c button.on{background:var(--ink);color:var(--bg)}
+.c-list{max-height:52vh;overflow:auto;border-top:1.5px solid var(--ink)}
+.c-col{padding:12px 2px 6px;font:700 11px/1 var(--mono);color:var(--acc);letter-spacing:.08em}
+.c-doc{display:flex;align-items:flex-start;gap:10px;padding:8px 2px;border-bottom:1px solid var(--line)}
+.c-doc .ci{flex:1;min-width:0}
+.c-doc .ci b{font:700 11.5px/1.4 var(--mono)}
+.c-doc pre{font:400 10.5px/1.5 var(--mono);color:var(--ink);white-space:pre-wrap;word-break:break-word;
+  background:var(--bg);border:1px solid var(--line);padding:8px;margin-top:4px;max-height:130px;overflow:auto}
+.c-empty{padding:18px 4px;color:var(--mut);font-size:12px}
+.c-note{font:400 11px/1.6 var(--mono);color:var(--mut);margin:10px 0 0;padding:10px;border:1px dashed var(--line);background:var(--bg)}
+.c-note b{color:var(--acc)}
+#rules{font:400 11px/1.7 var(--mono);background:var(--ink);color:#EDE7D8;padding:14px;white-space:pre-wrap;overflow:auto;max-height:50vh}
+#depLog{font:400 11.5px/1.8 var(--mono);background:var(--ink);color:#EDE7D8;padding:14px;
+  white-space:pre-wrap;min-height:220px;max-height:52vh;overflow:auto}
+#depLog .ok{color:#7FCB6A}#depLog .info{color:#6FB5E0}#depLog .w{color:#E8C15A}
+
+#toasts{position:fixed;left:16px;right:16px;bottom:16px;display:flex;flex-direction:column;align-items:center;gap:8px;z-index:99;pointer-events:none}
+.toast{display:flex;gap:9px;align-items:center;background:var(--ink);color:var(--bg);padding:11px 15px;
+  font:500 12px/1.4 var(--mono);max-width:100%;animation:tin .2s ease}
+.toast.err{background:var(--acc)}
+.toast svg{width:14px;height:14px}
+@keyframes tin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media(min-width:640px){#toasts{left:auto;right:20px;align-items:flex-end}}
+</style>
+</head>
+<body class="view-code">
+
+<header>
+  <div class="wrap-x h-in">
+    <div class="brand">BLOCKLAB<span class="star">*</span><span class="bsub"> / firebase</span></div>
+    <div class="h-right">
+      <span class="qb" id="qb" hidden>↑0</span>
+      <span class="status" id="stPill" title=""><span class="dot" id="stDot"></span><span id="stTxt">—</span></span>
+      <button class="iconbtn" id="btnDict" title="Diccionario de funciones"><i data-lucide="book-open"></i></button>
+      <button class="iconbtn" id="btnConsole" title="Consola del proyecto (datos)"><i data-lucide="database"></i></button>
+      <button class="btn" id="btnDeploy" title="Simular firebase deploy"><i data-lucide="rocket"></i><span class="lbl">Deploy</span></button>
+      <button class="iconbtn" id="btnSync" title="Sincronizar con Sheets"><i data-lucide="refresh-cw"></i></button>
+      <button class="iconbtn danger" id="btnWipe" title="Reiniciar proyecto simulado"><i data-lucide="trash-2"></i></button>
+    </div>
+  </div>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button type="button" data-view="code" class="on"><i data-lucide="code-2"></i>Código</button>
+  <button type="button" data-view="pdf"><i data-lucide="eye"></i>App<span class="tdot" id="tabDot"></span></button>
+</nav>
+
+<main class="panes">
+  <section class="pane ed">
+    <div class="pane-head">
+      <span>Editor · HTML + Firebase (simulado)</span>
+      <span class="r">
+        <span class="saved" id="draftInfo">—</span>
+        <button class="iconbtn sm" id="btnFmt" title="Formatear · Shift+Alt+F"><i data-lucide="wand-2"></i></button>
+        <button class="iconbtn sm danger" id="btnReset" title="Borrar todo · ejemplo base"><i data-lucide="trash-2"></i></button>
+      </span>
+    </div>
+    <div class="ed-wrap" id="edWrap">
+      <pre id="hl" aria-hidden="true"></pre>
+      <textarea id="ed" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" aria-label="HTML con Firebase"></textarea>
+      <div class="sug" id="sug" hidden></div>
+    </div>
+  </section>
+
+  <section class="pane pv">
+    <div class="pane-head">
+      <span>App en vivo · proyecto «blocklab-demo»</span>
+      <span class="r status"><span class="dot" id="cDot"></span><span id="cTxt">—</span></span>
+    </div>
+    <div class="err" id="errBox" hidden></div>
+    <div class="pages"><iframe id="frame" title="Vista previa" sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-popups"></iframe></div>
+  </section>
+</main>
+
+<!-- Diccionario -->
+<dialog id="dlgDict">
+  <div class="dlg-head">
+    <div><h3>Diccionario</h3><small id="dictCount">—</small></div>
+    <button type="button" class="iconbtn" data-close><i data-lucide="x"></i></button>
+  </div>
+  <div class="dlg-body">
+    <div class="d-tools">
+      <input id="q2" type="text" placeholder="Buscar…" autocomplete="off">
+      <button class="btn btn-solid" id="btnNewSnip"><i data-lucide="plus"></i>Nueva</button>
+    </div>
+    <div class="d-list" id="dictList"></div>
+  </div>
+</dialog>
+
+<!-- Entrada -->
+<dialog id="dlgSnip">
+  <form id="fmSnip" method="dialog">
+    <div class="dlg-head">
+      <div><h3 id="snipTitle">Nueva entrada</h3><small>hoja «firebase» en Sheets</small></div>
+      <button type="button" class="iconbtn" data-close><i data-lucide="x"></i></button>
+    </div>
+    <div class="dlg-body">
+      <input type="hidden" name="id">
+      <div class="field-row">
+        <div class="field"><label>Título</label><input name="name" required placeholder="addDoc"></div>
+        <div class="field"><label>Tipo</label><input name="tag" list="kinds" placeholder="firestore">
+          <datalist id="kinds">
+            <option>raíz</option><option>auth</option><option>firestore</option>
+            <option>storage</option><option>functions</option><option>hosting</option><option>elemento</option>
+          </datalist>
+        </div>
+      </div>
+      <div class="field"><label>Lo que insertará (código)</label>
+        <textarea name="code" id="snipTA" required spellcheck="false"></textarea>
+        <span class="hint"><code>$0</code> = cursor al insertar · Tab = sangría</span>
+      </div>
+    </div>
+    <div class="dlg-foot">
+      <button type="button" class="btn" data-close>Cancelar</button>
+      <button type="submit" class="btn btn-solid">Guardar</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Consola del proyecto -->
+<dialog id="dlgConsole">
+  <div class="dlg-head">
+    <div><h3>Consola · blocklab-demo</h3><small id="consCount">—</small></div>
+    <button type="button" class="iconbtn" data-close><i data-lucide="x"></i></button>
+  </div>
+  <div class="dlg-body">
+    <div class="tabs-c" id="consTabs">
+      <button data-t="firestore" class="on">Firestore</button>
+      <button data-t="auth">Auth</button>
+      <button data-t="storage">Storage</button>
+      <button data-t="hosting">Hosting</button>
+      <button data-t="rules">Reglas</button>
+    </div>
+    <div class="c-list" id="consBody"></div>
+    <p class="c-note"><b>Nota:</b> cada documento, usuario y archivo de este proyecto simulado vive también como fila en la hoja «firebase» de Google Sheets. Las contraseñas se guardan en texto plano <b>solo en el simulador</b> — Firebase real las guarda con hash y nunca debes hacerlo a mano.</p>
+  </div>
+</dialog>
+
+<!-- Deploy -->
+<dialog id="dlgDeploy">
+  <div class="dlg-head">
+    <div><h3>firebase deploy</h3><small>proyecto blocklab-demo (simulado)</small></div>
+    <button type="button" class="iconbtn" data-close><i data-lucide="x"></i></button>
+  </div>
+  <div class="dlg-body"><pre id="depLog"></pre></div>
+  <div class="dlg-foot">
+    <button type="button" class="btn" id="btnVisit" hidden><i data-lucide="external-link"></i>Ver en el preview</button>
+    <button type="button" class="btn btn-solid" data-close>Cerrar</button>
+  </div>
+</dialog>
+
+<div id="toasts"></div>
+
+<script>
+/* ═══ 1 · CONFIG ═══════════════════════════════════════════ */
+const API_URL   = 'https://script.google.com/macros/s/AKfycbzSLoucR2yC7X7kKpbeDnQUCNd94-WuVuGyR55CMIrP4hq5f1tgynDDdHumc8iBj8gI9g/exec';
+const SHEET     = 'firebase';
+const LS_DB     = 'blocklab.db.v1';        // caché de bloques (dict + draft)
+const LS_Q      = 'blocklab.queue.v1';
+const LS_DRAFT  = 'blocklab.draft.firebase.v1';
+const LS_DRAFT_T= 'blocklab.draft.firebase.t';
+const LS_SEEDED = 'blocklab.firebase.seeds.v1';
+const LS_FB     = 'blocklab.fb.db.v1';     // base del proyecto simulado
+const DRAFT_ID   = '__draft__';
+const DRAFT_NAME = 'BORRADOR · editor';
+
+const STARTER = `<!-- Proyecto simulado: blocklab-demo
+     El SDK (compat) ya está incluido: NO necesitas <script src="gstatic...">
+     auth · firestore · storage · functions funcionan aquí.
+     Los datos que guardes aparecen en la Consola (botón base de datos)
+     y en la hoja «firebase» de Google Sheets. -->
+
+<div class="card">
+  <h1>Mis notas</h1>
+
+  <div id="authBox">
+    <input id="email" placeholder="correo@demo.com" value="ana@demo.com">
+    <input id="pass" type="password" placeholder="contraseña (mín. 6)" value="123456">
+    <div class="row">
+      <button id="btnUp">Crear cuenta</button>
+      <button id="btnIn" class="alt">Entrar</button>
+    </div>
+  </div>
+
+  <div id="appBox" hidden>
+    <p>Hola, <b id="who"></b></p>
+    <div class="row">
+      <input id="texto" placeholder="escribe una nota…">
+      <button id="btnAdd">Guardar</button>
+    </div>
+    <ul id="notas"></ul>
+    <button id="btnOut" class="alt">Cerrar sesión</button>
+  </div>
+</div>
+
+<style>
+  body { font-family: system-ui, sans-serif; background: #FAF7F0; margin: 0; padding: 24px; }
+  .card { max-width: 420px; margin: 0 auto; background: #fff; border: 2px solid #222;
+          padding: 22px; box-shadow: 6px 6px 0 rgba(34,34,34,.9); }
+  h1 { margin: 0 0 16px; font-size: 22px; }
+  input { width: 100%; padding: 10px; margin-bottom: 8px; border: 1.5px solid #222; font-size: 14px; }
+  .row { display: flex; gap: 8px; }
+  .row input { flex: 1; }
+  button { padding: 10px 14px; border: 1.5px solid #222; background: #FFCA28;
+           font-weight: 700; cursor: pointer; }
+  button.alt { background: #fff; }
+  ul { padding-left: 18px; }
+  li { margin: 6px 0; }
+  li button { padding: 2px 8px; font-size: 11px; margin-left: 8px; }
+</style>
+
+<script>
+  firebase.initializeApp({ apiKey: 'demo-key', projectId: 'blocklab-demo' });
+
+  const db   = firebase.firestore();
+  const auth = firebase.auth();
+
+  const authBox = document.querySelector('#authBox');
+  const appBox  = document.querySelector('#appBox');
+  let quitarListener = null;
+
+  auth.onAuthStateChanged(user => {
+    if (quitarListener) { quitarListener(); quitarListener = null; }
+    document.querySelector('#notas').innerHTML = '';
+    if (user) {
+      authBox.hidden = true;  appBox.hidden = false;
+      document.querySelector('#who').textContent = user.email;
+      // onSnapshot: escucha en TIEMPO REAL la colección del usuario
+      quitarListener = db.collection('notas')
+        .where('uid', '==', user.uid)
+        .orderBy('creado', 'desc')
+        .onSnapshot(snap => {
+          const ul = document.querySelector('#notas');
+          ul.innerHTML = '';
+          snap.forEach(doc => {
+            const li = document.createElement('li');
+            li.textContent = doc.data().texto;
+            const b = document.createElement('button');
+            b.textContent = 'borrar';
+            b.onclick = () => doc.ref.delete();
+            li.appendChild(b);
+            ul.appendChild(li);
+          });
+        });
+    } else {
+      authBox.hidden = false; appBox.hidden = true;
+    }
+  });
+
+  document.querySelector('#btnUp').onclick = async () => {
+    try {
+      await auth.createUserWithEmailAndPassword(
+        document.querySelector('#email').value,
+        document.querySelector('#pass').value);
+    } catch (e) { alert(e.code + ': ' + e.message); }
+  };
+
+  document.querySelector('#btnIn').onclick = async () => {
+    try {
+      await auth.signInWithEmailAndPassword(
+        document.querySelector('#email').value,
+        document.querySelector('#pass').value);
+    } catch (e) { alert(e.code + ': ' + e.message); }
+  };
+
+  document.querySelector('#btnOut').onclick = () => auth.signOut();
+
+  document.querySelector('#btnAdd').onclick = async () => {
+    const user = auth.currentUser;
+    const texto = document.querySelector('#texto').value.trim();
+    if (!user || !texto) return;
+    await db.collection('notas').add({
+      uid: user.uid,
+      texto: texto,
+      creado: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    document.querySelector('#texto').value = '';
+  };
+<\/script>`;
+
+const SEED = [
+  { id:'fb-init',    name:'initializeApp', tag:'raíz',      code:`firebase.initializeApp({\n  apiKey: 'demo-key',\n  projectId: 'blocklab-demo'\n});` },
+  { id:'fb-auth-up', name:'createUser',    tag:'auth',      code:`auth.createUserWithEmailAndPassword('$0', '123456')` },
+  { id:'fb-auth-in', name:'signIn',        tag:'auth',      code:`auth.signInWithEmailAndPassword('$0', '123456')` },
+  { id:'fb-auth-st', name:'onAuthState',   tag:'auth',      code:`auth.onAuthStateChanged(user => {\n  if (user) {\n    $0\n  }\n});` },
+  { id:'fb-auth-out',name:'signOut',       tag:'auth',      code:`auth.signOut();` },
+  { id:'fb-fs-add',  name:'add',           tag:'firestore', code:`db.collection('$0').add({\n  campo: 'valor',\n  creado: firebase.firestore.FieldValue.serverTimestamp()\n});` },
+  { id:'fb-fs-set',  name:'set',           tag:'firestore', code:`db.collection('$1').doc('id-documento').set({\n  campo: 'valor'\n}, { merge: true });` },
+  { id:'fb-fs-get1', name:'getDoc',        tag:'firestore', code:`const snap = await db.collection('$1').doc('id').get();\nif (snap.exists) {\n  console.log(snap.id, snap.data());\n}` },
+  { id:'fb-fs-getall',name:'getDocs',      tag:'firestore', code:`const snap = await db.collection('$1').get();\nsnap.forEach(doc => {\n  console.log(doc.id, doc.data());\n});` },
+  { id:'fb-fs-query',name:'query',         tag:'firestore', code:`const snap = await db.collection('$1')\n  .where('campo', '==', 'valor')\n  .orderBy('creado', 'desc')\n  .limit(10)\n  .get();` },
+  { id:'fb-fs-snap', name:'onSnapshot',    tag:'firestore', code:`db.collection('$1').onSnapshot(snap => {\n  snap.forEach(doc => console.log(doc.id, doc.data()));\n});` },
+  { id:'fb-fs-upd',  name:'update',        tag:'firestore', code:`db.collection('$1').doc('id').update({\n  campo: 'nuevo-valor'\n});` },
+  { id:'fb-fs-del',  name:'deleteDoc',     tag:'firestore', code:`db.collection('$1').doc('id').delete();` },
+  { id:'fb-fs-inc',  name:'increment',     tag:'firestore', code:`.update({ contador: firebase.firestore.FieldValue.increment(1) })` },
+  { id:'fb-fs-arr',  name:'arrayUnion',    tag:'firestore', code:`.update({ etiquetas: firebase.firestore.FieldValue.arrayUnion('$0') })` },
+  { id:'fb-st-put',  name:'putString',     tag:'storage',   code:`const ref = firebase.storage().ref('textos/$0.txt');\nawait ref.putString('contenido del archivo');\nconst url = await ref.getDownloadURL();` },
+  { id:'fb-fn-def',  name:'define función',tag:'functions', code:`<script type="firebase-functions">\n  functions.define('saludar', async (data) => {\n    return { mensaje: 'Hola, ' + data.nombre };\n  });\n<\/script>` },
+  { id:'fb-fn-call', name:'httpsCallable', tag:'functions', code:`const saludar = firebase.functions().httpsCallable('saludar');\nconst res = await saludar({ nombre: '$0' });\nconsole.log(res.data.mensaje);` },
+  { id:'fb-host',    name:'deploy',        tag:'hosting',   code:`/* Pulsa el botón DEPLOY de la cabecera:\n   simula "firebase deploy" y publica esta página\n   como index.html del proyecto. */` }
+];
+
+/* ═══ 2 · SDK SIMULADO (se inyecta ANTES del código del usuario) ══ */
+const SDK_SRC = `
+'use strict';
+(function(){
+  var DB_KEY = 'blocklab.fb.db.v1';
+  function emptyDB(){ return { collections:{}, users:{}, session:null, storage:{}, hosting:null }; }
+  function loadDB(){ try{ var d = JSON.parse(localStorage.getItem(DB_KEY) || 'null'); if(d && d.collections) return d; }catch(e){} return emptyDB(); }
+  var DB = loadDB();
+  function persist(){
+    try{ localStorage.setItem(DB_KEY, JSON.stringify(DB)); }catch(e){}
+    try{ parent.postMessage({ source:'bl-fb', type:'change' }, '*'); }catch(e){}
+    fireAll();
+  }
+  function nowISO(){ return new Date().toISOString(); }
+  function rid(p){ return p + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+  function fbErr(code, msg){ var e = new Error(msg); e.code = code; return e; }
+  function clone(v){ return v === undefined ? undefined : JSON.parse(JSON.stringify(v)); }
+  function deepEq(a, b){ return JSON.stringify(a) === JSON.stringify(b); }
+  function getField(obj, path){ return String(path).split('.').reduce(function(o, k){ return o == null ? undefined : o[k]; }, obj); }
+
+  var FV = {
+    serverTimestamp: function(){ return { __sv:'ts' }; },
+    increment: function(n){ return { __sv:'inc', n:Number(n) || 0 }; },
+    arrayUnion: function(){ return { __sv:'au', v:Array.prototype.slice.call(arguments) }; },
+    arrayRemove: function(){ return { __sv:'ar', v:Array.prototype.slice.call(arguments) }; },
+    delete: function(){ return { __sv:'del' }; }
+  };
+  function mergeData(prev, data){
+    var out = prev ? clone(prev.data) : {};
+    Object.keys(data).forEach(function(k){
+      var v = data[k];
+      if(v && typeof v === 'object' && !Array.isArray(v) && v.__sv){
+        if(v.__sv === 'ts') out[k] = nowISO();
+        else if(v.__sv === 'inc') out[k] = (Number(out[k]) || 0) + v.n;
+        else if(v.__sv === 'au'){ var a1 = Array.isArray(out[k]) ? out[k].slice() : []; v.v.forEach(function(x){ if(!a1.some(function(y){ return deepEq(x, y); })) a1.push(x); }); out[k] = a1; }
+        else if(v.__sv === 'ar'){ var a2 = Array.isArray(out[k]) ? out[k] : []; out[k] = a2.filter(function(x){ return !v.v.some(function(y){ return deepEq(x, y); }); }); }
+        else if(v.__sv === 'del') delete out[k];
+      } else out[k] = clone(v);
+    });
+    return out;
+  }
+
+  var docListeners = [], qListeners = [], authListeners = [];
+  function fireAll(){
+    docListeners.forEach(function(L){
+      var d = (DB.collections[L.col] || {})[L.id];
+      try{ L.cb(makeDocSnap(L.col, L.id, d)); }catch(e){ console.error(e); }
+    });
+    qListeners.forEach(function(L){
+      runQuery(L.col, L.parts).then(function(snap){ try{ L.cb(snap); }catch(e){ console.error(e); } });
+    });
+    var cur = authImpl.currentUser;
+    authListeners.forEach(function(cb){ try{ cb(cur); }catch(e){ console.error(e); } });
+  }
+
+  function makeUser(uid, u){
+    return { uid: uid, email: u.email, displayName: null, photoURL: null,
+             metadata: { creationTime: u.createdAt }, _sim: true };
+  }
+  var authImpl = {
+    get currentUser(){
+      var uid = DB.session;
+      if(!uid || !DB.users[uid]) return null;
+      return makeUser(uid, DB.users[uid]);
+    },
+    onAuthStateChanged: function(cb){ authListeners.push(cb); setTimeout(function(){ cb(authImpl.currentUser); }, 0); },
+    createUserWithEmailAndPassword: function(email, pass){
+      email = String(email || '').trim().toLowerCase();
+      if(!/^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$/.test(email)) return Promise.reject(fbErr('auth/invalid-email', 'La dirección de correo electrónico no es válida.'));
+      if(String(pass).length < 6) return Promise.reject(fbErr('auth/weak-password', 'La contraseña debe tener al menos 6 caracteres.'));
+      var dup = Object.keys(DB.users).some(function(uid){ return DB.users[uid].email === email; });
+      if(dup) return Promise.reject(fbErr('auth/email-already-in-use', 'Ya existe una cuenta con ese correo.'));
+      var uid = rid('u');
+      DB.users[uid] = { email: email, pass: String(pass), createdAt: nowISO() };
+      DB.session = uid; persist();
+      return Promise.resolve({ user: makeUser(uid, DB.users[uid]) });
+    },
+    signInWithEmailAndPassword: function(email, pass){
+      email = String(email || '').trim().toLowerCase();
+      var hit = null;
+      Object.keys(DB.users).forEach(function(uid){ if(DB.users[uid].email === email) hit = uid; });
+      if(!hit) return Promise.reject(fbErr('auth/user-not-found', 'No existe ningún usuario con ese correo.'));
+      if(DB.users[hit].pass !== String(pass)) return Promise.reject(fbErr('auth/wrong-password', 'La contraseña no es válida.'));
+      DB.session = hit; persist();
+      return Promise.resolve({ user: makeUser(hit, DB.users[hit]) });
+    },
+    signOut: function(){ DB.session = null; persist(); return Promise.resolve(); },
+    sendPasswordResetEmail: function(email){
+      console.info('[simulador] Se enviaría un correo de restablecimiento a ' + email);
+      return Promise.resolve();
+    }
+  };
+
+  function makeDocSnap(col, id, d){
+    return {
+      id: id, exists: !!d,
+      get ref(){ return makeDocRef(col, id); },
+      data: function(){ return d ? clone(d.data) : undefined; },
+      get: function(f){ return d ? getField(d.data, f) : undefined; }
+    };
+  }
+  function makeDocRef(col, id){
+    return {
+      id: id,
+      get path(){ return col + '/' + id; },
+      set: function(data, opts){
+        var c = DB.collections[col] || (DB.collections[col] = {});
+        var prev = c[id];
+        var merged = (opts && opts.merge && prev) ? mergeData(prev, data) : mergeData(null, Object.assign({}, prev && prev.data, {}));
+        if(opts && opts.merge && prev) merged = mergeData(prev, data);
+        else merged = mergeData({ data: Object.assign({}, prev && prev.data) }, data);
+        c[id] = { data: merged, createdAt: prev ? prev.createdAt : nowISO(), updatedAt: nowISO() };
+        persist();
+        return Promise.resolve();
+      },
+      update: function(data){
+        var c = DB.collections[col];
+        var prev = c && c[id];
+        if(!prev) return Promise.reject(fbErr('not-found', 'No existe el documento ' + col + '/' + id));
+        c[id] = { data: mergeData(prev, data), createdAt: prev.createdAt, updatedAt: nowISO() };
+        persist();
+        return Promise.resolve();
+      },
+      delete: function(){
+        var c = DB.collections[col];
+        if(c && c[id]){ delete c[id]; persist(); }
+        return Promise.resolve();
+      },
+      get: function(){
+        return Promise.resolve(makeDocSnap(col, id, (DB.collections[col] || {})[id]));
+      },
+      onSnapshot: function(cb){
+        docListeners.push({ col: col, id: id, cb: cb });
+        setTimeout(function(){ cb(makeDocSnap(col, id, (DB.collections[col] || {})[id])); }, 0);
+        return function(){ docListeners = docListeners.filter(function(L){ return !(L.col === col && L.id === id && L.cb === cb); }); };
+      },
+      collection: function(){
+        throw fbErr('invalid-argument', 'Subcolecciones no soportadas en el simulador (usa colecciones planas).');
+      }
+    };
+  }
+  function runQuery(col, parts){
+    return new Promise(function(res){
+      var c = DB.collections[col] || {};
+      var rows = Object.keys(c).map(function(id){ return makeDocSnap(col, id, c[id]); });
+      parts.forEach(function(p){
+        if(p.t === 'where'){
+          rows = rows.filter(function(s){
+            var val = s.exists ? getField(s.__d || (s.__d = c[s.id]).data, p.f) : undefined;
+            switch(p.op){
+              case '==': return deepEq(val, p.v);
+              case '!=': return !deepEq(val, p.v);
+              case '>':  return val >  p.v;
+              case '<':  return val <  p.v;
+              case '>=': return val >= p.v;
+              case '<=': return val <= p.v;
+              case 'array-contains': return Array.isArray(val) && val.some(function(x){ return deepEq(x, p.v); });
+              default: throw fbErr('invalid-argument', 'Operador no soportado en el simulador: ' + p.op);
+            }
+          });
+        }
+        if(p.t === 'orderBy'){
+          rows.sort(function(a, b){
+            var av = a.exists ? a.data()[p.f] : undefined;
+            var bv = b.exists ? b.data()[p.f] : undefined;
+            var r = (av === undefined ? 1 : 0) - (bv === undefined ? 1 : 0);
+            if(r) return r;
+            if(av === bv) return 0;
+            var cmp = av < bv ? -1 : 1;
+            return p.dir === 'desc' ? -cmp : cmp;
+          });
+        }
+        if(p.t === 'limit') rows = rows.slice(0, p.n);
+      });
+      res({
+        forEach: function(cb){ rows.forEach(cb); },
+        docs: rows,
+        size: rows.length,
+        empty: rows.length === 0,
+        docChanges: function(){ return []; }
+      });
+    });
+  }
+  function makeQuery(col, parts){
+    var warns = parts.filter(function(p){ return p.t === 'where'; }).length && parts.filter(function(p){ return p.t === 'orderBy'; }).length;
+    var q = {
+      where: function(f, op, v){ return makeQuery(col, parts.concat([{ t:'where', f:f, op:op, v:v }])); },
+      orderBy: function(f, dir){ return makeQuery(col, parts.concat([{ t:'orderBy', f:f, dir:dir || 'asc' }])); },
+      limit: function(n){ return makeQuery(col, parts.concat([{ t:'limit', n:n }])); },
+      get: function(){ return runQuery(col, parts); },
+      onSnapshot: function(cb){
+        if(warns) console.warn('[simulador] where+orderBy combinados requerirían un índice en Firestore real.');
+        qListeners.push({ col: col, parts: parts, cb: cb });
+        runQuery(col, parts).then(cb);
+        return function(){ qListeners = qListeners.filter(function(L){ return L.cb !== cb; }); };
+      },
+      doc: function(id){ return makeDocRef(col, id); },
+      add: function(data){
+        var id = rid('d');
+        return makeDocRef(col, id).set(data).then(function(){ return makeDocRef(col, id); });
+      }
+    };
+    return q;
+  }
+  var firestore = {
+    collection: function(name){
+      if(!name || typeof name !== 'string') throw fbErr('invalid-argument', 'collection() espera el nombre de una colección.');
+      return makeQuery(name, []);
+    },
+    doc: function(path){
+      var pp = String(path).split('/');
+      if(pp.length !== 2) throw fbErr('invalid-argument', 'doc() espera "coleccion/id".');
+      return makeDocRef(pp[0], pp[1]);
+    },
+    FieldValue: FV
+  };
+
+  var storageRoot = function(){
+    return { ref: function(path){
+      return {
+        putString: function(data, fmt){
+          DB.storage[path] = { data: String(data).slice(0, 300000), type: fmt || 'raw', updatedAt: nowISO() };
+          persist();
+          return Promise.resolve({ ref: this });
+        },
+        getDownloadURL: function(){
+          var s = DB.storage[path];
+          if(!s) return Promise.reject(fbErr('storage/object-not-found', 'No existe el objeto ' + path));
+          return Promise.resolve('data:text/plain,' + encodeURIComponent(s.data.slice(0, 80)) + '…');
+        },
+        delete: function(){ delete DB.storage[path]; persist(); return Promise.resolve(); }
+      };
+    } };
+  };
+
+  var functionsImpl = function(){
+    return { httpsCallable: function(name){
+      return function(data){
+        var reg = window.__blFunctions || {};
+        var fn = reg[name];
+        if(!fn) return Promise.reject(fbErr('functions/not-found', 'La función "' + name + '" no existe. Defínela en un <script type="firebase-functions"> con functions.define("' + name + '", async (data) => { … })'));
+        return Promise.resolve().then(function(){ return fn(data == null ? {} : data); })
+          .then(function(out){ return { data: out === undefined ? null : out }; });
+      };
+    } };
+  };
+
+  function initFunctions(){
+    window.__blFunctions = window.__blFunctions || {};
+    var ctx = { define: function(name, fn){
+      if(typeof fn !== 'function') throw fbErr('invalid-argument', 'define() espera una función async.');
+      window.__blFunctions[name] = fn;
+      console.info('[functions] registrada: ' + name);
+    } };
+    document.querySelectorAll('script[type="firebase-functions"]').forEach(function(s){
+      try{ new Function('functions', s.textContent)(ctx); }
+      catch(e){ try{ parent.postMessage({ source:'bl-fb', type:'error', message:'functions: ' + e.message }, '*'); }catch(e2){} }
+    });
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initFunctions);
+  else initFunctions();
+
+  window.addEventListener('message', function(e){
+    var d = e.data;
+    if(!d || d.source !== 'bl-parent') return;
+    if(d.type === 'fb-merge'){ DB = loadDB(); fireAll(); }
+    if(d.type === 'fb-del-doc'){ var c = DB.collections[d.col]; if(c && c[d.id]){ delete c[d.id]; persist(); } }
+    if(d.type === 'fb-del-user'){ if(DB.users[d.uid]){ delete DB.users[d.uid]; if(DB.session === d.uid) DB.session = null; persist(); } }
+    if(d.type === 'fb-del-storage'){ if(DB.storage[d.path]){ delete DB.storage[d.path]; persist(); } }
+    if(d.type === 'fb-hosting'){ DB.hosting = { html: String(d.html || ''), deployedAt: nowISO() }; persist(); }
+  });
+
+  window.addEventListener('error', function(ev){
+    try{ parent.postMessage({ source:'bl-fb', type:'error', message: ev.message || 'error' }, '*'); }catch(e){}
+  });
+
+  window.firebase = {
+    SDK_VERSION: '10.12-sim',
+    apps: [],
+    initializeApp: function(cfg){
+      var app = { name: (cfg && cfg.projectId) || 'blocklab-demo', options: cfg || {} };
+      window.firebase.apps.push(app);
+      return app;
+    },
+    auth: function(){ return authImpl; },
+    firestore: function(){ return firestore; },
+    functions: functionsImpl,
+    storage: storageRoot
+  };
+
+  setTimeout(function(){ try{ parent.postMessage({ source:'bl-fb', type:'ready' }, '*'); }catch(e){} }, 0);
+})();
+`;
+
+/* ═══ 3 · ESTADO ═══════════════════════════════════════════ */
+let MODULES = [], BLOCKS = {}, queue = [], syncing = false;
+let seq = 0, libTries = 0;
+let sugItems = [], sugNew = null, sugActive = 0;
+let snipReturn = 'dict';
+let lastRows = {}, fbPushT = null;
+let consTab = 'firestore', deployedView = false;
+
+let connected = false, connLabel = '', connDetail = '';
+let diagDone = false, diagRunning = false, dlgAutoShown = false;
+let lastPushedDraft = '';
+
+const $   = s => document.querySelector(s);
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const nowISO = () => new Date().toISOString();
+const hora = iso => new Date(iso).toLocaleTimeString('es',{hour12:false});
+const refreshIcons = () => { if(window.lucide) lucide.createIcons(); };
+const isDraftOp = op => op.action==='saveBlock' && op.block && op.block.id===DRAFT_ID;
+
+const dict = () => (BLOCKS[SHEET] || (BLOCKS[SHEET] = [])).filter(b => b.id !== DRAFT_ID);
+const ed = $('#ed'), hl = $('#hl'), sug = $('#sug'), edWrap = $('#edWrap'), frame = $('#frame');
+
+/* ═══ 4 · CACHÉ / COLA ═════════════════════════════════════ */
+function saveCache(){ try{ localStorage.setItem(LS_DB, JSON.stringify({modules:MODULES, blocks:BLOCKS, ts:nowISO()})); }catch(e){} }
+function loadCache(){
+  try{
+    const d = JSON.parse(localStorage.getItem(LS_DB)||'null');
+    if(d){ MODULES = d.modules||[]; BLOCKS = d.blocks||{}; return true; }
+  }catch(e){}
+  return false;
+}
+const saveQueue = () => { try{ localStorage.setItem(LS_Q, JSON.stringify(queue)); }catch(e){} };
+const loadQueue = () => { try{ queue = JSON.parse(localStorage.getItem(LS_Q)||'[]'); }catch(e){ queue=[]; } };
+
+function renderConn(){
+  const pend = queue.filter(op => !isDraftOp(op)).length;
+  const qb = $('#qb');
+  qb.hidden = !pend; qb.textContent = '↑' + pend;
+  const dot = $('#stDot'), txt = $('#stTxt');
+  $('#stPill').title = connDetail || '';
+  if(connected){ txt.textContent='Conectado'; dot.className='dot ok'; return; }
+  if(syncing){ txt.textContent='Conectando…'; dot.className='dot busy'; return; }
+  txt.textContent = connLabel || 'En espera';
+  dot.className = 'dot ' + (connLabel ? 'err' : '');
+}
+function cset(txt, cls){ $('#cTxt').textContent = txt; $('#cDot').className = 'dot ' + (cls||''); }
+function tabDot(cls){ $('#tabDot').className = 'tdot ' + (cls||''); }
+function toast(msg, kind){
+  const t = document.createElement('div');
+  t.className = 'toast' + (kind==='err'?' err':'');
+  t.innerHTML = `<i data-lucide="${kind==='err'?'alert-triangle':'check'}"></i><span>${esc(msg)}</span>`;
+  $('#toasts').appendChild(t); refreshIcons();
+  setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity .25s'; setTimeout(()=>t.remove(),260); }, 4200);
+}
+
+/* ═══ 5 · RED SIN CORS ═════════════════════════════════════ */
+let jsonpSeq = 0, jsonpChain = Promise.resolve();
+function jsonpRaw(action, params, ms){
+  return new Promise((res, rej)=>{
+    const cb = '__bl_' + (++jsonpSeq) + '_' + Date.now();
+    const s  = document.createElement('script');
+    let settled = false;
+    const finish = (ok, val) => {
+      if(settled) return;
+      settled = true;
+      setTimeout(()=>{ try{ delete window[cb]; }catch(e){} s.remove(); }, 45000);
+      ok ? res(val) : rej(val);
+    };
+    window[cb] = d => finish(true, d);
+    const to = setTimeout(()=>finish(false, new Error('timeout')), ms);
+    s.onerror = () => finish(false, new Error('corb-o-red'));
+    const q = new URLSearchParams(Object.assign({ action, callback:cb, _:Date.now() }, params));
+    s.src = API_URL + '?' + q.toString();
+    document.head.appendChild(s);
+  });
+}
+function jsonpGet(action, params={}){
+  const run = () => jsonpRaw(action, params, 25000);
+  const p = jsonpChain.then(run, run);
+  jsonpChain = p.then(()=>{}, ()=>{});
+  return p;
+}
+async function sendNoCors(op){
+  op.lastTry = Date.now(); op.tries = (op.tries||0) + 1;
+  try{ await fetch(API_URL, { method:'POST', mode:'no-cors', body: JSON.stringify(op) }); return true; }
+  catch(e){ return false; }
+}
+let syncT = null;
+function scheduleSync(ms=3500){ clearTimeout(syncT); syncT = setTimeout(sync, ms); }
+function pushOp(op){
+  if(isDraftOp(op)) queue = queue.filter(q => !isDraftOp(q));
+  op.lastTry = 0;
+  queue.push(op); saveQueue(); renderConn();
+  sendNoCors(op).then(()=>scheduleSync(3500));
+}
+function retryPending(){
+  if(!queue.length) return;
+  const now = Date.now();
+  let re = false;
+  queue.forEach(op => { if(now - (op.lastTry||0) > 20000){ sendNoCors(op); re = true; } });
+  saveQueue();
+  if(re) scheduleSync(4000);
+}
+function isConfirmed(op, data){
+  const B = data.blocks || {};
+  if(op.action==='saveBlock'){
+    const arr = B[op.sheet]; if(!arr) return false;
+    const r = arr.find(b=>b.id===(op.block&&op.block.id));
+    return !!r && r.code === op.block.code;
+  }
+  if(op.action==='deleteBlock'){
+    const arr = B[op.sheet];
+    return !arr || !arr.some(b=>b.id===op.id);
+  }
+  return true;
+}
+function reconcileOps(data){
+  if(!queue.length) return;
+  const confirmedOps = queue.filter(op => isConfirmed(op, data));
+  if(!confirmedOps.length) return;
+  queue = queue.filter(op => !isConfirmed(op, data));
+  saveQueue();
+  if(confirmedOps.some(op => !isDraftOp(op))) toast('Guardado en Sheets ✓');
+  renderConn();
+}
+
+/* ═══ 6 · SYNC + puente Firestore simulado ↔ Sheets ════════ */
+const normBlock = o => ({ id:String(o.id||''), name:String(o.name||''), tag:String(o.tag||''),
+  code:(o.code==null?'':String(o.code)), createdAt:String(o.createdAt||''), updatedAt:String(o.updatedAt||'') });
+
+function readFB(){ try{ return JSON.parse(localStorage.getItem(LS_FB) || 'null') || { collections:{}, users:{}, session:null, storage:{}, hosting:null }; }catch(e){ return { collections:{}, users:{}, session:null, storage:{}, hosting:null }; } }
+function writeFB(db){ try{ localStorage.setItem(LS_FB, JSON.stringify(db)); }catch(e){} }
+
+/* filas que el proyecto simulado representa (para diffs) */
+function fbRows(db){
+  const rows = {};
+  Object.entries(db.collections||{}).forEach(([col, docs]) => {
+    Object.entries(docs||{}).forEach(([id, d]) => {
+      rows['fs:'+col+'/'+id] = { name: col+'/'+id, tag:'firestore', code: JSON.stringify(d.data||{}), updated: d.updatedAt || nowISO() };
+    });
+  });
+  Object.entries(db.users||{}).forEach(([uid, u]) => {
+    rows['auth:'+uid] = { name: u.email, tag:'auth', code: JSON.stringify({ email:u.email, pass:u.pass, uid:uid }), updated: u.createdAt || nowISO() };
+  });
+  Object.entries(db.storage||{}).forEach(([p, s]) => {
+    rows['st:'+p] = { name: p, tag:'storage', code: s.data || '', updated: s.updatedAt || nowISO() };
+  });
+  if(db.hosting && db.hosting.html)
+    rows['host:index'] = { name:'index.html', tag:'hosting', code: db.hosting.html, updated: db.hosting.deployedAt || nowISO() };
+  return rows;
+}
+function scheduleFbPush(){ clearTimeout(fbPushT); fbPushT = setTimeout(pushFbDiffs, 1500); }
+function pushFbDiffs(){
+  const db = readFB();
+  const rows = fbRows(db);
+  for(const [rid, r] of Object.entries(rows)){
+    const sig = r.updated + '|' + r.code;
+    if(lastRows[rid] === sig) continue;
+    pushOp({ action:'saveBlock', sheet:SHEET,
+      block:{ id:rid, name:r.name, tag:r.tag, code:r.code, createdAt: lastRows[rid] ? undefined : r.updated, updatedAt: r.updated } });
+    lastRows[rid] = sig;
+  }
+  for(const rid of Object.keys(lastRows)){
+    if(!rows[rid]){ pushOp({ action:'deleteBlock', sheet:SHEET, id: rid }); delete lastRows[rid]; }
+  }
+}
+function rebuildLastRows(){
+  lastRows = {};
+  const rows = fbRows(readFB());
+  for(const [rid, r] of Object.entries(rows)) lastRows[rid] = r.updated + '|' + r.code;
+}
+
+async function sync(){
+  if(syncing) return;
+  syncing = true; $('#btnSync').classList.add('spin');
+  if(!connected) renderConn();
+  try{
+    const data = await jsonpGet('bootstrap', { m: SHEET });
+    if(!data || !data.ok){
+      const e = new Error((data && data.error) || 'respuesta inválida'); e.srv = true; throw e;
+    }
+    connected = true; connLabel=''; connDetail=''; diagDone=false;
+    if(data.modules && data.modules.length) MODULES = data.modules;
+
+    const remote = ((data.blocks||{})[SHEET] || []).map(normBlock);
+    const merged = remote.slice();
+    for(const op of queue){
+      if(op.action==='saveBlock' && op.sheet===SHEET && op.block && !merged.some(r=>r.id===op.block.id))
+        merged.push(normBlock(op.block));
+    }
+    BLOCKS[SHEET] = merged.sort((a,b)=>a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+    saveCache();
+
+    /* Sheets → proyecto simulado: gana el más reciente */
+    const db = readFB();
+    for(const b of merged){
+      if(b.id === DRAFT_ID) continue;
+      try{
+        if(b.tag === 'firestore'){
+          const i = b.name.indexOf('/');
+          const col = b.name.slice(0, i), did = b.name.slice(i+1);
+          if(!col || !did) continue;
+          const cur = (db.collections[col]||{})[did];
+          if(!cur || (b.updatedAt && b.updatedAt > cur.updatedAt)){
+            db.collections[col] = db.collections[col] || {};
+            db.collections[col][did] = { data: JSON.parse(b.code || '{}'),
+              createdAt: cur ? cur.createdAt : (b.createdAt || b.updatedAt || nowISO()),
+              updatedAt: b.updatedAt || nowISO() };
+          }
+        } else if(b.tag === 'auth'){
+          const u = JSON.parse(b.code || '{}');
+          if(u.email){
+            const cur = db.users[u.uid];
+            if(!cur || (b.updatedAt && b.updatedAt > (cur.createdAt||'')))
+              db.users[u.uid] = { email: u.email, pass: u.pass || '', createdAt: u.createdAt || b.updatedAt || nowISO() };
+          }
+        } else if(b.tag === 'storage'){
+          const cur = db.storage[b.name];
+          if(!cur || (b.updatedAt && b.updatedAt > cur.updatedAt))
+            db.storage[b.name] = { data: b.code, type:'raw', updatedAt: b.updatedAt || nowISO() };
+        } else if(b.tag === 'hosting'){
+          if(!db.hosting || (b.updatedAt && b.updatedAt > db.hosting.deployedAt))
+            db.hosting = { html: b.code, deployedAt: b.updatedAt || nowISO() };
+        }
+      }catch(e){}
+    }
+    writeFB(db);
+    rebuildLastRows();
+    try{ frame.contentWindow && frame.contentWindow.postMessage({ source:'bl-parent', type:'fb-merge' }, '*'); }catch(e){}
+
+    reconcileOps(data);
+    retryPending();
+    reconcileDraft();
+    seedDict();
+    renderDict();
+  }catch(err){
+    if(!connected){
+      if(err && err.srv){ connLabel='Error servidor'; connDetail='El script responde pero falla: ' + err.message; }
+      else if(!diagDone) diagnose();
+    }
+  }finally{
+    syncing = false; $('#btnSync').classList.remove('spin'); renderConn();
+  }
+}
+async function diagnose(){
+  if(diagRunning) return;
+  diagRunning = true; diagDone = true;
+  connLabel='Diagnosticando…'; connDetail=''; renderConn();
+  try{
+    const p = await jsonpGet('ping');
+    if(p && p.ok){ connLabel='Ajuste fino'; connDetail='El script responde; el bootstrap falló por otra causa.'; }
+    else { connLabel='Error servidor'; connDetail='Actualiza a Code.gs v2 y crea «Nueva versión».'; }
+  }catch(e){
+    connLabel = 'Login o versión vieja';
+    connDetail = 'La URL no devuelve JavaScript. Sigue los 4 pasos (Code.gs v2 + setup + acceso Cualquiera).';
+    openConnDlg(true);
+  }
+  diagRunning = false; renderConn();
+}
+function openConnDlg(auto){
+  if(auto && dlgAutoShown) return;
+  if(auto) dlgAutoShown = true;
+  toast(connDetail || 'Sin conexión con Sheets — el proyecto simulado funciona igual, en local.', 'err');
+}
+setInterval(()=>{ if(!connected) sync(); else retryPending(); }, 25000);
+setInterval(()=>{ if(connected) sync(); }, 5*60*1000);
+window.addEventListener('online', ()=>{ if(!connected) sync(); else { retryPending(); scheduleSync(500); } });
+
+window.addEventListener('message', e => {
+  const d = e.data;
+  if(!d || d.source !== 'bl-fb') return;
+  if(d.type === 'ready'){ cset('listo · ' + hora(nowISO()), 'ok'); tabDot('ok'); }
+  if(d.type === 'error'){ failNow(d.message); }
+  if(d.type === 'change'){
+    scheduleFbPush();
+    if(!$('#dlgConsole').open && false) {}
+    if($('#dlgConsole').open) renderConsole();
+  }
+});
+
+/* ═══ 7 · SEMILLAS ═════════════════════════════════════════ */
+function seedDict(){
+  if(localStorage.getItem(LS_SEEDED)) return;
+  const have = new Set((BLOCKS[SHEET]||[]).map(b=>b.id));
+  const t = nowISO();
+  SEED.forEach(s=>{
+    if(!have.has(s.id)){
+      const row = Object.assign({createdAt:t, updatedAt:t}, s);
+      (BLOCKS[SHEET] = BLOCKS[SHEET]||[]).push(normBlock(row));
+      pushOp({action:'saveBlock', sheet:SHEET, block:row});
+    }
+  });
+  (BLOCKS[SHEET]||[]).sort((a,b)=>a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+  saveCache();
+  localStorage.setItem(LS_SEEDED,'1');
+}
+
+/* ═══ 8 · BORRADOR ↔ Sheets ════════════════════════════════ */
+const getDraftRemote = () => (BLOCKS[SHEET]||[]).find(b => b.id === DRAFT_ID);
+function saveDraftLocal(txt){
+  try{ localStorage.setItem(LS_DRAFT, txt); localStorage.setItem(LS_DRAFT_T, nowISO()); }catch(e){}
+}
+function pushDraftNow(){
+  const txt = ed.value;
+  if(txt === lastPushedDraft) return;
+  lastPushedDraft = txt;
+  const prev = getDraftRemote();
+  const row = { id:DRAFT_ID, name:DRAFT_NAME, tag:'sistema', code:txt,
+    createdAt:(prev && prev.createdAt) || nowISO(), updatedAt: nowISO() };
+  const arr = BLOCKS[SHEET] || (BLOCKS[SHEET] = []);
+  const i = arr.findIndex(x=>x.id===DRAFT_ID);
+  if(i<0) arr.push(normBlock(row)); else arr[i] = Object.assign({}, arr[i], row);
+  saveCache();
+  pushOp({action:'saveBlock', sheet:SHEET, block:row});
+}
+let pushDT = null;
+function pushDraftSoon(){ clearTimeout(pushDT); pushDT = setTimeout(pushDraftNow, 2500); }
+function reconcileDraft(){
+  const rem = getDraftRemote();
+  const localT = localStorage.getItem(LS_DRAFT_T) || '';
+  const typing = document.activeElement === ed;
+  if(rem && rem.code != null){
+    const remoteNewer = !localT || (rem.updatedAt && rem.updatedAt > localT);
+    if(!typing && remoteNewer && rem.code !== ed.value){
+      ed.value = rem.code;
+      lastPushedDraft = rem.code;
+      syncHL(); scheduleCompile(200);
+      $('#draftInfo').textContent = 'desde Sheets ' + hora(rem.updatedAt||nowISO());
+    } else if(!remoteNewer && ed.value !== rem.code){
+      pushDraftSoon();
+    }
+  } else if(ed.value.trim()){
+    pushDraftNow();
+  }
+}
+
+/* ═══ 9 · MUTACIONES del diccionario ═══════════════════════ */
+function upsertSnipLocal(b){
+  b.updatedAt = nowISO();
+  const arr = BLOCKS[SHEET] || (BLOCKS[SHEET] = []);
+  const i = arr.findIndex(x=>x.id===b.id);
+  if(i<0){ b.createdAt = b.createdAt||nowISO(); arr.push(b); }
+  else arr[i] = Object.assign({}, arr[i], b);
+  arr.sort((a,c)=>a.name.toLowerCase().localeCompare(c.name.toLowerCase()));
+  saveCache(); renderDict();
+  pushOp({action:'saveBlock', sheet:SHEET, block:b});
+}
+function deleteSnip(id){
+  const b = dict().find(x=>x.id===id); if(!b) return;
+  BLOCKS[SHEET] = (BLOCKS[SHEET]||[]).filter(x=>x.id!==id);
+  saveCache(); renderDict();
+  toast('Entrada "'+b.name+'" eliminada');
+  pushOp({action:'deleteBlock', sheet:SHEET, id});
+}
+
+/* ═══ 10 · FORMATEO HÍBRIDO ════════════════════════════════ */
+function logicalLinesMixed(src){
+  const out = []; let cur = '';
+  let i = 0;
+  while(i < src.length){
+    if(src.startsWith('<!--', i)){
+      let end = src.indexOf('-->', i+4);
+      const stop = end<0 ? src.length : end+3;
+      const parts = (cur + src.slice(i, stop)).split('\n');
+      for(let p=0;p<parts.length-1;p++) out.push({text:parts[p], prot:true});
+      cur = parts[parts.length-1];
+      i = stop; continue;
+    }
+    const c = src[i];
+    if(c === '\n'){ out.push({text:cur, prot:false}); cur=''; i++; }
+    else { cur += c; i++; }
+  }
+  if(cur!=='') out.push({text:cur, prot:false});
+  return out;
+}
+function tagDelta(t){
+  let d = 0, m;
+  const re = /<(\/?)([A-Za-z_][\w:.-]*)((?:"[^"]*"|'[^']*'|[^>"'])*?)(\/?)>/g;
+  while((m = re.exec(t))){
+    if(m[1] === '/') d--;
+    else if(m[4] === '/') {}
+    else d++;
+  }
+  return d;
+}
+function jsLineDelta(t){
+  let d = 0, i = 0, st = 'norm';
+  while(i < t.length){
+    const c = t[i];
+    if(st === 'norm'){
+      if(c === '\'') st='sq';
+      else if(c === '"') st='dq';
+      else if(c === '`') st='tpl';
+      else if(c === '/' && t[i+1] === '/') break;
+      else if(c === '{' || c === '[' || c === '(') d++;
+      else if(c === '}' || c === ']' || c === ')') d--;
+    } else if(st === 'sq'){ if(c==='\\') i++; else if(c==='\'') st='norm'; }
+    else if(st === 'dq'){ if(c==='\\') i++; else if(c==='"') st='norm'; }
+    else { if(c==='\\') i++; else if(c==='`') st='norm'; }
+    i++;
+  }
+  return d;
+}
+function reindentMixed(src){
+  const IND = '  ';
+  const lines = logicalLinesMixed(src);
+  let depth = 0, mode = 'xml';
+  const out = [];
+  for(const ln of lines){
+    if(ln.prot){ out.push(ln.text.replace(/\s+$/,'')); continue; }
+    let t = ln.text.trim();
+    if(!t){ out.push(''); continue; }
+    if(mode === 'xml'){
+      let disp = depth, rest = t, m;
+      while((m = /^<\/[\w:.-]*>\s*/.exec(rest))){ disp--; rest = rest.slice(m[0].length); }
+      out.push(IND.repeat(Math.max(0, disp)) + t);
+      const openScript  = /<script\b/i.test(t) && !/\/>\s*$/.test(t);
+      const closeScript = /<\/script/i.test(t);
+      if(openScript){ depth++; mode = 'js'; }
+      else if(closeScript){ depth--; mode = 'xml'; }
+      else depth += tagDelta(t);
+    } else {
+      const closeM = /^(.*?)<\/script\s*>/i.exec(t);
+      const jsPart = closeM ? closeM[1] : t;
+      let disp = depth, j = 0;
+      while(j < jsPart.length){
+        const c = jsPart[j];
+        if(c === '}' || c === ']' || c === ')'){ disp--; j++; }
+        else if(c === ',' || c === ' ' || c === '\t'){ j++; }
+        else break;
+      }
+      out.push(IND.repeat(Math.max(0, disp)) + jsPart.trim() + (closeM ? closeM[0].slice(jsPart.length) : ''));
+      if(closeM){ depth += jsLineDelta(jsPart); depth--; mode = 'xml'; }
+      else depth += jsLineDelta(jsPart);
+    }
+  }
+  const res = []; let blanks = 0;
+  for(const l of out){
+    if(l === ''){ blanks++; if(blanks > 1) continue; } else blanks = 0;
+    res.push(l);
+  }
+  while(res.length && res[0] === '') res.shift();
+  while(res.length && res[res.length-1] === '') res.pop();
+  return res.join('\n');
+}
+function formatDoc(){
+  const src = ed.value;
+  const out = reindentMixed(src);
+  if(out === src){ toast('El código ya está formateado'); return; }
+  const cp = ed.selectionStart;
+  let k = 0; const max = Math.min(cp, out.length, src.length);
+  while(k < max && out[k] === src[k]) k++;
+  ed.value = out;
+  ed.selectionStart = ed.selectionEnd = Math.min(k, out.length);
+  onEdInput();
+  toast('Código formateado');
+}
+
+/* ═══ 11 · RESALTADO HÍBRIDO ═══════════════════════════════ */
+const HTML_ELS = new Set(['html','head','body','div','span','p','h1','h2','h3','h4','h5','h6','ul','ol','li',
+  'table','thead','tbody','tr','td','th','img','a','style','script','br','hr','strong','em','b','i','u',
+  'button','input','label','form','select','option','textarea','section','header','footer','main','nav']);
+const FB_METHODS = new Set(['initializeApp','auth','firestore','functions','storage','collection','doc','add',
+  'set','update','delete','get','onSnapshot','where','orderBy','limit','createUserWithEmailAndPassword',
+  'signInWithEmailAndPassword','signOut','onAuthStateChanged','httpsCallable','define','putString',
+  'getDownloadURL','ref','serverTimestamp','increment','arrayUnion','arrayRemove','currentUser','data']);
+function jsHl(code){
+  return esc(code).replace(
+    /(\/\/[^\n]*)|('(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*")|\b(true|false|null|undefined|const|let|var|new|function|return|if|else|for|while|of|in|async|await|try|catch)\b|([A-Za-z_$\u00C0-\u024F][\w$\u00C0-\u024F]*)(?=\s*:)|\.([A-Za-z_$][\w$]*)(?=\s*\()|\b(\d+(?:\.\d+)?)\b|([{}\[\]()])/g,
+    (m,com,str,kw,key,meth,num,brk)=>{
+      if(com) return `<span class="c">${com}</span>`;
+      if(str) return `<span class="s">${str}</span>`;
+      if(kw)  return `<span class="k">${kw}</span>`;
+      if(key) return `<span class="p">${key}</span>`;
+      if(meth) return FB_METHODS.has(meth) ? `<span class="e">.${meth}</span>` : `.${meth}`;
+      if(num) return `<span class="n">${num}</span>`;
+      if(brk) return `<span class="b">${brk}</span>`;
+      return m;
+    });
+}
+function findTagEnd(src, i){
+  let q = null;
+  for(let j=i+1; j<src.length; j++){
+    const c = src[j];
+    if(q){ if(c===q) q=null; }
+    else if(c==='"'||c==="'") q=c;
+    else if(c==='>') return j;
+  }
+  return src.length - 1;
+}
+function hlTag(t){
+  let out = '', k = 0;
+  if(t[1] === '/'){ out += '<span class="b">&lt;/</span>'; k = 2; }
+  else { out += '<span class="b">&lt;</span>'; k = 1; }
+  const m = /^[\w:.-]+/.exec(t.slice(k));
+  if(m){
+    const cls = HTML_ELS.has(m[0].toLowerCase()) ? 'e' : 'p';
+    out += `<span class="${cls}">${esc(m[0])}</span>`;
+    k += m[0].length;
+  }
+  while(k < t.length){
+    const c = t[k];
+    if(c === '/'){ out += '<span class="b">/</span>'; k++; continue; }
+    if(c === '>'){ out += '<span class="b">&gt;</span>'; k++; continue; }
+    if(/\s/.test(c)){ out += esc(c); k++; continue; }
+    const m2 = /^[^\s=<>\/]+/.exec(t.slice(k));
+    if(m2){
+      out += `<span class="p">${esc(m2[0])}</span>`;
+      k += m2[0].length;
+      const me = /^\s*=\s*/.exec(t.slice(k));
+      if(me){
+        out += '<span class="b">'+esc(me[0])+'</span>';
+        k += me[0].length;
+        const q = t[k];
+        if(q === '"' || q === "'"){
+          const endq = t.indexOf(q, k+1);
+          const stop = endq < 0 ? t.length : endq+1;
+          out += `<span class="s">${esc(t.slice(k, stop))}</span>`;
+          k = stop;
+        } else {
+          const m3 = /^[^\s>]+/.exec(t.slice(k));
+          if(m3){ out += `<span class="s">${esc(m3[0])}</span>`; k += m3[0].length; }
+        }
+      }
+      continue;
+    }
+    out += esc(c); k++;
+  }
+  return out;
+}
+function hled(src){
+  let out = '', i = 0;
+  const n = src.length;
+  while(i < n){
+    if(src.startsWith('<!--', i)){
+      const end = src.indexOf('-->', i+4);
+      const stop = end < 0 ? n : end+3;
+      out += '<span class="c">' + esc(src.slice(i, stop)) + '</span>';
+      i = stop; continue;
+    }
+    if(src[i] === '<' && /[A-Za-z\/!]/.test(src[i+1] || '')){
+      const end = findTagEnd(src, i);
+      const tag = src.slice(i, end+1);
+      const nm = /^<\s*\/?\s*([A-Za-z][\w:-]*)/i.exec(tag);
+      const name = nm && nm[1] ? nm[1].toLowerCase() : '';
+      if((name === 'script' || name === 'style') && !/\/\s*>$/.test(tag)){
+        const closeRe = name === 'script' ? /<\/script\s*>/i : /<\/style\s*>/i;
+        const cm = closeRe.exec(src.slice(i));
+        if(cm){
+          const inner = src.slice(i + tag.length, i + cm.index);
+          out += hlTag(tag) + jsHl(inner) + hlTag(cm[0]);
+          i = i + tag.length + inner.length + cm[0].length;
+          continue;
+        }
+      }
+      out += hlTag(tag);
+      i = end + 1; continue;
+    }
+    let j = src.indexOf('<', i+1);
+    if(j < 0) j = n;
+    out += esc(src.slice(i, j));
+    i = j;
+  }
+  return out;
+}
+function syncHL(){
+  hl.innerHTML = hled(ed.value) + '\u200b';
+  hl.scrollTop = ed.scrollTop; hl.scrollLeft = ed.scrollLeft;
+}
+
+/* ═══ 12 · AUTOCOMPLETADO ══════════════════════════════════ */
+function currentWord(){
+  const before = ed.value.slice(0, ed.selectionStart);
+  const m = before.match(/[A-Za-z0-9_$\u00C0-\u024F-]+$/);
+  return m ? m[0] : '';
+}
+function matches(w){
+  const lw = w.toLowerCase();
+  const hit = e => e.name.toLowerCase().startsWith(lw) ||
+                   e.name.toLowerCase().split(/\s+/).some(t=>t.startsWith(lw));
+  return dict().filter(hit).sort((a,b)=>{
+    const sa = a.name.toLowerCase().startsWith(lw)?0:1, sb = b.name.toLowerCase().startsWith(lw)?0:1;
+    return sa-sb || a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+  }).slice(0,8);
+}
+function caretXY(){
+  const div = document.createElement('div');
+  const cs = getComputedStyle(ed);
+  ['fontFamily','fontSize','fontWeight','lineHeight','letterSpacing','tabSize',
+   'paddingTop','paddingRight','paddingBottom','paddingLeft','boxSizing'].forEach(p=>div.style[p]=cs[p]);
+  div.style.cssText += ';position:absolute;visibility:hidden;white-space:pre-wrap;word-wrap:break-word;width:'+ed.clientWidth+'px';
+  div.textContent = ed.value.slice(0, ed.selectionStart);
+  const sp = document.createElement('span'); sp.textContent='\u200b'; div.appendChild(sp);
+  document.body.appendChild(div);
+  const r = { x:sp.offsetLeft, y:sp.offsetTop, lh:parseFloat(cs.lineHeight)||22 };
+  div.remove(); return r;
+}
+function showSug(){
+  const w = currentWord();
+  if(!w){ hideSug(); return; }
+  const list = matches(w);
+  const exact = list.some(e=>e.name.toLowerCase()===w.toLowerCase());
+  const canNew = w.length>=2 && !exact;
+  if(!list.length && !canNew){ hideSug(); return; }
+  sugItems = list; sugNew = canNew ? w : null; sugActive = 0;
+  sug.innerHTML = list.map((e,i)=>
+      `<button type="button" data-i="${i}" class="${i===0?'on':''}"><b>${esc(e.name)}</b>${e.tag?`<span class="tag">${esc(e.tag)}</span>`:''}</button>`
+    ).join('') + (canNew ? `<button type="button" data-new="1" class="newrow">＋ guardar «${esc(w)}»…</button>` : '');
+  sug.hidden = false;
+  const c = caretXY();
+  let left = c.x - ed.scrollLeft + 2;
+  let top  = c.y - ed.scrollTop + c.lh + 3;
+  sug.style.left = left+'px'; sug.style.top = top+'px';
+  const maxX = edWrap.clientWidth  - sug.offsetWidth  - 8;
+  const maxY = edWrap.clientHeight - sug.offsetHeight - 8;
+  if(left > maxX) left = Math.max(8, maxX);
+  if(top  > maxY) top  = Math.max(8, c.y - ed.scrollTop - sug.offsetHeight - c.lh - 6);
+  sug.style.left = left+'px'; sug.style.top = top+'px';
+}
+function hideSug(){ sug.hidden = true; sugItems=[]; sugNew=null; sugActive=0; }
+function markActive(){
+  sug.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('on', i===sugActive));
+  const el = sug.querySelectorAll('button')[sugActive];
+  if(el) el.scrollIntoView({block:'nearest'});
+}
+function moveActive(d){
+  const n = sug.querySelectorAll('button').length;
+  if(!n) return;
+  sugActive = (sugActive + d + n) % n;
+  markActive();
+}
+function insertSnippet(sn){
+  const pos = ed.selectionStart, selEnd = ed.selectionEnd;
+  const before = ed.value.slice(0, pos);
+  const m = before.match(/[A-Za-z0-9_$\u00C0-\u024F-]+$/);
+  const start = m ? pos - m[0].length : pos;
+  const lineStart = ed.value.lastIndexOf('\n', start - 1) + 1;
+  const baseIndent = (ed.value.slice(lineStart, start).match(/^[ \t]*/) || [''])[0];
+  let code = String(sn.code || '');
+  if(ed.value.charAt(start-1) === '<' && code.charAt(0) === '<') code = code.slice(1);
+  code = code.split('\n').map((l, idx) => (idx === 0 || !l.trim()) ? l : baseIndent + l).join('\n');
+  let off = code.length;
+  const i0 = code.indexOf('$0');
+  if(i0 >= 0){ code = code.slice(0, i0) + code.slice(i0 + 2); off = i0; }
+  const i1 = code.indexOf('$1');
+  if(i1 >= 0){ code = code.slice(0, i1) + code.slice(i1 + 2); }
+  ed.setRangeText(code, start, selEnd, 'end');
+  ed.selectionStart = ed.selectionEnd = start + off;
+  hideSug(); ed.focus(); onEdInput();
+}
+function acceptActive(){
+  const btns = sug.querySelectorAll('button');
+  const el = btns[sugActive];
+  if(!el) return;
+  if(el.dataset.new) openSnip(null, {name:sugNew, ret:'insert'});
+  else insertSnippet(sugItems[sugActive]);
+}
+sug.addEventListener('pointerdown', e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  e.preventDefault();
+  if(b.dataset.new) openSnip(null, {name:sugNew, ret:'insert'});
+  else insertSnippet(sugItems[+b.dataset.i]);
+});
+document.addEventListener('pointerdown', e=>{
+  if(!e.target.closest('#sug') && e.target!==ed) hideSug();
+});
+
+/* ═══ 13 · ENTER INTELIGENTE ═══════════════════════════════ */
+function smartEnter(){
+  const val  = ed.value;
+  const s    = ed.selectionStart, epos = ed.selectionEnd;
+  const lineStart = val.lastIndexOf('\n', s - 1) + 1;
+  const lineBefore = val.slice(lineStart, s);
+  const indent = (lineBefore.match(/^[ \t]*/) || [''])[0];
+  const prev = val.slice(0, s).slice(-1);
+  const twoBack = val.slice(0, s).slice(-2);
+  const rest = val.slice(epos);
+  const closeFor = {'{':'}','[':']','(':')'};
+  let ins, caret;
+  if(closeFor[prev] && rest.charAt(0) === closeFor[prev]){
+    ins = '\n' + indent + '  ' + '\n' + indent;
+    caret = 1 + indent.length + 2;
+  } else if(prev === '>' && /^<\//.test(rest)){
+    ins = '\n' + indent + '  ' + '\n' + indent;
+    caret = 1 + indent.length + 2;
+  } else if(closeFor[prev]){
+    ins = '\n' + indent + '  ';
+    caret = ins.length;
+  } else if(prev === '>' && twoBack !== '/>' && !rest.trim().startsWith('<')){
+    ins = '\n' + indent + '  ';
+    caret = ins.length;
+  } else if(/^\s*<\//.test(rest) && lineBefore.trim() === ''){
+    ins = '\n' + indent.replace(/ {1,2}$/, '').replace(/\t$/, '');
+    caret = ins.length;
+  } else {
+    ins = '\n' + indent;
+    caret = ins.length;
+  }
+  ed.setSelectionRange(s, epos);
+  let ok = false;
+  try{ ok = document.execCommand && document.execCommand('insertText', false, ins); }catch(e){ ok = false; }
+  if(!ok) ed.setRangeText(ins, s, epos, 'end');
+  ed.selectionStart = ed.selectionEnd = s + caret;
+  onEdInput();
+}
+const indentOne = l => l.trim() ? '  ' + l : l;
+const dedentOne = l => /^ {1,2}/.test(l) ? l.replace(/^ {1,2}/,'') : (l.charAt(0)==='\t' ? l.slice(1) : l);
+function mapSelectedLines(fn){
+  const s = ed.selectionStart, epos = ed.selectionEnd;
+  const start = ed.value.lastIndexOf('\n', s - 1) + 1;
+  let end = ed.value.indexOf('\n', epos); if(end < 0) end = ed.value.length;
+  const nb = ed.value.slice(start, end).split('\n').map(fn).join('\n');
+  ed.setRangeText(nb, start, end, 'end');
+  ed.setSelectionRange(start, start + nb.length);
+  onEdInput();
+}
+
+/* ═══ 14 · COMPILACIÓN (sandbox con SDK) ═══════════════════ */
+function failNow(msg){
+  cset('error','err'); tabDot('err');
+  const box = $('#errBox'); box.hidden = false; box.textContent = msg;
+}
+function buildSrcdoc(markup, banner){
+  return '<!DOCTYPE html><html><head><meta charset="utf-8">' +
+    '<script>' + SDK_SRC + '<\/script>' +
+    '</head><body>' +
+    (banner ? '<div style="position:fixed;top:0;left:0;right:0;z-index:9999;background:#F57C00;color:#fff;font:700 11px/1 system-ui;padding:6px 10px;text-align:center">HOSTING EN VIVO · blocklab-demo.web.app (simulado) · desplegado ' + banner + '</div>' : '') +
+    markup + '</body></html>';
+}
+function compile(){
+  const mySeq = ++seq;
+  deployedView = false;
+  cset('montando…','busy'); tabDot('');
+  frame.srcdoc = buildSrcdoc(ed.value, '');
+}
+let cT=null, dT=null, rT=null;
+function scheduleCompile(ms=650){ clearTimeout(cT); cT = setTimeout(compile, ms); }
+function saveDraftSoon(){
+  clearTimeout(dT);
+  dT = setTimeout(()=>{
+    saveDraftLocal(ed.value);
+    $('#draftInfo').textContent = 'guardado ' + hora(nowISO());
+  }, 700);
+}
+function onEdInput(){ syncHL(); saveDraftSoon(); pushDraftSoon(); scheduleCompile(); showSug(); }
+
+/* ═══ 15 · VISTAS ══════════════════════════════════════════ */
+function setView(v){
+  document.body.classList.toggle('view-pdf', v==='pdf');
+  document.body.classList.toggle('view-code', v==='code');
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on', b.dataset.view===v));
+}
+ $('#tabs').addEventListener('click', e=>{
+  const b = e.target.closest('button[data-view]'); if(b) setView(b.dataset.view);
+});
+
+/* ═══ 16 · CONSOLA DEL PROYECTO ════════════════════════════ */
+function renderConsole(){
+  const db = readFB();
+  const body = $('#consBody');
+  const pend = queue.filter(o=>o.action==='saveBlock' && o.sheet===SHEET && o.block && o.block.id!==DRAFT_ID).length;
+  $('#consCount').textContent = 'hoja «' + SHEET + '» en Sheets' +
+    (pend ? ' · ↑' + pend + ' por subir' : (connected ? ' · sincronizado' : ''));
+  let html = '';
+  if(consTab === 'firestore'){
+    const cols = Object.keys(db.collections || {}).sort();
+    if(!cols.length) html = '<div class="c-empty">Sin colecciones todavía. Crea documentos desde tu app (addDoc/setDoc) y aparecerán aquí y en Sheets.</div>';
+    cols.forEach(col => {
+      const docs = db.collections[col] || {};
+      const n = Object.keys(docs).length;
+      html += `<div class="c-col">▸ ${esc(col)} <span style="color:var(--mut);font-weight:400">· ${n} doc(s)</span></div>`;
+      Object.entries(docs).forEach(([id, d]) => {
+        html += `<div class="c-doc"><div class="ci"><b>${esc(id)}</b>
+          <pre>${esc(JSON.stringify(d.data, null, 1))}</pre></div>
+          <button class="iconbtn sm danger" data-del="doc" data-col="${esc(col)}" data-id="${esc(id)}" title="Eliminar documento"><i data-lucide="trash-2"></i></button></div>`;
+      });
+    });
+  } else if(consTab === 'auth'){
+    const us = Object.entries(db.users || {});
+    if(!us.length) html = '<div class="c-empty">Sin usuarios. Regístrate desde tu app (createUserWithEmailAndPassword) — mínimo 6 caracteres de contraseña, como en el Firebase real.</div>';
+    us.forEach(([uid, u]) => {
+      html += `<div class="c-doc"><div class="ci"><b>${esc(u.email)}</b>
+        <pre>uid: ${esc(uid)}\ncreado: ${esc((u.createdAt||'').slice(0,19).replace('T',' '))}\ncontraseña (simulada, texto plano): ${esc(u.pass)}</pre></div>
+        <button class="iconbtn sm danger" data-del="user" data-uid="${esc(uid)}" title="Eliminar usuario"><i data-lucide="trash-2"></i></button></div>`;
+    });
+  } else if(consTab === 'storage'){
+    const ss = Object.entries(db.storage || {});
+    if(!ss.length) html = '<div class="c-empty">Sin archivos. Sube con storage().ref("ruta").putString("…").</div>';
+    ss.forEach(([p, s]) => {
+      html += `<div class="c-doc"><div class="ci"><b>${esc(p)}</b>
+        <pre>tipo: ${esc(s.type)} · ${s.data.length} bytes\n${esc(s.data.slice(0,120))}${s.data.length>120?'…':''}</pre></div>
+        <button class="iconbtn sm danger" data-del="storage" data-path="${esc(p)}" title="Eliminar"><i data-lucide="trash-2"></i></button></div>`;
+    });
+  } else if(consTab === 'hosting'){
+    if(db.hosting && db.hosting.html){
+      html = `<div class="c-doc"><div class="ci"><b>index.html</b>
+        <pre>publicado: ${esc((db.hosting.deployedAt||'').slice(0,19).replace('T',' '))}\nhttps://blocklab-demo.web.app (simulado)\ntamaño: ${db.hosting.html.length} bytes</pre></div></div>
+        <div class="dlg-foot" style="justify-content:flex-start;padding:12px 0 0">
+          <button class="btn btn-solid" id="btnVisit2"><i data-lucide="external-link"></i>Ver versión publicada</button>
+        </div>`;
+    } else {
+      html = '<div class="c-empty">Nunca has desplegado. Pulsa el botón 🚀 DEPLOY de la cabecera.</div>';
+    }
+  } else {
+    html = `<pre id="rules">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Notas: solo su dueño las lee o escribe
+    match /notas/{notaId} {
+      allow read, update, delete: if request.auth != null
+        && request.auth.uid == resource.data.uid;
+      allow create: if request.auth != null
+        && request.auth.uid == request.resource.data.uid;
+    }
+
+    // Perfiles públicos: cualquiera lee, solo el dueño escribe
+    match /perfiles/{uid} {
+      allow read: if true;
+      allow write: if request.auth != null
+        && request.auth.uid == uid;
+    }
+  }
+}</pre>
+      <p class="c-note">Así se ven las <b>reglas de seguridad</b> reales. El simulador no las aplica — pero acostúmbrate a pensarlas: en un proyecto real, sin reglas, cualquiera podría leer y escribir tus datos.</p>`;
+  }
+  body.innerHTML = html;
+  refreshIcons();
+  const v2 = $('#btnVisit2');
+  if(v2) v2.addEventListener('click', visitDeployed);
+}
+ $('#consTabs').addEventListener('click', e=>{
+  const b = e.target.closest('button[data-t]'); if(!b) return;
+  consTab = b.dataset.t;
+  document.querySelectorAll('#consTabs button').forEach(x=>x.classList.toggle('on', x===b));
+  renderConsole();
+});
+ $('#consBody').addEventListener('click', e=>{
+  const b = e.target.closest('[data-del]'); if(!b) return;
+  armConfirm(b, ()=>{
+    try{
+      const w = frame.contentWindow;
+      if(b.dataset.del === 'doc')      w.postMessage({ source:'bl-parent', type:'fb-del-doc', col:b.dataset.col, id:b.dataset.id }, '*');
+      if(b.dataset.del === 'user')     w.postMessage({ source:'bl-parent', type:'fb-del-user', uid:b.dataset.uid }, '*');
+      if(b.dataset.del === 'storage')  w.postMessage({ source:'bl-parent', type:'fb-del-storage', path:b.dataset.path }, '*');
+      toast('Eliminado (también saldrá de Sheets)');
+    }catch(err){ toast('El preview no está activo', 'err'); }
+  });
+});
+ $('#btnConsole').addEventListener('click', ()=>{ renderConsole(); $('#dlgConsole').showModal(); refreshIcons(); });
+
+/* ═══ 17 · DEPLOY (hosting simulado) ═══════════════════════ */
+function visitDeployed(){
+  const db = readFB();
+  if(!(db.hosting && db.hosting.html)){ toast('Primero haz deploy','err'); return; }
+  deployedView = true;
+  cset('hosting · ' + hora(db.hosting.deployedAt), 'ok'); tabDot('ok');
+  frame.srcdoc = buildSrcdoc(db.hosting.html, (db.hosting.deployedAt||'').slice(11,16));
+  $('#dlgDeploy').close();
+  $('#dlgConsole').close();
+  setView('pdf');
+}
+ $('#btnDeploy').addEventListener('click', async ()=>{
+  const log = $('#depLog');
+  log.innerHTML = '';
+  $('#btnVisit').hidden = true;
+  $('#dlgDeploy').showModal(); refreshIcons();
+  const line = (html) => { const d = document.createElement('div'); d.innerHTML = html; log.appendChild(d); log.scrollTop = log.scrollHeight; };
+  const wait = ms => new Promise(r=>setTimeout(r,ms));
+  line('<span class="info">=== Deploying to \'blocklab-demo\'...</span>');
+  await wait(400);
+  line('');
+  line('<span class="info">i  deploying firestore, functions, hosting</span>');
+  await wait(350);
+  line('<span class="info">i  firestore: checking rules for compilation errors...</span>');
+  await wait(300);
+  line('<span class="ok">✔  firestore: rules file firestore.rules compiled successfully</span>');
+  await wait(300);
+  line('<span class="info">i  functions: preparing codebase default for deployment</span>');
+  await wait(350);
+  line('<span class="ok">✔  functions: blocklab-demo (simulado) uploaded successfully</span>');
+  await wait(300);
+  line('<span class="info">i  hosting: preparing files for upload</span>');
+  await wait(300);
+  line('<span class="ok">✔  hosting: 1 file(s) uploaded successfully</span>');
+  await wait(250);
+  line('<span class="info">i  hosting: released index.html to https://blocklab-demo.web.app</span>');
+  await wait(350);
+  line('');
+  line('<span class="ok">✔  Deploy complete!</span>');
+  line('<span class="w">   (simulado — el sitio «publicado» solo vive en tu navegador y en Sheets)</span>');
+  try{
+    frame.contentWindow.postMessage({ source:'bl-parent', type:'fb-hosting', html: ed.value }, '*');
+  }catch(e){
+    const db = readFB(); db.hosting = { html: ed.value, deployedAt: nowISO() }; writeFB(db);
+    scheduleFbPush();
+  }
+  $('#btnVisit').hidden = false;
+  toast('Deploy completo — index.html publicado (simulado)');
+});
+ $('#btnVisit').addEventListener('click', visitDeployed);
+
+/* ═══ 18 · TECLADO ═════════════════════════════════════════ */
+ed.addEventListener('keydown', e=>{
+  if(e.shiftKey && e.altKey && e.code === 'KeyF'){ e.preventDefault(); formatDoc(); return; }
+  if(!sug.hidden){
+    if(e.key==='ArrowDown'){ e.preventDefault(); moveActive(1); return; }
+    if(e.key==='ArrowUp'){   e.preventDefault(); moveActive(-1); return; }
+    if(e.key==='Tab'){
+      e.preventDefault();
+      if(sugItems.length || sugNew) acceptActive();
+      return;
+    }
+    if(e.key==='Enter'){
+      if(sugItems.length){ e.preventDefault(); acceptActive(); return; }
+      hideSug();
+    }
+    if(e.key==='Escape'){ e.preventDefault(); hideSug(); return; }
+  }
+  if(e.key==='Enter'){ e.preventDefault(); smartEnter(); return; }
+  if(e.key==='Tab'){
+    e.preventDefault();
+    const multi = ed.selectionStart !== ed.selectionEnd &&
+                  ed.value.slice(ed.selectionStart, ed.selectionEnd).includes('\n');
+    if(e.shiftKey)      mapSelectedLines(dedentOne);
+    else if(multi)      mapSelectedLines(indentOne);
+    else { ed.setRangeText('  ', ed.selectionStart, ed.selectionEnd, 'end'); onEdInput(); }
+  }
+});
+ed.addEventListener('input', onEdInput);
+ed.addEventListener('click', hideSug);
+ed.addEventListener('scroll', ()=>{ hl.scrollTop = ed.scrollTop; hl.scrollLeft = ed.scrollLeft; hideSug(); });
+ $('#snipTA').addEventListener('keydown', e=>{
+  if(e.key==='Tab'){ e.preventDefault(); e.target.setRangeText('  ', e.target.selectionStart, e.target.selectionEnd, 'end'); }
+});
+
+/* ═══ 19 · BOTONES ═════════════════════════════════════════ */
+ $('#btnFmt').addEventListener('click', formatDoc);
+ $('#btnDict').addEventListener('click', ()=>{ renderDict(); $('#dlgDict').showModal(); refreshIcons(); });
+function manualSync(){
+  diagDone = false;
+  sync().then(()=>{
+    if(!connected && connDetail) toast(connDetail, 'err');
+    else if(connected){ compile(); toast('Proyecto sincronizado con Sheets'); }
+  });
+}
+ $('#btnSync').addEventListener('click', manualSync);
+ $('#stPill').addEventListener('click', ()=>{ if(!connected) manualSync(); });
+ $('#btnWipe').addEventListener('click', e=>{
+  armConfirm(e.currentTarget, ()=>{
+    for(const rid of Object.keys(lastRows)) pushOp({ action:'deleteBlock', sheet:SHEET, id: rid });
+    lastRows = {};
+    writeFB({ collections:{}, users:{}, session:null, storage:{}, hosting:null });
+    compile();
+    toast('Proyecto reiniciado — datos borrados también de Sheets');
+  });
+});
+ $('#btnReset').addEventListener('click', e=>{
+  armConfirm(e.currentTarget, ()=>{
+    ed.value = STARTER;
+    saveDraftLocal(STARTER);
+    lastPushedDraft = '';
+    pushDraftNow();
+    onEdInput();
+    toast('Editor restablecido al ejemplo');
+  });
+});
+document.querySelectorAll('dialog').forEach(d=>{
+  d.addEventListener('click', e => { if(e.target===d) d.close(); });
+  d.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', ()=>d.close()));
+});
+ $('#q2').addEventListener('input', renderDict);
+window.addEventListener('resize', ()=>{
+  clearTimeout(rT);
+  rT = setTimeout(compile, 300);
+});
+
+/* ═══ 20 · DICCIONARIO (diálogo) ═══════════════════════════ */
+function renderDict(){
+  const q = ($('#q2').value||'').trim().toLowerCase();
+  let arr = dict().slice().sort((a,b)=>a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+  if(q) arr = arr.filter(e => (e.name+' '+(e.tag||'')).toLowerCase().includes(q));
+  const pend = new Set(queue.filter(o=>o.action==='saveBlock' && o.sheet===SHEET && o.block && o.block.id!==DRAFT_ID).map(o=>o.block.id));
+  $('#dictCount').textContent = dict().length + ' entradas · hoja ' + SHEET +
+    (pend.size ? ' · ↑' + pend.size + ' por subir' : (connected ? ' · todo en Sheets' : ''));
+  let html = '', letter = null;
+  for(const e of arr){
+    const L = (e.name.charAt(0)||'#').toUpperCase();
+    if(L!==letter){ letter = L; html += `<div class="dl-l">${esc(L)}</div>`; }
+    const one = String(e.code||'').replace(/\s+/g,' ').slice(0,52);
+    html += `<div class="drow" data-id="${esc(e.id)}">
+      <div class="d-main">
+        <div class="t"><strong>${esc(e.name)}</strong>${e.tag?`<span class="tag">${esc(e.tag)}</span>`:''}${pend.has(e.id)?'<span class="tag pend">↑</span>':''}</div>
+        <code class="d-c">${esc(one)}${String(e.code||'').length>52?'…':''}</code>
+      </div>
+      <div class="d-acts">
+        <button class="iconbtn sm" data-a="ins" title="Insertar en el editor"><i data-lucide="corner-down-left"></i></button>
+        <button class="iconbtn sm" data-a="edit" title="Editar"><i data-lucide="pencil"></i></button>
+        <button class="iconbtn sm danger" data-a="del" title="Eliminar"><i data-lucide="trash-2"></i></button>
+      </div>
+    </div>`;
+  }
+  $('#dictList').innerHTML = html || '<div class="d-empty">Nada coincide con la búsqueda.</div>';
+  refreshIcons();
+}
+ $('#dictList').addEventListener('click', e=>{
+  const btn = e.target.closest('[data-a]'); if(!btn) return;
+  const row = btn.closest('.drow'); const b = dict().find(x=>x.id===row.dataset.id);
+  if(!b) return;
+  const a = btn.dataset.a;
+  if(a==='ins'){ setView('code'); $('#dlgDict').close(); insertSnippet(b); }
+  else if(a==='edit') openSnip(b, {ret:'dict'});
+  else if(a==='del') armConfirm(btn, ()=>deleteSnip(b.id));
+});
+function openSnip(entry, opts={}){
+  snipReturn = opts.ret || 'dict';
+  $('#snipTitle').textContent = entry ? 'Editar entrada' : 'Nueva entrada';
+  const f = $('#fmSnip');
+  f.id.value   = entry ? entry.id : '';
+  f.name.value = entry ? entry.name : (opts.name || '');
+  f.tag.value  = entry ? (entry.tag||'') : '';
+  f.code.value = entry ? (entry.code||'') : '';
+  $('#dlgDict').close();
+  $('#dlgSnip').showModal(); refreshIcons();
+  setTimeout(()=>f.name.focus(), 60);
+}
+ $('#btnNewSnip').addEventListener('click', ()=>openSnip(null, {ret:'dict'}));
+ $('#fmSnip').addEventListener('submit', e=>{
+  e.preventDefault();
+  const f = e.target;
+  const b = {
+    id:   f.id.value || 'fb-'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),
+    name: f.name.value.trim(), tag: f.tag.value.trim() || 'firestore', code: f.code.value
+  };
+  upsertSnipLocal(b);
+  toast('"' + b.name + '" guardada — ' + (connected ? 'subiendo a Sheets' : 'en cola, se sube al conectar'));
+  f.closest('dialog').close();
+  if(snipReturn==='insert' && !f.id.value) insertSnippet(b);
+});
+function armConfirm(btn, fn){
+  if(btn.dataset.armed){ delete btn.dataset.armed; fn(); return; }
+  btn.dataset.armed='1'; btn.dataset.html = btn.innerHTML;
+  btn.classList.add('armed'); btn.textContent='¿Seguro?';
+  setTimeout(()=>{
+    if(!btn.isConnected || !btn.dataset.armed) return;
+    delete btn.dataset.armed; btn.classList.remove('armed');
+    btn.innerHTML = btn.dataset.html; refreshIcons();
+  }, 2600);
+}
+
+/* ═══ 21 · ARRANQUE ════════════════════════════════════════ */
+(function init(){
+  loadQueue();
+  loadCache();
+  seedDict();
+  const draft = localStorage.getItem(LS_DRAFT);
+  ed.value = (draft && draft.trim()) ? draft : STARTER;
+  lastPushedDraft = '';
+  rebuildLastRows();
+  syncHL(); refreshIcons(); renderConn();
+  reconcileDraft();
+  compile();
+  sync();
+})();
+</script>
+</body>
+</html>

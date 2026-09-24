@@ -37,11 +37,11 @@ i[data-lucide]{display:inline-flex}
 .btn:hover{background:var(--ink);color:var(--bg)}
 .btn svg{width:14px;height:14px}
 .iconbtn{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;flex:none;
-  border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;transition:all .15s}
+  border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;transition:all .15s;
+  font:700 13px/1 var(--mono)}
 .iconbtn:hover{background:var(--ink);color:var(--bg)}
 .iconbtn.danger:hover{background:var(--acc);border-color:var(--acc);color:var(--bg)}
-.iconbtn.sm{width:28px;height:28px;border-width:1px}
-.iconbtn.sm svg{width:13px;height:13px}
+.iconbtn.sm{width:28px;height:28px;border-width:1px;font-size:11px}
 .iconbtn.armed{width:auto;padding:0 9px;font:700 10px/1 var(--mono);border-color:var(--acc);color:var(--acc)}
 .iconbtn svg{width:15px;height:15px}
 .spin svg{animation:rot 1s linear infinite}
@@ -61,7 +61,6 @@ header{flex:none;border-bottom:1.5px solid var(--ink);background:var(--bg)}
 .qb{font:700 10px/1 var(--mono);color:var(--acc);border:1.5px solid var(--acc);padding:4px 6px}
 @media(max-width:720px){#stTxt{display:none}.btn .lbl{display:none}}
 
-/* Pestañas del EDITOR (4) + pestañas del PREVIEW (2) */
 .tabs{flex:none;display:flex;border-bottom:1.5px solid var(--ink);background:var(--bg)}
 .tabs button{display:flex;justify-content:center;align-items:center;gap:6px;min-height:44px;padding:0 14px;
   font:600 10.5px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;
@@ -75,22 +74,17 @@ header{flex:none;border-bottom:1.5px solid var(--ink);background:var(--bg)}
 
 .panes{flex:1;min-height:0;display:grid;grid-template-columns:1fr}
 .pane{display:flex;flex-direction:column;min-height:0;min-width:0}
-.pv{display:none}
-body.view-dev .ed{display:none}
-body.view-dev .pv-dev{display:flex}
-body.view-app .ed{display:none}
-body.view-app .pv-app{display:flex}
+.pv-app,.pv-dev{display:none}
+body.pv-app-mode .pv-app{display:flex}
+body.pv-dev-mode .pv-dev{display:flex}
+body.pv-dev-mode .ed{display:none}
+@media(max-width:1023px){
+  body.pv-app-mode .ed,body.pv-dev-mode .ed{display:none}
+}
 @media(min-width:1024px){
   .panes{grid-template-columns:minmax(0,46%) minmax(0,54%)}
   .ed{display:flex!important;border-right:1.5px solid var(--ink)}
-  .pv-app,.pv-dev{display:none!important}
-  body.pv-app-mode .pv-app{display:flex!important}
-  body.pv-dev-mode .pv-dev{display:flex!important}
-  .tabs.pv-tabs{display:none}
-}
-@media(max-width:1023px){
-  body.view-code .pv-app,body.view-code .pv-dev{display:none}
-  body.view-code .ed{display:flex}
+  .pv-tabs{display:none}
 }
 .pane-head{flex:none;display:flex;justify-content:space-between;align-items:center;gap:10px;
   padding:8px 14px;border-bottom:1px solid var(--line);
@@ -135,14 +129,17 @@ body.view-app .pv-app{display:flex}
 .sug .newrow{color:var(--acc);font-weight:700;border-top:1px solid var(--line)}
 .sug .newrow:hover{background:var(--acc);color:var(--bg)}
 
-/* ═══ Terminal CachyOS sobre Firestore ═════════════════════ */
+.err{flex:none;margin:10px 12px 0;padding:10px 12px;border:1.5px solid var(--acc);color:var(--acc);
+  background:#FBEFE9;font:500 11px/1.55 var(--mono);max-height:110px;overflow:auto;white-space:pre-wrap}
+
+/* Terminal Firestore */
 #termPane{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--term);color:var(--tpaper)}
 #termOut{flex:1;min-height:0;overflow-y:auto;padding:12px 14px;cursor:text;font:400 12.5px/1.55 var(--mono)}
 #termOut::-webkit-scrollbar{width:10px}
 #termOut::-webkit-scrollbar-thumb{background:rgba(237,231,216,.2)}
 .tl{white-space:pre-wrap;word-break:break-word;min-height:19px}
-.tl .c-red{color:var(--tred)} .tl .c-green{color:var(--tgreen)} .tl .c-blue{color:var(--tblue)}
-.tl .c-yellow{color:var(--tyellow)} .tl .c-mag{color:var(--tmag)} .tl .c-dim{color:var(--tmut)}
+.c-red{color:var(--tred)} .c-green{color:var(--tgreen)} .c-blue{color:var(--tblue)}
+.c-yellow{color:var(--tyellow)} .c-mag{color:var(--tmag)} .c-dim{color:var(--tmut)}
 #termIn{display:flex;align-items:baseline;padding:6px 14px 8px}
 #termPrompt{white-space:pre}
 #termInput{flex:1;min-width:50px;background:transparent;border:none;outline:none;
@@ -158,7 +155,6 @@ body.view-app .pv-app{display:flex}
 .kbtn.wide{min-width:64px}
 @media (hover:hover) and (pointer:fine){#keybar{display:none}}
 
-/* ═══ nano (clicable en móvil) ═════════════════════════════ */
 #nano{position:fixed;inset:0;z-index:60;background:var(--term);display:flex;flex-direction:column;font:inherit}
 .nano-top{flex:none;display:flex;justify-content:space-between;gap:12px;padding:8px 14px;
   background:var(--bg);color:var(--ink);font-weight:700;font-size:12px;border-bottom:2px solid var(--acc)}
@@ -173,7 +169,6 @@ body.view-app .pv-app{display:flex}
 .nano-bar .nbtn:active{background:var(--ink);color:var(--bg)}
 .nano-bar .nbtn:active b{background:var(--acc)}
 
-/* ═══ DevTools (Consola F12) ═══════════════════════════════ */
 .pv-dev{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--term);color:var(--tpaper)}
 .dev-list{flex:1;min-height:0;overflow-y:auto;padding:8px 12px;font:400 12px/1.6 var(--mono)}
 .dev-list::-webkit-scrollbar{width:10px}
@@ -192,9 +187,8 @@ body.view-app .pv-app{display:flex}
 .dev-head button{border:none;background:none;color:var(--tmut);font:600 9.5px var(--mono);letter-spacing:.1em;cursor:pointer;text-transform:uppercase}
 .dev-head button:hover{color:var(--tred)}
 
-.err{flex:none;margin:10px 12px 0;padding:10px 12px;border:1.5px solid var(--acc);color:var(--acc);
-  background:#FBEFE9;font:500 11px/1.55 var(--mono);max-height:110px;overflow:auto;white-space:pre-wrap}
-.pv-app{flex:1;min-height:0;display:flex;flex-direction:column;padding:12px;background:#E9E4D6}
+.pv-app{flex:1;min-height:0;display:flex;flex-direction:column}
+.pages{flex:1;min-height:0;display:flex;flex-direction:column;padding:12px;background:#E9E4D6}
 #frame{flex:1;min-height:0;width:100%;border:1.5px solid var(--ink);background:#fff;border-radius:3px;
   box-shadow:0 2px 8px rgba(28,25,21,.14)}
 
@@ -260,7 +254,7 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
 @media(min-width:640px){#toasts{left:auto;right:20px;align-items:flex-end}}
 </style>
 </head>
-<body class="view-code pv-app-mode">
+<body class="pv-app-mode">
 
 <header>
   <div class="wrap-x h-in">
@@ -277,30 +271,27 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
   </div>
 </header>
 
-<!-- Pestañas del EDITOR: HTML · CSS · JS · Consola -->
 <nav class="tabs" id="edTabs">
-  <button type="button" data-t="html" class="on"><i data-lucide="code-2"></i>HTML</button>
-  <button type="button" data-t="css"><i data-lucide="palette"></i>CSS</button>
-  <button type="button" data-t="js"><i data-lucide="braces"></i>JS</button>
-  <button type="button" data-t="term"><i data-lucide="terminal"></i>Consola</button>
+  <button type="button" data-t="html" class="on">HTML</button>
+  <button type="button" data-t="css">CSS</button>
+  <button type="button" data-t="js">JS</button>
+  <button type="button" data-t="term">Consola</button>
   <span class="grow"></span>
 </nav>
 
-<!-- Pestañas del PREVIEW: App · Consola (F12) — visibles en móvil -->
 <nav class="tabs pv-tabs" id="pvTabs">
-  <button type="button" data-p="app" class="on"><i data-lucide="eye"></i>App<span class="tdot" id="tabDot"></span></button>
-  <button type="button" data-p="dev"><i data-lucide="terminal-square"></i>Consola <span id="devCount"></span></button>
+  <button type="button" data-p="app" class="on">App<span class="tdot" id="tabDot"></span></button>
+  <button type="button" data-p="dev">Consola F12 <span id="devCount"></span></button>
 </nav>
 
 <main class="panes">
-  <!-- Lado EDITOR -->
   <section class="pane ed">
     <div class="pane-head" id="edHead">
       <span id="edTitle">HTML · marcado</span>
       <span class="r">
         <span class="saved" id="draftInfo">—</span>
-        <button class="iconbtn sm" id="btnFmt" title="Formatear · Shift+Alt+F"><i data-lucide="wand-2"></i></button>
-        <button class="iconbtn sm danger" id="btnReset" title="Restablecer ejemplo"><i data-lucide="trash-2"></i></button>
+        <button class="iconbtn sm" id="btnFmt" title="Formatear · Shift+Alt+F">✎</button>
+        <button class="iconbtn sm danger" id="btnReset" title="Restablecer ejemplo">↺</button>
       </span>
     </div>
     <div class="ed-wrap" id="edWrap">
@@ -309,7 +300,6 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
       <div class="sug" id="sug" hidden></div>
     </div>
 
-    <!-- Terminal Firestore (pestaña Consola del editor) -->
     <div id="termPane" hidden>
       <div id="termOut"><div id="termMsgs"></div></div>
       <div id="termIn" hidden><span id="termPrompt"></span><input id="termInput" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="terminal"></div>
@@ -332,19 +322,17 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
     </div>
   </section>
 
-  <!-- Lado PREVIEW: App -->
   <section class="pane pv-app">
     <div class="pane-head">
       <span>App en vivo · proyecto «blocklab-demo»</span>
       <span class="r status"><span class="dot" id="cDot"></span><span id="cTxt">—</span></span>
     </div>
     <div class="err" id="errBox" hidden></div>
-    <div class="pages" style="flex:1;min-height:0;display:flex;flex-direction:column;padding:12px;background:#E9E4D6">
-      <iframe id="frame" title="Vista previa" sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-popups" style="flex:1;min-height:0;width:100%;border:1.5px solid var(--ink);background:#fff;border-radius:3px;box-shadow:0 2px 8px rgba(28,25,21,.14)"></iframe>
+    <div class="pages">
+      <iframe id="frame" title="Vista previa" sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-popups"></iframe>
     </div>
   </section>
 
-  <!-- Lado PREVIEW: Consola F12 -->
   <section class="pane pv-dev">
     <div class="dev-head">
       <span>Consola · console.log · errores · evalúa JS de tu app</span>
@@ -353,7 +341,7 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
     <div class="dev-list" id="devList"></div>
     <form class="dev-form" id="devForm">
       <span class="pr">›</span>
-      <input id="devInput" autocomplete="off" spellcheck="false" placeholder="expresión JS sobre tu app — ej.: firebase.apps.length">
+      <input id="devInput" autocomplete="off" spellcheck="false" placeholder="expresión JS — ej.: firebase.apps.length">
     </form>
   </section>
 </main>
@@ -361,12 +349,12 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
 <dialog id="dlgDict">
   <div class="dlg-head">
     <div><h3>Diccionario</h3><small id="dictCount">—</small></div>
-    <button type="button" class="iconbtn" data-close><i data-lucide="x"></i></button>
+    <button type="button" class="iconbtn" data-close>✕</button>
   </div>
   <div class="dlg-body">
     <div class="d-tools">
       <input id="q2" type="text" placeholder="Buscar…" autocomplete="off">
-      <button class="btn btn-solid" id="btnNewSnip"><i data-lucide="plus"></i>Nueva</button>
+      <button class="btn btn-solid" id="btnNewSnip">+ Nueva</button>
     </div>
     <div class="d-list" id="dictList"></div>
   </div>
@@ -376,7 +364,7 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
   <form id="fmSnip" method="dialog">
     <div class="dlg-head">
       <div><h3 id="snipTitle">Nueva entrada</h3><small>hoja «firebase» en Sheets</small></div>
-      <button type="button" class="iconbtn" data-close><i data-lucide="x"></i></button>
+      <button type="button" class="iconbtn" data-close>✕</button>
     </div>
     <div class="dlg-body">
       <input type="hidden" name="id">
@@ -404,7 +392,7 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
 <dialog id="dlgConsole">
   <div class="dlg-head">
     <div><h3>Consola · blocklab-demo</h3><small id="consCount">—</small></div>
-    <button type="button" class="iconbtn" data-close><i data-lucide="x"></i></button>
+    <button type="button" class="iconbtn" data-close>✕</button>
   </div>
   <div class="dlg-body">
     <div class="tabs-c" id="consTabs">
@@ -422,11 +410,11 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
 <dialog id="dlgDeploy">
   <div class="dlg-head">
     <div><h3>firebase deploy</h3><small>proyecto blocklab-demo (simulado)</small></div>
-    <button type="button" class="iconbtn" data-close><i data-lucide="x"></i></button>
+    <button type="button" class="iconbtn" data-close>✕</button>
   </div>
   <div class="dlg-body"><pre id="depLog"></pre></div>
   <div class="dlg-foot">
-    <button type="button" class="btn" id="btnVisit" hidden><i data-lucide="external-link"></i>Ver en el preview</button>
+    <button type="button" class="btn" id="btnVisit" hidden>Ver en el preview</button>
     <button type="button" class="btn btn-solid" data-close>Cerrar</button>
   </div>
 </dialog>
@@ -434,10 +422,13 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
 <div id="toasts"></div>
 
 <script>
-/* ═══ 1 · CONFIG ═══════════════════════════════════════════
-   REGLA: ninguna cadena de este archivo contiene la secuencia
-   literal de cierre de script — se escribe \u003c/script>.
-   La única etiqueta de cierre real es la del final del archivo. ══ */
+/* ═══ REGLA DE ORO DE ESTE ARCHIVO ═════════════════════════
+   Dentro de este bloque de código NUNCA aparecen las
+   secuencias literales de cierre de script ni de comentario
+   HTML: se escriben \u003c/script> y \u003c!--  (en runtime
+   producen los mismos caracteres, pero ningún copiado/pegado
+   ni parser puede romper este bloque). La única etiqueta de
+   cierre real es la última del archivo.                       ══ */
 const API_URL   = 'https://script.google.com/macros/s/AKfycbzSLoucR2yC7X7kKpbeDnQUCNd94-WuVuGyR55CMIrP4hq5f1tgynDDdHumc8iBj8gI9g/exec';
 const SHEET     = 'firebase';
 const LS_DB     = 'blocklab.db.v1';
@@ -445,19 +436,22 @@ const LS_Q      = 'blocklab.queue.v1';
 const LS_SEEDED = 'blocklab.firebase.seeds.v1';
 const LS_FB     = 'blocklab.fb.db.v1';
 const DRAFT_NAME = 'BORRADOR · ';
+const CLOSE_SCRIPT = '\u003c/script>';
+const CMT_OPEN = '\u003c!--';
 
-/* Las tres pestañas de código, cada una con su borrador local y su fila en Sheets */
 const DRAFTS = {
   html: { ls:'blocklab.draft.fb.html.v1', lsT:'blocklab.draft.fb.html.t', sid:'__draft_html__', name:'BORRADOR · HTML' },
   css:  { ls:'blocklab.draft.fb.css.v1',  lsT:'blocklab.draft.fb.css.t',  sid:'__draft_css__',  name:'BORRADOR · CSS'  },
   js:   { ls:'blocklab.draft.fb.js.v1',   lsT:'blocklab.draft.fb.js.t',   sid:'__draft_js__',   name:'BORRADOR · JS'   }
 };
 
-const STARTER_HTML = `<!-- HTML: solo marcado. El CSS va en su pestaña,
+const STARTER_HTML = `\u003c!-- HTML: solo marcado. El CSS va en su pestaña,
      el JS en la suya (se inyectan solos al compilar).
-     El SDK simulado ya está cargado: NO agregas el de gstatic. -->
+     El SDK simulado ya está cargado: NO agregas el de gstatic. --\u003e`
 
-<div class="card">
++ '\n\n' + 
+
+`<div class="card">
   <h1>Mis notas</h1>
 
   <div id="authBox">
@@ -516,7 +510,7 @@ ul { padding-left: 18px; }
 li { margin: 6px 0; }
 li button { padding: 2px 8px; font-size: 11px; margin-left: 8px; }`;
 
-const STARTER_JS = `// SDK modular completo (el simulador expone las mismas funciones globales)
+const STARTER_JS = `// SDK modular completo (mismas funciones globales que el v9 real)
 const app  = initializeApp({ apiKey: 'demo-key', projectId: 'blocklab-demo' });
 const db   = getFirestore();
 const auth = getAuth();
@@ -531,7 +525,7 @@ onAuthStateChanged(auth, user => {
   if (user) {
     authBox.hidden = true; appBox.hidden = false;
     document.querySelector('#who').textContent = user.email;
-    // consulta en tiempo real con query + where + orderBy
+    // consulta en tiempo real: query + where + orderBy
     const q = query(
       collection(db, 'notas'),
       where('uid', '==', user.uid),
@@ -587,20 +581,20 @@ document.querySelector('#btnAdd').onclick = async () => {
   document.querySelector('#texto').value = '';
 };`;
 
-/* ═══ 2 · SHIM: puente de consola (F12) + eval remoto ═══════ */
+/* ═══ SHIM: puente de consola (F12) + eval remoto ═══════════ */
 const SHIM_SRC = `
 (function(){
-  function fmt(v, deep){
+  function fmt(v){
     try{
       if(typeof v === 'string') return v;
       if(v instanceof Error) return v.stack || (v.name+': '+v.message);
-      var s = JSON.stringify(v, null, deep ? 2 : 0);
+      var s = JSON.stringify(v, null, 2);
       return (s === undefined) ? String(v) : s;
     }catch(e){ return String(v); }
   }
   function send(level, args){
     try{ parent.postMessage({ source:'bl-dev', type:'log', level:level,
-      text: Array.prototype.map.call(args, function(a){ return fmt(a, true); }).join(' ') }, '*'); }catch(e){}
+      text: Array.prototype.map.call(args, function(a){ return fmt(a); }).join(' ') }, '*'); }catch(e){}
   }
   ['log','warn','error','info','debug'].forEach(function(m){
     var orig = console[m] ? console[m].bind(console) : function(){};
@@ -617,15 +611,12 @@ const SHIM_SRC = `
     if(!d || d.source !== 'bl-parent' || d.type !== 'dev-eval') return;
     var out, ok = true;
     try{ out = window.eval(d.code); }catch(err){ ok = false; out = (err && err.message) || String(err); }
-    try{
-      parent.postMessage({ source:'bl-dev', type:'dev-eval-res', id:d.id, ok:ok,
-        text: fmt(out, true) }, '*');
-    }catch(e2){}
+    try{ parent.postMessage({ source:'bl-dev', type:'dev-eval-res', id:d.id, ok:ok, text: fmt(out) }, '*'); }catch(e2){}
   });
 })();
 `;
 
-/* ═══ 3 · SDK SIMULADO: compat + modular completo ══════════ */
+/* ═══ SDK SIMULADO: compat + modular completo ══════════════ */
 const SDK_SRC = `
 'use strict';
 (function(){
@@ -693,8 +684,8 @@ const SDK_SRC = `
     onAuthStateChanged: function(cb){ authListeners.push(cb); setTimeout(function(){ cb(authImpl.currentUser); }, 0); },
     createUserWithEmailAndPassword: function(email, pass){
       email = String(email || '').trim().toLowerCase();
-      if(!/^[^@\u005Cs]+@[^@\u005Cs]+\u005C.[^@\u005Cs]+$/.test(email)) return Promise.reject(fbErr('auth/invalid-email', 'La dirección de correo electrónico no es válida.'));
-      if(String(pass).length < 6) return Promise.reject(fbErr('auth/weak-password', 'La contraseña debe tener al menos 6 caracteres.'));
+      if(!/^[^@\u005Cs]+@[^@\u005Cs]+\u005C.[^@\u005Cs]+$/.test(email)) return Promise.reject(fbErr('auth/invalid-email', 'La direcci\u00F3n de correo electr\u00F3nico no es v\u00E1lida.'));
+      if(String(pass).length < 6) return Promise.reject(fbErr('auth/weak-password', 'La contrase\u00F1a debe tener al menos 6 caracteres.'));
       var dup = Object.keys(DB.users).some(function(uid){ return DB.users[uid].email === email; });
       if(dup) return Promise.reject(fbErr('auth/email-already-in-use', 'Ya existe una cuenta con ese correo.'));
       var uid = rid('u');
@@ -706,8 +697,8 @@ const SDK_SRC = `
       email = String(email || '').trim().toLowerCase();
       var hit = null;
       Object.keys(DB.users).forEach(function(uid){ if(DB.users[uid].email === email) hit = uid; });
-      if(!hit) return Promise.reject(fbErr('auth/user-not-found', 'No existe ningún usuario con ese correo.'));
-      if(DB.users[hit].pass !== String(pass)) return Promise.reject(fbErr('auth/wrong-password', 'La contraseña no es válida.'));
+      if(!hit) return Promise.reject(fbErr('auth/user-not-found', 'No existe ning\u00FAn usuario con ese correo.'));
+      if(DB.users[hit].pass !== String(pass)) return Promise.reject(fbErr('auth/wrong-password', 'La contrase\u00F1a no es v\u00E1lida.'));
       DB.session = hit; persist();
       return Promise.resolve({ user: makeUser(hit, DB.users[hit]) });
     },
@@ -917,7 +908,6 @@ const SDK_SRC = `
     storage: storageRoot
   };
 
-  /* ─── API MODULAR COMPLETA (mismas funciones globales que el SDK v9) ─── */
   window.initializeApp = function(cfg){ return window.firebase.initializeApp(cfg); };
   window.getApps = function(){ return window.firebase.apps; };
   window.getApp = function(){ return window.firebase.apps[0]; };
@@ -966,16 +956,17 @@ const SDK_SRC = `
 })();
 `;
 
-/* ═══ 4 · ESTADO ═══════════════════════════════════════════ */
+/* ═══ ESTADO ═══════════════════════════════════════════════ */
 let MODULES = [], BLOCKS = {}, queue = [], syncing = false;
 let seq = 0;
-let edTab = 'html';                       // html | css | js | term
+let edTab = 'html';
 let ED_CONTENT = { html:'', css:'', js:'' };
 let sugItems = [], sugNew = null, sugActive = 0;
 let snipReturn = 'dict';
 let lastRows = {}, fbPushT = null;
 let consTab = 'firestore';
 let devLog = [], devEvalId = 0, devCount = 0;
+let compileT = null, draftT = null, resizeT = null;
 
 let connected = false, connLabel = '', connDetail = '';
 let diagDone = false, diagRunning = false, dlgAutoShown = false;
@@ -984,7 +975,6 @@ const $   = s => document.querySelector(s);
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const nowISO = () => new Date().toISOString();
 const hora = iso => new Date(iso).toLocaleTimeString('es',{hour12:false});
-const refreshIcons = () => { if(window.lucide) lucide.createIcons(); };
 const isDraftOp = op => op.action==='saveBlock' && op.block && String(op.block.id||'').startsWith('__draft');
 const isTouch = window.matchMedia('(hover: none)').matches;
 
@@ -993,7 +983,30 @@ const ed = $('#ed'), hl = $('#hl'), sug = $('#sug'), edWrap = $('#edWrap'), fram
 const termMsgs = $('#termMsgs'), termOut = $('#termOut'), termIn = $('#termIn'),
       termInput = $('#termInput'), termPrompt = $('#termPrompt'), keybar = $('#keybar');
 
-/* ═══ 5 · CACHÉ / COLA ═════════════════════════════════════ */
+/* Errores visibles sin abrir consola */
+function showFatal(msg){
+  try{
+    const box = $('#errBox');
+    box.hidden = false;
+    box.textContent = 'ERROR: ' + msg;
+    cset('error','err'); tabDot('err');
+  }catch(e){}
+  try{ console.error('[BLOCKLAB]', msg); }catch(e){}
+}
+window.addEventListener('error', e => showFatal(e.message + ' @' + (e.lineno||'?')));
+
+/* Iconos con fallback si el CDN falla */
+const ICON_FALLBACK = { 'book-open':'☰', 'database':'▦', 'rocket':'🚀', 'refresh-cw':'⟳', 'trash-2':'🗑',
+  'code-2':'</>', 'palette':'◐', 'braces':'{}', 'terminal':'▸', 'terminal-square':'▸', 'eye':'◉', 'x':'✕',
+  'external-link':'↗', 'corner-down-left':'↵', 'pencil':'✎', 'plus':'+', 'copy':'⧉', 'check':'✓', 'alert-triangle':'⚠' };
+function refreshIcons(){
+  if(window.lucide){ try{ lucide.createIcons(); return; }catch(e){} }
+  document.querySelectorAll('i[data-lucide]').forEach(el => {
+    if(!el.textContent) el.textContent = ICON_FALLBACK[el.dataset.lucide] || '•';
+  });
+}
+
+/* ═══ CACHÉ / COLA ═════════════════════════════════════════ */
 function saveCache(){ try{ localStorage.setItem(LS_DB, JSON.stringify({modules:MODULES, blocks:BLOCKS, ts:nowISO()})); }catch(e){} }
 function loadCache(){
   try{
@@ -1026,7 +1039,7 @@ function toast(msg, kind){
   setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity .25s'; setTimeout(()=>t.remove(),260); }, 4200);
 }
 
-/* ═══ 6 · RED SIN CORS ═════════════════════════════════════ */
+/* ═══ RED SIN CORS ═════════════════════════════════════════ */
 let jsonpSeq = 0, jsonpChain = Promise.resolve();
 function jsonpRaw(action, params, ms){
   return new Promise((res, rej)=>{
@@ -1097,7 +1110,7 @@ function reconcileOps(data){
   renderConn();
 }
 
-/* ═══ 7 · PROYECTO FB SIMULADO + SYNC ↔ Sheets ═════════════ */
+/* ═══ PROYECTO FB SIMULADO + SYNC ↔ Sheets ════════════════ */
 const normBlock = o => ({ id:String(o.id||''), name:String(o.name||''), tag:String(o.tag||''),
   code:(o.code==null?'':String(o.code)), createdAt:String(o.createdAt||''), updatedAt:String(o.updatedAt||'') });
 
@@ -1145,7 +1158,7 @@ function rebuildLastRows(){
 async function sync(){
   if(syncing) return;
   syncing = true; $('#btnSync').classList.add('spin');
-  if(!connected) renderConn();
+  renderConn();
   try{
     const data = await jsonpGet('bootstrap', { m: SHEET });
     if(!data || !data.ok){
@@ -1163,7 +1176,6 @@ async function sync(){
     BLOCKS[SHEET] = merged.sort((a,b)=>a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
     saveCache();
 
-    /* Sheets → proyecto simulado (gana el más reciente) */
     const db = readFB();
     for(const b of merged){
       if(String(b.id).startsWith('__draft')) continue;
@@ -1253,7 +1265,7 @@ window.addEventListener('message', e => {
   }
 });
 
-/* ═══ 8 · SEMILLAS ═════════════════════════════════════════ */
+/* ═══ SEMILLAS ═════════════════════════════════════════════ */
 const SEED = [
   { id:'fb-init',    name:'initializeApp', tag:'raíz',      code:"initializeApp({\n  apiKey: 'demo-key',\n  projectId: 'blocklab-demo'\n});" },
   { id:'fb-getfs',   name:'getFirestore',  tag:'raíz',      code:"const db = getFirestore();\nconst auth = getAuth();" },
@@ -1272,7 +1284,7 @@ const SEED = [
   { id:'fb-fs-inc',  name:'increment',     tag:'firestore', code:"await updateDoc(ref, { contador: increment(1) });" },
   { id:'fb-fs-arr',  name:'arrayUnion',    tag:'firestore', code:"await updateDoc(ref, { etiquetas: arrayUnion('$0') });" },
   { id:'fb-st-put',  name:'putString',     tag:'storage',   code:"const ref = getStorage().ref('textos/$0.txt');\nawait ref.putString('contenido del archivo');\nconst url = await ref.getDownloadURL();" },
-  { id:'fb-fn-def',  name:'define función',tag:'functions', code:'<script type="firebase-functions">\n  functions.define(\'saludar\', async (data) => {\n    return { mensaje: \'Hola, \' + data.nombre };\n  });\n\u003c/script>' },
+  { id:'fb-fn-def',  name:'define función',tag:'functions', code:'\u003cscript type="firebase-functions">\n  functions.define(\'saludar\', async (data) => {\n    return { mensaje: \'Hola, \' + data.nombre };\n  });\n' + CLOSE_SCRIPT },
   { id:'fb-fn-call', name:'httpsCallable', tag:'functions', code:"const saludar = getFunctions().httpsCallable('saludar');\nconst res = await saludar({ nombre: '$0' });\nconsole.log(res.data.mensaje);" },
   { id:'fb-host',    name:'deploy',        tag:'hosting',   code:'/* Pulsa el botón DEPLOY de la cabecera:\n   simula "firebase deploy" y publica esta página\n   como index.html del proyecto. */' }
 ];
@@ -1293,18 +1305,18 @@ function seedDict(){
   localStorage.setItem(LS_SEEDED,'1');
 }
 
-/* ═══ 9 · BORRADORES ×3 (HTML/CSS/JS) ↔ Sheets ═════════════ */
+/* ═══ BORRADORES ×3 ↔ Sheets ═══════════════════════════════ */
 const getDraftRemote = sid => (BLOCKS[SHEET]||[]).find(b => b.id === sid);
 function saveDraftLocal(tab, txt){
   const d = DRAFTS[tab];
   try{ localStorage.setItem(d.ls, txt); localStorage.setItem(d.lsT, nowISO()); }catch(e){}
 }
 function draftLocalTime(tab){
-  const d = DRAFTS[tab];
-  try{ return localStorage.getItem(d.lsT) || ''; }catch(e){ return ''; }
+  try{ return localStorage.getItem(DRAFTS[tab].lsT) || ''; }catch(e){ return ''; }
 }
 function pushDraftNow(tab){
-  const d = DRAFTS[tab], txt = ED_CONTENT[tab];
+  const d = DRAFTS[tab];
+  const txt = ED_CONTENT[tab];
   if(txt === d.lastPushed) return;
   d.lastPushed = txt;
   const prev = getDraftRemote(d.sid);
@@ -1339,7 +1351,7 @@ function reconcileDraft(tab){
   }
 }
 
-/* ═══ 10 · MUTACIONES del diccionario ═══════════════════════ */
+/* ═══ MUTACIONES del diccionario ═══════════════════════════ */
 function upsertSnipLocal(b){
   b.updatedAt = nowISO();
   const arr = BLOCKS[SHEET] || (BLOCKS[SHEET] = []);
@@ -1358,7 +1370,7 @@ function deleteSnip(id){
   pushOp({action:'deleteBlock', sheet:SHEET, id});
 }
 
-/* ═══ 11 · RESALTADO (HTML híbrido · CSS · JS) ═════════════ */
+/* ═══ RESALTADO ════════════════════════════════════════════ */
 const HTML_ELS = new Set(['html','head','body','div','span','p','h1','h2','h3','h4','h5','h6','ul','ol','li',
   'table','thead','tbody','tr','td','th','img','a','style','script','br','hr','strong','em','b','i','u',
   'button','input','label','form','select','option','textarea','section','header','footer','main','nav']);
@@ -1366,7 +1378,6 @@ const FB_METHODS = new Set(['initializeApp','getAuth','getFirestore','getStorage
   'setDoc','updateDoc','deleteDoc','getDoc','getDocs','onSnapshot','query','where','orderBy','limit','createUserWithEmailAndPassword',
   'signInWithEmailAndPassword','signOut','onAuthStateChanged','httpsCallable','putString','getDownloadURL',
   'serverTimestamp','increment','arrayUnion','arrayRemove','currentUser','data','firebase']);
-function escRe(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
 function jsHl(code){
   return esc(code).replace(
     /(\/\/[^\n]*)|('(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*")|\b(true|false|null|undefined|const|let|var|new|function|return|if|else|for|while|of|in|async|await|try|catch)\b|([A-Za-z_$\u00C0-\u024F][\w$\u00C0-\u024F]*)(?=\s*:)|\.([A-Za-z_$][\w$]*)(?=\s*\()|\b(\d+(?:\.\d+)?)\b|([{}\[\]()])/g,
@@ -1383,7 +1394,7 @@ function jsHl(code){
 }
 function cssHl(src){
   return esc(src).replace(
-    /(\/\*[\s\S]*?\*\/)|("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*')|(#[0-9a-fA-F]{3,8})|([A-Za-z-]+)(?=\s*:)|(-?\d+\.?\d*(?:px|rem|em|%|vh|vw|vmin|vmax|s|ms|deg|fr|ch)?)|([{};:,])/g,
+    /(\/\*[\s\S]*?\*\/)|("[^"\n]*"|'[^'\n]*')|(#[0-9a-fA-F]{3,8})|([A-Za-z-]+)(?=\s*:)|(-?\d+\.?\d*(?:px|rem|em|%|vh|vw|s|ms|deg|fr)?)|([{};:,])/g,
     (m,com,str,hex,prop,num,brk)=>{
       if(com) return `<span class="c">${com}</span>`;
       if(str) return `<span class="s">${str}</span>`;
@@ -1445,7 +1456,7 @@ function hled(src){
   let out = '', i = 0;
   const n = src.length;
   while(i < n){
-    if(src.startsWith('<!--', i)){
+    if(src.startsWith(CMT_OPEN, i)){
       const end = src.indexOf('-->', i+4);
       const stop = end < 0 ? n : end+3;
       out += '<span class="c">' + esc(src.slice(i, stop)) + '</span>';
@@ -1470,141 +1481,119 @@ function syncHL(){
   hl.scrollTop = ed.scrollTop; hl.scrollLeft = ed.scrollLeft;
 }
 
-/* ═══ 12 · AUTOCOMPLETADO MULTI-LENGUAJE (por pestaña) ═════ */
+/* ═══ AUTOCOMPLETADO (tablas esenciales) ═══════════════════ */
 const AC_HTML_TAGS = {
-  a:['enlace','href, target, download'], abbr:['abreviatura','title'], address:['dirección de contacto',''],
-  area:['zona de mapa','shape, coords, href'], article:['artículo',''], aside:['contenido lateral',''],
-  audio:['audio','src, controls, autoplay, loop, muted'], b:['negrita',''],
-  base:['URL base (head)','href, target'], bdi:['aislar bidireccional',''], bdo:['dirección de texto','dir'],
-  blockquote:['cita en bloque','cite'], body:['cuerpo del documento',''], br:['salto de línea',''],
+  a:['enlace','href, target, download'], abbr:['abreviatura','title'], address:['dirección',''],
+  area:['zona de mapa','shape, coords'], article:['artículo',''], aside:['lateral',''],
+  audio:['audio','src, controls, autoplay'], b:['negrita',''], base:['URL base','href'],
+  blockquote:['cita','cite'], body:['cuerpo',''], br:['salto de línea',''],
   button:['botón','type, disabled, onclick'], canvas:['lienzo','width, height'],
-  caption:['título de tabla',''], cite:['título de obra',''], code:['código inline',''],
-  col:['columna de tabla','span'], colgroup:['grupo de columnas','span'],
-  data:['valor machine-readable','value'], datalist:['opciones de input','id'], dd:['definición',''],
-  del:['texto eliminado','cite, datetime'], details:['detalles plegables','open'], dfn:['término definido',''],
-  dialog:['diálogo/modal','open'], div:['contenedor','class, id, style'], dl:['lista de definiciones',''],
-  dt:['término',''], em:['énfasis',''], embed:['embebido','src, type'],
-  fieldset:['grupo de campos','disabled'], figcaption:['pie de figura',''], figure:['figura',''],
-  footer:['pie de página',''], form:['formulario','action, method, target'],
+  caption:['título de tabla',''], code:['código',''], col:['columna','span'],
+  data:['valor','value'], datalist:['opciones','id'], dd:['definición',''],
+  del:['eliminado','datetime'], details:['plegable','open'], div:['contenedor','class, id, style'],
+  dl:['lista definiciones',''], dt:['término',''], em:['énfasis',''],
+  embed:['embebido','src, type'], fieldset:['grupo campos','disabled'],
+  figcaption:['pie figura',''], figure:['figura',''], footer:['pie página',''],
+  form:['formulario','action, method, target'],
   h1:['título 1',''], h2:['título 2',''], h3:['título 3',''], h4:['título 4',''], h5:['título 5',''], h6:['título 6',''],
-  head:['cabecera',''], header:['encabezado',''], hgroup:['grupo de títulos',''], hr:['línea horizontal',''],
-  html:['raíz del documento','lang, dir'], i:['itálica',''],
-  iframe:['marco inline','src, width, height, sandbox'], img:['imagen','src, alt, width, height, loading, srcset'],
-  input:['campo de entrada','type, name, value, placeholder, required, min, max, step, pattern, checked, disabled, multiple, accept'],
-  ins:['texto insertado','cite, datetime'], kbd:['tecla',''], label:['etiqueta de campo','for'],
-  legend:['leyenda de fieldset',''], li:['elemento de lista','value'],
-  link:['recurso externo (head)','rel, href, type'], main:['contenido principal',''], map:['mapa de imagen','name'],
-  mark:['resaltado',''], meta:['metadatos (head)','charset, name, content, viewport'],
-  meter:['medidor','value, min, max'], nav:['navegación',''], noscript:['alternativa sin JS',''],
-  object:['objeto embebido','data, type'], ol:['lista ordenada','start, reversed'],
-  optgroup:['grupo de opciones','label'], option:['opción','value, selected'], output:['resultado','for'],
-  p:['párrafo',''], picture:['imágenes responsive',''], pre:['preformateado',''],
-  progress:['barra de progreso','value, max'], q:['cita inline','cite'], rp:['paréntesis ruby',''],
-  rt:['anotación ruby',''], ruby:['ruby',''], s:['tachado',''], samp:['salida de programa',''],
-  script:['código JS','src, type, async, defer'], search:['zona de búsqueda',''], section:['sección',''],
-  select:['selector','name, multiple, size, required'], slot:['slot','name'], small:['texto pequeño',''],
-  source:['fuente de media','src, srcset, type'], span:['contenedor inline',''],
-  strong:['importancia',''], style:['estilos CSS','media'], sub:['subíndice',''],
-  summary:['resumen de details',''], sup:['superíndice',''], svg:['vectorial','viewBox, width, height'],
-  table:['tabla',''], tbody:['cuerpo de tabla',''], td:['celda','colspan, rowspan'],
-  template:['plantilla',''], textarea:['área de texto','rows, cols, placeholder, maxlength'],
-  tfoot:['pie de tabla',''], th:['celda de encabezado','colspan, rowspan, scope'], thead:['encabezado de tabla',''],
-  time:['fecha/hora','datetime'], title:['título del documento',''], tr:['fila',''],
-  track:['subtítulos','src, kind, srclang'], u:['subrayado',''], ul:['lista',''],
-  var:['variable',''], video:['video','src, controls, width, height, poster, autoplay, muted, loop, playsinline'],
-  wbr:['corte de palabra','']
+  head:['cabecera',''], header:['encabezado',''], hr:['línea',''],
+  html:['raíz','lang, dir'], i:['itálica',''],
+  iframe:['marco','src, sandbox'], img:['imagen','src, alt, width, height, loading'],
+  input:['entrada','type, name, value, placeholder, required, min, max, checked, disabled'],
+  ins:['insertado','datetime'], label:['etiqueta','for'], legend:['leyenda',''],
+  li:['item lista','value'], link:['recurso head','rel, href'], main:['principal',''],
+  mark:['resaltado',''], meta:['metadatos','charset, name, content'],
+  nav:['navegación',''], ol:['lista ordenada','start'], option:['opción','value, selected'],
+  p:['párrafo',''], pre:['preformateado',''], progress:['progreso','value, max'],
+  q:['cita inline','cite'], s:['tachado',''], script:['código JS','src, type, async, defer'],
+  section:['sección',''], select:['selector','name, multiple, required'],
+  small:['pequeño',''], source:['fuente media','src, type'], span:['inline',''],
+  strong:['importancia',''], style:['estilos','media'], sub:['subíndice',''],
+  summary:['resumen',''], sup:['superíndice',''], svg:['vectorial','viewBox, width, height'],
+  table:['tabla',''], tbody:['cuerpo tabla',''], td:['celda','colspan, rowspan'],
+  template:['plantilla',''], textarea:['área texto','rows, cols, placeholder'],
+  th:['encabezado celda','scope'], thead:['encabezado tabla',''],
+  time:['fecha','datetime'], title:['título doc',''], tr:['fila',''],
+  u:['subrayado',''], ul:['lista',''],
+  var:['variable',''], video:['video','src, controls, poster, autoplay, muted'],
+  wbr:['corte palabra','']
 };
 const AC_VOID = new Set(['area','base','br','col','embed','hr','img','input','link','meta','param','source','track','wbr']);
-const AC_GLOBAL_ATTRS = ['class','id','style','title','hidden','data-*','contenteditable','dir','lang','tabindex','draggable','accesskey','spellcheck','autofocus'];
+const AC_GLOBAL_ATTRS = ['class','id','style','title','hidden','data-*','contenteditable','dir','lang','tabindex','spellcheck','autofocus'];
 const AC_ATTR_VALUES = {
-  type:['text','password','email','number','tel','url','search','date','time','datetime-local','month','week','color','checkbox','radio','range','file','hidden','submit','reset','button','image'],
+  type:['text','password','email','number','tel','url','search','date','time','datetime-local','month','week','color','checkbox','radio','range','file','hidden','submit','reset','button'],
   target:['_self','_blank','_parent','_top'],
-  rel:['stylesheet','icon','preload','prefetch','preconnect','canonical','alternate','noopener','noreferrer','manifest'],
+  rel:['stylesheet','icon','preload','preconnect','canonical','alternate','noopener'],
   method:['get','post','dialog'],
-  enctype:['application/x-www-form-urlencoded','multipart/form-data','text/plain'],
-  autocomplete:['on','off','name','email','username','new-password','current-password','one-time-code'],
+  autocomplete:['on','off','name','email','username','new-password','current-password'],
   inputmode:['text','numeric','decimal','tel','email','url','search'],
   enterkeyhint:['enter','done','go','next','previous','search','send'],
-  loading:['lazy','eager'], decoding:['async','sync','auto'],
-  dir:['ltr','rtl','auto'], lang:['es','en','pt','fr','de'],
+  loading:['lazy','eager'], dir:['ltr','rtl','auto'], lang:['es','en','pt'],
   crossorigin:['anonymous','use-credentials'],
-  referrerpolicy:['no-referrer','origin','strict-origin','no-referrer-when-downgrade','strict-origin-when-cross-origin'],
-  kind:['subtitles','captions','descriptions','chapters','metadata'],
   preload:['none','metadata','auto'],
-  sandbox:['allow-scripts','allow-same-origin','allow-forms','allow-modals','allow-popups','allow-top-navigation'],
+  sandbox:['allow-scripts','allow-same-origin','allow-forms','allow-modals','allow-popups'],
   contenteditable:['true','false'], spellcheck:['true','false'], draggable:['true','false'],
-  shape:['rect','circle','poly','default'], scope:['row','col','rowgroup','colgroup']
+  scope:['row','col']
 };
 const AC_CSS_PROPS = {
-  'align-content':['center','flex-start','flex-end','space-between','stretch'],
   'align-items':['center','flex-start','flex-end','baseline','stretch'],
   'align-self':['auto','center','flex-start','flex-end','stretch'],
-  animation:['none','0.3s ease'], 'animation-duration':['0.3s'],
   background:['#fff','transparent','linear-gradient(90deg,#a,#b)','url()'],
   'background-color':['#fff','transparent','var(--color)'],
-  'background-image':['linear-gradient(90deg,#a,#b)','url()','none'],
-  'background-size':['cover','contain','auto'], 'background-position':['center','top','left'],
+  'background-size':['cover','contain','auto'],
   border:['1px solid #ccc','none','1px dashed #999'],
   'border-radius':['4px','50%','999px'],
-  bottom:['0','10px','auto'],
   'box-shadow':['0 2px 8px rgba(0,0,0,.2)','none'],
   'box-sizing':['border-box','content-box'],
   color:['#333','inherit','var(--color)'],
-  cursor:['pointer','default','not-allowed','grab','text','move'],
-  display:['block','flex','grid','inline','inline-block','inline-flex','none','table','contents'],
+  cursor:['pointer','default','not-allowed','grab','text'],
+  display:['block','flex','grid','inline','inline-block','inline-flex','none','contents'],
   'flex-direction':['row','column','row-reverse','column-reverse'],
-  'flex-wrap':['wrap','nowrap','wrap-reverse'], flex:['1','none','auto','0 1 auto'],
-  'flex-grow':['1','0'], 'flex-shrink':['1','0'], 'flex-basis':['auto','100%'],
-  float:['left','right','none'], font:['inherit'],
-  'font-family':['system-ui, sans-serif','inherit','monospace','Georgia, serif'],
-  'font-size':['14px','1rem','1.2em','clamp(14px,2vw,20px)'],
+  'flex-wrap':['wrap','nowrap'], flex:['1','none','auto'],
+  'font-family':['system-ui, sans-serif','inherit','monospace'],
+  'font-size':['14px','1rem','1.2em'],
   'font-style':['normal','italic'], 'font-weight':['400','700','bold','300','600'],
   gap:['8px','1rem','8px 16px'],
-  'grid-template-columns':['repeat(3, 1fr)','auto auto','1fr 2fr','none'],
-  'grid-template-rows':['auto','1fr 1fr'], height:['100%','auto','100vh','50px'],
-  inset:['0','auto'], 'justify-content':['center','flex-start','flex-end','space-between','space-around'],
-  'letter-spacing':['normal','1px','0.05em'], 'line-height':['1.4','1','normal','1.6'],
-  'list-style':['none','disc','decimal','inside'], margin:['0','auto','0 auto','10px 20px'],
-  'max-height':['none','100vh','300px'], 'max-width':['none','100%','600px'],
-  'min-height':['0','100vh','200px'], 'min-width':['0','auto','200px'],
-  'object-fit':['cover','contain','fill','none'], opacity:['1','0.5','0'],
-  order:['0','1'], outline:['none','1px solid #333'], overflow:['hidden','auto','scroll','visible'],
-  'overflow-x':['hidden','auto','scroll'], 'overflow-y':['hidden','auto','scroll'],
+  'grid-template-columns':['repeat(3, 1fr)','auto auto','1fr 2fr'],
+  height:['100%','auto','100vh','50px'],
+  'justify-content':['center','flex-start','flex-end','space-between','space-around'],
+  'line-height':['1.4','1','normal','1.6'],
+  'list-style':['none','disc','decimal'],
+  margin:['0','auto','0 auto','10px 20px'],
+  'max-width':['none','100%','600px'], 'min-height':['0','100vh','200px'],
+  'object-fit':['cover','contain','fill'], opacity:['1','0.5','0'],
+  outline:['none','1px solid #333'], overflow:['hidden','auto','scroll','visible'],
   padding:['0','10px','10px 20px'], position:['static','relative','absolute','fixed','sticky'],
-  right:['0','auto','10px'], top:['0','auto','10px'], left:['0','auto','10px'],
   'text-align':['left','center','right','justify'], 'text-decoration':['none','underline','line-through'],
   'text-transform':['uppercase','lowercase','capitalize','none'],
-  'text-shadow':['1px 1px 2px rgba(0,0,0,.3)','none'],
-  transform:['none','scale(1.1)','rotate(45deg)','translateY(-4px)','translateX(10px)','scaleX(-1)'],
-  transition:['all .3s ease','none','opacity .2s','transform .3s ease'],
-  'transition-property':['all','opacity','transform'], 'transition-duration':['0.3s','0.2s','1s'],
-  'transition-timing-function':['ease','linear','ease-in','ease-out','ease-in-out','cubic-bezier(.4,0,.2,1)'],
-  'user-select':['none','auto','text'], 'vertical-align':['middle','top','bottom','baseline'],
+  transform:['none','scale(1.1)','rotate(45deg)','translateY(-4px)'],
+  transition:['all .3s ease','none','opacity .2s'],
+  'user-select':['none','auto','text'],
   visibility:['visible','hidden'], 'white-space':['normal','nowrap','pre','pre-wrap'],
-  width:['100%','auto','100vw','50%'], 'will-change':['transform','opacity','auto'], 'z-index':['1','0','999','auto']
+  width:['100%','auto','100vw','50%'], 'z-index':['1','0','999','auto']
 };
 const AC_JS_KW = ['const','let','var','function','return','if','else','for','while','do','switch','case','break','continue','new','class','extends','super','this','typeof','instanceof','in','of','try','catch','finally','throw','async','await','yield','import','export','default','from','delete','void','null','undefined','true','false','static'];
 const AC_JS_GLOBALS = {
-  console:['log()','warn()','error()','info()','table()','dir()','time()','timeEnd()','group()','assert()','count()','clear()'],
-  document:['querySelector()','querySelectorAll()','getElementById()','getElementsByClassName()','getElementsByTagName()','createElement()','createTextNode()','addEventListener()','removeEventListener()','body','head','title','documentElement','forms','images','cookie','readyState'],
-  window:['addEventListener()','removeEventListener()','setTimeout()','setInterval()','clearTimeout()','clearInterval()','requestAnimationFrame()','open()','close()','alert()','confirm()','prompt()','location','history','localStorage','sessionStorage','innerWidth','innerHeight','devicePixelRatio','matchMedia()','fetch()','scrollTo()','getComputedStyle()'],
-  Math:['floor()','ceil()','round()','abs()','max()','min()','random()','pow()','sqrt()','trunc()','sign()','PI','E'],
+  console:['log()','warn()','error()','info()','table()','dir()','time()','timeEnd()','clear()'],
+  document:['querySelector()','querySelectorAll()','getElementById()','getElementsByClassName()','createElement()','addEventListener()','removeEventListener()','body','head','title','documentElement','cookie','readyState'],
+  window:['addEventListener()','removeEventListener()','setTimeout()','setInterval()','clearTimeout()','clearInterval()','requestAnimationFrame()','open()','close()','alert()','confirm()','prompt()','location','history','localStorage','innerWidth','innerHeight','matchMedia()','fetch()','getComputedStyle()'],
+  Math:['floor()','ceil()','round()','abs()','max()','min()','random()','pow()','sqrt()','trunc()','PI','E'],
   JSON:['stringify()','parse()'],
-  Object:['keys()','values()','entries()','assign()','freeze()','fromEntries()','defineProperty()'],
+  Object:['keys()','values()','entries()','assign()','freeze()','fromEntries()'],
   Array:['isArray()','from()','of()'],
   Promise:['all()','allSettled()','race()','resolve()','reject()'],
-  Number:['isInteger()','parseFloat()','parseInt()','isFinite()','isNaN()','MAX_SAFE_INTEGER'],
+  Number:['isInteger()','parseFloat()','parseInt()','isNaN()'],
   Date:['now()','toLocaleDateString()','toLocaleTimeString()','getFullYear()','getMonth()','getDate()','getHours()','toISOString()','getTime()'],
   localStorage:['getItem()','setItem()','removeItem()','clear()'],
-  location:['href','reload()','assign()','pathname','search','hash','origin'],
+  location:['href','reload()','assign()','pathname','search','origin'],
   history:['pushState()','replaceState()','back()','forward()'],
-  navigator:['clipboard','userAgent','onLine','geolocation'],
+  navigator:['clipboard','userAgent','onLine'],
   performance:['now()'],
   URL:['createObjectURL()','revokeObjectURL()'],
   crypto:['randomUUID()','getRandomValues()'],
   parseInt:['()'], parseFloat:['()'], isNaN:['()'],
   setTimeout:['()'], setInterval:['()'], clearTimeout:['()'], clearInterval:['()'],
-  requestAnimationFrame:['()'], structuredClone:['()'], fetch:['()'],
+  requestAnimationFrame:['()'], fetch:['()'],
   alert:['()'], confirm:['()'], prompt:['()']
 };
 const AC_JS_PROTO = {
@@ -1613,7 +1602,7 @@ const AC_JS_PROTO = {
     'getAttribute()','setAttribute()','removeAttribute()','hasAttribute()','closest()','matches()',
     'addEventListener()','focus()','blur()','click()','scrollIntoView()','getBoundingClientRect()'],
   event:['target','currentTarget','key','code','type','preventDefault()','stopPropagation()','clientX','clientY','detail','data'],
-  array:['push()','pop()','shift()','unshift()','slice()','splice()','concat()','join()','indexOf()','includes()','find()','findIndex()','filter()','map()','forEach()','reduce()','some()','every()','sort()','reverse()','flat()','flatMap()','fill()','at()','length'],
+  array:['push()','pop()','shift()','unshift()','slice()','splice()','concat()','join()','indexOf()','includes()','find()','findIndex()','filter()','map()','forEach()','reduce()','some()','every()','sort()','reverse()','flat()','at()','length'],
   string:['split()','slice()','substring()','toUpperCase()','toLowerCase()','trim()','padStart()','padEnd()','replace()','replaceAll()','includes()','indexOf()','startsWith()','endsWith()','repeat()','match()','at()','length'],
   number:['toFixed()','toString()'],
   promise:['then()','catch()','finally()']
@@ -1625,7 +1614,7 @@ const AC_FIREBASE = {
   'collection()':['addDoc()','doc()','where()','orderBy()','limit()','getDocs()','onSnapshot()'],
   'doc()':['setDoc()','updateDoc()','getDoc()','deleteDoc()','onSnapshot()','id','data()','exists','ref'],
   'firebase.storage()':['ref()'],
-  'ref()':['put()','putString()','getDownloadURL()','delete()','child()','listAll()','fullPath'],
+  'ref()':['put()','putString()','getDownloadURL()','delete()','child()','listAll()'],
   'firebase.functions()':['httpsCallable()'],
   'onSnapshot()':['doc.data()','doc.id','doc.ref','doc.exists','snap.docs','snap.size','snap.empty']
 };
@@ -1663,7 +1652,6 @@ const AC_FLAT_FIREBASE = [
 function acContext(){
   const val = ed.value, pos = ed.selectionStart;
   const before = val.slice(0, pos);
-  const CLOSE_SCRIPT = '\u003c/script>';
   if(edTab === 'css'){
     const pm = /([\w-]+)\s*:\s*([^;]*)$/.exec(before);
     if(pm) return { kind:'cssval', prop:pm[1].toLowerCase(), word:(before.match(/[A-Za-z0-9#%().,-]+$/) || [''])[0] };
@@ -1699,6 +1687,8 @@ function acContext(){
     if(/\s/.test(inner)) return { kind:'attr', tagName, word:(before.match(/[\w-]+$/) || [''])[0] };
     return { kind:'tag', word:(before.match(/[A-Za-z][\w:-]*$/) || [''])[0] };
   }
+  const dotM = /([A-Za-z_$][\w$]*)\.\s*[A-Za-z0-9_$]*$/.exec(before);
+  if(dotM && dotM[0].length > 1) return { kind:'dot', obj:dotM[1], word:dotM[0].split('.').pop() };
   return { kind:'js', word:(before.match(/[A-Za-z0-9_$\u00C0-\u024F]+$/) || [''])[0] };
 }
 function acTagItems(w){
@@ -1898,7 +1888,7 @@ document.addEventListener('pointerdown', e=>{
   if(!e.target.closest('#sug') && e.target!==ed) hideSug();
 });
 
-/* ═══ 13 · PESTAÑAS DEL EDITOR ═════════════════════════════ */
+/* ═══ PESTAÑAS DEL EDITOR ══════════════════════════════════ */
 const ED_TITLES = { html:'HTML · marcado', css:'CSS · estilos', js:'JS · Firebase', term:'Consola · Firestore como filesystem' };
 function setEdTab(t){
   if(t === edTab) return;
@@ -1926,7 +1916,7 @@ function setEdTab(t){
   const b = e.target.closest('button[data-t]'); if(b) setEdTab(b.dataset.t);
 });
 
-/* ═══ 14 · FORMATEO (por pestaña) ══════════════════════════ */
+/* ═══ FORMATEO ═════════════════════════════════════════════ */
 function logicalLines(src){
   const out = []; let cur = '';
   let st = 'norm';
@@ -2008,7 +1998,7 @@ function logicalLinesMixed(src){
   const out = []; let cur = '';
   let i = 0;
   while(i < src.length){
-    if(src.startsWith('<!--', i)){
+    if(src.startsWith(CMT_OPEN, i)){
       let end = src.indexOf('-->', i+4);
       const stop = end<0 ? src.length : end+3;
       const parts = (cur + src.slice(i, stop)).split('\n');
@@ -2059,10 +2049,9 @@ function reindentMixed(src){
   return out.join('\n');
 }
 function formatDoc(){
-  const tab = edTab;
-  if(tab === 'term'){ toast('La consola no se formatea'); return; }
+  if(edTab === 'term'){ toast('La consola no se formatea'); return; }
   const src = ed.value;
-  const out = tab === 'html' ? reindentMixed(src) : reindentBlock(src);
+  const out = edTab === 'html' ? reindentMixed(src) : reindentBlock(src);
   if(out === src){ toast('El código ya está formateado'); return; }
   const cp = ed.selectionStart;
   let k = 0; const max = Math.min(cp, out.length, src.length);
@@ -2073,7 +2062,7 @@ function formatDoc(){
   toast('Código formateado');
 }
 
-/* ═══ 15 · ENTER INTELIGENTE ═══════════════════════════════ */
+/* ═══ ENTER INTELIGENTE ════════════════════════════════════ */
 function smartEnter(){
   const val  = ed.value;
   const s    = ed.selectionStart, epos = ed.selectionEnd;
@@ -2123,7 +2112,7 @@ function mapSelectedLines(fn){
   onEdInput();
 }
 
-/* ═══ 16 · COMPILACIÓN ═════════════════════════════════════ */
+/* ═══ COMPILACIÓN ══════════════════════════════════════════ */
 function failNow(msg){
   cset('error','err'); tabDot('err');
   const box = $('#errBox'); box.hidden = false; box.textContent = msg;
@@ -2132,13 +2121,13 @@ function buildSrcdoc(banner){
   const safeJs = ED_CONTENT.js.replace(/<\/script/gi, '\u003c/script');
   const safeCss = ED_CONTENT.css.replace(/<\/style/gi, '\u003c/style');
   return '<!DOCTYPE html><html><head><meta charset="utf-8">' +
-    '<script>' + SHIM_SRC + '\u003c/script>' +
-    '<script>' + SDK_SRC + '\u003c/script>' +
+    '<scr' + 'ipt>' + SHIM_SRC + CLOSE_SCRIPT +
+    '<scr' + 'ipt>' + SDK_SRC + CLOSE_SCRIPT +
     '</head><body>' +
     (banner ? '<div style="position:fixed;top:0;left:0;right:0;z-index:9999;background:#F57C00;color:#fff;font:700 11px/1 system-ui;padding:6px 10px;text-align:center">HOSTING EN VIVO · blocklab-demo.web.app (simulado) · desplegado ' + banner + '</div>' : '') +
     ED_CONTENT.html +
-    '<style>' + safeCss + '</style>' +
-    '<script>' + safeJs + '\u003c/script>' +
+    '<sty' + 'le>' + safeCss + '\u003c/style>' +
+    '<scr' + 'ipt>' + safeJs + CLOSE_SCRIPT +
     '</body></html>';
 }
 function compile(){
@@ -2149,27 +2138,26 @@ function compile(){
   frame.srcdoc = buildSrcdoc('');
   addDev('sys','— app recargada · ' + hora(nowISO()) + ' —');
 }
-let cT=null, rT=null;
-function scheduleCompile(ms=650){ clearTimeout(cT); cT = setTimeout(compile, ms); }
+function scheduleCompile(ms=650){ clearTimeout(compileT); compileT = setTimeout(compile, ms); }
 function onEdInput(){
   if(edTab === 'term') return;
   ED_CONTENT[edTab] = ed.value;
   syncHL(); saveDraftSoon(edTab); pushDraftSoon(edTab); scheduleCompile(); showSug();
 }
 function saveDraftSoon(tab){
-  clearTimeout(cT);
-  cT = setTimeout(()=>{
+  clearTimeout(draftT);
+  draftT = setTimeout(()=>{
     saveDraftLocal(tab, ED_CONTENT[tab]);
     $('#draftInfo').textContent = tab + ' guardado ' + hora(nowISO());
   }, 700);
 }
 
-/* ═══ 17 · VISTAS DEL PREVIEW (App / Consola F12) ══════════ */
+/* ═══ VISTAS DEL PREVIEW ═══════════════════════════════════ */
 function setPv(p){
-  document.body.classList.toggle('view-app', p==='app');
-  document.body.classList.toggle('view-dev', p==='dev');
   document.body.classList.toggle('pv-app-mode', p==='app');
   document.body.classList.toggle('pv-dev-mode', p==='dev');
+  document.body.classList.toggle('view-app', p==='app');
+  document.body.classList.toggle('view-dev', p==='dev');
   document.querySelectorAll('#pvTabs button').forEach(b=>b.classList.toggle('on', b.dataset.p===p));
   if(p==='dev') $('#devInput').focus();
 }
@@ -2182,12 +2170,12 @@ function addDev(level, text){
   devLog.push({ level, text, t: nowISO() });
   const el = document.createElement('div');
   el.className = 'dv dv-' + (level==='sys' ? 'sys' : level);
-  el.innerHTML = (level==='in' ? '' : '<span class="tm">' + hora(nowISO()) + '</span>') + esc(text);
+  el.innerHTML = (level==='in' ? '<b>›</b> ' : '<span class="tm">' + hora(nowISO()) + '</span>') + esc(text);
   const list = $('#devList');
   list.appendChild(el);
   while(list.children.length > 400) list.firstChild.remove();
   list.scrollTop = list.scrollHeight;
-  if(level !== 'in'){
+  if(level !== 'in' && level !== 'sys'){
     devCount++;
     $('#devCount').textContent = devCount > 99 ? '99+' : devCount;
   }
@@ -2203,24 +2191,19 @@ const devPending = {};
   const code = $('#devInput').value.trim();
   if(!code) return;
   $('#devInput').value = '';
-  addDev('in', '› ' + code);
+  addDev('in', code);
   const id = ++devEvalId;
   const to = setTimeout(()=>{
     if(devPending[id]){ addDev('error','sin respuesta (¿el preview está detenido?)'); delete devPending[id]; }
   }, 2500);
-  devPending[id] = { to, res: d => {
-    addDev(d.ok ? 'log' : 'error', d.text);
-  }};
+  devPending[id] = { to, res: d => { addDev(d.ok ? 'log' : 'error', d.text); }};
   try{ frame.contentWindow.postMessage({ source:'bl-parent', type:'dev-eval', id, code }, '*'); }
   catch(err){ addDev('error','el preview no está activo'); clearTimeout(to); delete devPending[id]; }
 });
 
-/* ═══ 18 · TERMINAL FIRESTORE (CachyOS) ════════════════════
-   /            → raíz del proyecto (carpetas = colecciones)
-   /notas       → colección (archivos = documentos .json)
-   /notas/a.json→ documento (contenido = JSON)                ══ */
+/* ═══ TERMINAL FIRESTORE (CachyOS) ═════════════════════════ */
 const Term = { cwd:'/', hist:[], histIdx:-1, pending:null };
-
+function escRe(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
 function tNorm(p){
   if(p === '~' || p === '') p = '/';
   if(!p.startsWith('/')) p = (Term.cwd === '/' ? '' : Term.cwd) + '/' + p;
@@ -2255,9 +2238,8 @@ function tPrint(html){
 function tPrintText(text, cls){
   String(text).split('\n').forEach(l => tPrint('<span class="c-' + (cls||'') + '">' + esc(l) + '</span>'));
 }
-function termFocus(){ if(!$('#termPane').hidden){ termIn.hidden = false; termPrompt.innerHTML = tPromptHTML(); termInput.value=''; termOut.scrollTop = termOut.scrollHeight; termInput.focus(); } }
+function termFocus(){ if(!$('#termPane').hidden){ termIn.hidden = false; termPrompt.innerHTML = tPromptHTML(); termOut.scrollTop = termOut.scrollHeight; termInput.focus(); } }
 function termCloseInput(){ termIn.hidden = true; }
-
 function tTokenize(str){
   const toks = []; let cur = '', q = null;
   for(const ch of str){
@@ -2271,11 +2253,10 @@ function tTokenize(str){
 }
 function tPretty(d){ return JSON.stringify(d, null, 2); }
 function tDocSize(d){ return tPretty(d.data).length; }
-
 function tLs(args){
   const flags = args.filter(a => a.startsWith('-')).join('');
   const target = tNode(args.find(a => !a.startsWith('-')) || Term.cwd);
-  if(!target) return { err:"ls: no existe esa ruta (¿es una colección o documento válido?)" };
+  if(!target) return { err:'ls: no existe esa ruta' };
   const db = readFB();
   if(target.kind === 'root'){
     const cols = Object.keys(db.collections||{}).sort();
@@ -2284,14 +2265,14 @@ function tLs(args){
     const lines = ['total ' + cols.length];
     cols.forEach(c => {
       const n = Object.keys(db.collections[c]||{}).length;
-      lines.push('drwxr-xr-x  firestore ' + String(n + ' docs').padStart(8) + '  ' + '<span class="c-blue">' + esc(c) + '/</span>');
+      lines.push('drwxr-xr-x  firestore ' + String(n + ' docs').padStart(8) + '  <span class="c-blue">' + esc(c) + '/</span>');
     });
     return { out: lines.join('\n') };
   }
   if(target.kind === 'col'){
     const docs = db.collections[target.col] || {};
     const ids = Object.keys(docs).sort();
-    if(!ids.length) return { out:'<span class="c-dim">(colección vacía — nano algo.json para crear un documento)</span>' };
+    if(!ids.length) return { out:'<span class="c-dim">(colección vacía — nano algo.json)</span>' };
     if(!flags.includes('l')) return { out: ids.map(id => esc(id + '.json')).join('  ') };
     const lines = ['total ' + ids.length];
     ids.forEach(id => {
@@ -2301,27 +2282,13 @@ function tLs(args){
   }
   return { out: esc(target.id + '.json') };
 }
-async function tNano(args){
-  let raw = args[0];
-  if(!raw) return { err:'nano: indica un documento · ej.: nano notas/nota1.json (o nano nota1.json dentro de una colección)' };
-  if(!raw.endsWith('.json')) raw += '.json';
-  const p = tNorm(raw);
-  const parts = p.split('/').filter(Boolean);
-  if(parts.length !== 2) return { err:'nano: la ruta debe ser /coleccion/documento.json' };
-  const db = readFB();
-  const col = parts[0], id = parts[1].replace(/\.json$/,'');
-  if(!(col in (db.collections||{}))) return { err:'nano: la colección "' + col + '" no existe (crea con mkdir ' + col + ')' };
-  const existing = db.collections[col][id];
-  openNanoDoc(col, id, existing ? tPretty(existing.data) : '{\n  \n}');
-  return undefined;
-}
 function tCat(args){
   if(!args.length) return { err:'cat: indica un documento .json' };
   let out = [];
   for(const f of args){
     const n = tNode(f);
-    if(!n) return { err:"cat: " + f + ": no existe" };
-    if(n.kind !== 'doc') return { err:"cat: " + f + ": es una carpeta (colección)" };
+    if(!n) return { err:'cat: ' + f + ': no existe' };
+    if(n.kind !== 'doc') return { err:'cat: ' + f + ': es una colección' };
     out.push(tPretty(n.doc.data));
   }
   return { out: out.join('\n') };
@@ -2332,16 +2299,15 @@ const TCMDS = {
       '<span class="c-blue">navegar:   </span>ls [-l] cd [ruta] pwd tree find\n' +
       '<span class="c-blue">documentos:</span>cat nano head tail wc grep stat echo "> doc.json"\n' +
       '<span class="c-blue">crear/borrar:</span>mkdir colección · rm doc.json · rm -r colección · mv · cp\n' +
-      '<span class="c-blue">proyecto:  </span>users whoami neofetch df du deploy help clear history\n' +
-      '<span class="c-dim">· rutas absolutas OK: cat /notas/abc.json · cd sin argumentos = raíz</span>\n' +
-      '<span class="c-dim">· colecciones = carpetas · documentos = archivos .json</span>';
+      '<span class="c-blue">proyecto:  </span>users whoami neofetch df du help clear history\n' +
+      '<span class="c-dim">· rutas absolutas OK: cat /notas/abc.json · cd sin argumentos = raíz</span>';
   },
   pwd(){ return { out: Term.cwd }; },
   cd(args){
     if(!args.length || args[0] === '~'){ Term.cwd = '/'; return undefined; }
     const n = tNode(args[0]);
-    if(!n) return { err:"cd: " + args[0] + ": no existe" };
-    if(n.kind === 'doc') return { err:"cd: " + args[0] + ": es un documento (usa cat o nano)" };
+    if(!n) return { err:'cd: ' + args[0] + ': no existe' };
+    if(n.kind === 'doc') return { err:'cd: ' + args[0] + ': es un documento (usa cat o nano)' };
     Term.cwd = n.path;
     return undefined;
   },
@@ -2349,15 +2315,28 @@ const TCMDS = {
   cat(args){ return tCat(args); },
   less(args){ return tCat(args); },
   more(args){ return tCat(args); },
-  async nano(args){ return tNano(args); },
-  vi(args){ return { err:'vi: en CachyOS-terminal el editor es nano (prueba: nano ' + (args[0]||'doc.json') + ')' }; },
+  async nano(args){
+    let raw = args[0];
+    if(!raw) return { err:'nano: indica un documento · ej.: nano notas/nota1.json' };
+    if(!raw.endsWith('.json')) raw += '.json';
+    const p = tNorm(raw);
+    const parts = p.split('/').filter(Boolean);
+    if(parts.length !== 2) return { err:'nano: la ruta debe ser /coleccion/documento.json' };
+    const db = readFB();
+    const col = parts[0], id = parts[1].replace(/\.json$/,'');
+    if(!(col in (db.collections||{}))) return { err:'nano: la colección "' + col + '" no existe (mkdir ' + col + ')' };
+    const existing = db.collections[col][id];
+    openNanoDoc(col, id, existing ? tPretty(existing.data) : '{\n  \n}');
+    return undefined;
+  },
+  vi(args){ return { err:'vi: aquí el editor es nano (nano ' + (args[0]||'doc.json') + ')' }; },
   vim(args){ return TCMDS.vi(args); },
   mkdir(args){
     if(!args.length) return { err:'mkdir: indica el nombre de la colección' };
     for(const c of args){
-      if(!/^[A-Za-z_][\w-]*$/.test(c)) return { err:'mkdir: nombre de colección inválido: ' + c };
+      if(!/^[A-Za-z_][\w-]*$/.test(c)) return { err:'mkdir: nombre inválido: ' + c };
       const db = readFB();
-      if(db.collections[c]) return { err:'mkdir: la colección ya existe: ' + c };
+      if(db.collections[c]) return { err:'mkdir: ya existe: ' + c };
       db.collections[c] = {};
       writeFB(db);
     }
@@ -2370,14 +2349,14 @@ const TCMDS = {
     if(!targets.length) return { err:'rm: indica un objetivo' };
     for(const t of targets){
       const n = tNode(t);
-      if(!n) return { err:"rm: " + t + ": no existe" };
+      if(!n) return { err:'rm: ' + t + ': no existe' };
       const db = readFB();
       if(n.kind === 'doc'){ delete db.collections[n.col][n.id]; }
       else if(n.kind === 'col'){
         const kids = Object.keys(db.collections[n.col] || {});
-        if(kids.length && !flags.includes('r')) return { err:"rm: " + t + ": es una colección con documentos (usa -r)" };
+        if(kids.length && !flags.includes('r')) return { err:'rm: ' + t + ': tiene documentos (usa -r)' };
         delete db.collections[n.col];
-        if(Term.cwd === '/' + n.col || Term.cwd.startsWith('/' + n.col + '/')) Term.cwd = '/';
+        if(Term.cwd === n.path || Term.cwd.startsWith(n.path + '/')) Term.cwd = '/';
       } else return { err:'rm: no puedes borrar la raíz' };
       writeFB(db);
     }
@@ -2386,24 +2365,24 @@ const TCMDS = {
   },
   mv(args){
     if(args.length < 2) return { err:'mv: origen y destino' };
-    const src = tNode(args[0]); if(!src) return { err:"mv: " + args[0] + ": no existe" };
+    const src = tNode(args[0]); if(!src) return { err:'mv: ' + args[0] + ': no existe' };
     const db = readFB();
-    let dstRaw = args[1];
+    const dstRaw = args[1];
     const dstN = tNode(dstRaw);
     if(src.kind === 'doc'){
       let dstCol, dstId;
       if(dstN && dstN.kind === 'col'){ dstCol = dstN.col; dstId = src.id; }
       else {
         const parts = tNorm(dstRaw).split('/').filter(Boolean);
-        if(parts.length !== 2) return { err:'mv: destino debe ser /coleccion o /coleccion/nombre.json' };
+        if(parts.length !== 2) return { err:'mv: destino debe ser /coleccion o /coleccion/doc.json' };
         dstCol = parts[0]; dstId = parts[1].replace(/\.json$/,'');
       }
-      if(!(dstCol in (db.collections||{}))) return { err:'mv: la colección destino no existe: ' + dstCol };
+      if(!(dstCol in (db.collections||{}))) return { err:'mv: la colección destino no existe' };
       db.collections[dstCol][dstId] = db.collections[src.col][src.id];
       delete db.collections[src.col][src.id];
     } else if(src.kind === 'col'){
       const newName = dstRaw.replace(/^\/+|\/+$/g,'').split('/')[0];
-      if(!/^[A-Za-z_][\w-]*$/.test(newName)) return { err:'mv: nombre de colección inválido' };
+      if(!/^[A-Za-z_][\w-]*$/.test(newName)) return { err:'mv: nombre inválido' };
       if(db.collections[newName]) return { err:'mv: ya existe: ' + newName };
       db.collections[newName] = db.collections[src.col];
       delete db.collections[src.col];
@@ -2414,8 +2393,8 @@ const TCMDS = {
   },
   cp(args){
     if(args.length < 2) return { err:'cp: origen y destino' };
-    const src = tNode(args[0]); if(!src) return { err:"cp: " + args[0] + ": no existe" };
-    if(src.kind !== 'doc') return { err:'cp: solo documentos (sin -r)' };
+    const src = tNode(args[0]); if(!src) return { err:'cp: ' + args[0] + ': no existe' };
+    if(src.kind !== 'doc') return { err:'cp: solo documentos' };
     const db = readFB();
     const dstN = tNode(args[1]);
     let dstCol, dstId;
@@ -2460,7 +2439,7 @@ const TCMDS = {
   },
   grep(args){
     const rest = args.filter(a => !a.startsWith('-'));
-    if(rest.length < 2) return { err:'grep: patrón y documento · ej.: grep ana /usuarios/x.json' };
+    if(rest.length < 2) return { err:'grep: patrón y documento' };
     const c = tCat([rest[1]]);
     if(c.err) return c;
     const re = new RegExp(escRe(rest[0]), args.includes('-i') ? 'i' : '');
@@ -2491,16 +2470,16 @@ const TCMDS = {
   },
   stat(args){
     const n = tNode(args[0] || Term.cwd);
-    if(!n) return { err:"stat: " + args[0] + ": no existe" };
+    if(!n) return { err:'stat: ' + args[0] + ': no existe' };
     if(n.kind === 'doc'){
-      return { out:'  File: ' + n.path + '\n  Type: documento · colección ' + n.col + '\n  Size: ' + tDocSize(n.doc) + ' bytes\n  Created: ' + (n.doc.createdAt||'').slice(0,19).replace('T',' ') + '\n  Modified: ' + (n.doc.updatedAt||'').slice(0,19).replace('T',' ') };
+      return { out:'  File: ' + n.path + '\n  Type: documento\n  Size: ' + tDocSize(n.doc) + ' bytes\n  Modified: ' + (n.doc.updatedAt||'').slice(0,19).replace('T',' ') };
     }
     if(n.kind === 'col'){
       const docs = Object.keys(readFB().collections[n.col]||{}).length;
-      return { out:'  Dir: ' + n.path + '\n  Type: colección\n  Documents: ' + docs };
+      return { out:'  Dir: ' + n.path + '\n  Type: colecci\u00F3n\n  Documents: ' + docs };
     }
     const db = readFB();
-    return { out:'  Dir: /\n  Type: raíz del proyecto\n  Collections: ' + Object.keys(db.collections||{}).length + '\n  Users: ' + Object.keys(db.users||{}).length };
+    return { out:'  Dir: /\n  Type: ra\u00EDz del proyecto\n  Collections: ' + Object.keys(db.collections||{}).length + '\n  Users: ' + Object.keys(db.users||{}).length };
   },
   du(args){
     const db = readFB();
@@ -2515,21 +2494,19 @@ const TCMDS = {
   df(){
     const db = readFB();
     const nDocs = Object.values(db.collections||{}).reduce((a,c)=>a+Object.keys(c||{}).length,0);
-    return { out:'Sistema      Tamaño  Usado   Disp. Uso%  Montado en\nfirebase-sim  1.0Gi   ' + (nDocs/1024*4).toFixed(1) + 'M  1.0Gi   1%  / (proyecto simulado)' };
+    return { out:'Sistema      Tamaño  Usado   Disp. Uso%  Montado en\nfirebase-sim  1.0Gi   ' + (nDocs/1024*4).toFixed(1) + 'M  1.0Gi   1%  /' };
   },
-  echo(args, raw){
-    return { out: args.join(' ') };
-  },
+  echo(args){ return { out: args.join(' ') }; },
   users(){
     const db = readFB();
     const us = Object.entries(db.users||{});
     if(!us.length) return { out:'<span class="c-dim">(sin usuarios — regístrate desde la app)</span>' };
-    return { out: us.map(([uid,u]) => esc(uid) + '  ' + esc(u.email) + (u.anon ? ' <span class="c-dim">(anónimo)</span>' : '') + '  <span class="c-dim">' + esc((u.createdAt||'').slice(0,10)) + '</span>').join('\n') };
+    return { out: us.map(([uid,u]) => esc(uid) + '  ' + esc(u.email) + (u.anon ? ' <span class="c-dim">(anónimo)</span>' : '')).join('\n') };
   },
   whoami(){
     const db = readFB();
     const uid = db.session;
-    if(!uid || !db.users[uid]) return { out:'<span class="c-dim">(nadha sesión activa — entra desde la app)</span>' };
+    if(!uid || !db.users[uid]) return { out:'<span class="c-dim">(sin sesión activa — entra desde la app)</span>' };
     return { out: db.users[uid].email + '  (' + uid + ')' };
   },
   neofetch(){ return TCMDS.fastfetch(); },
@@ -2546,8 +2523,7 @@ const TCMDS = {
       '<span class="c-green">Colecciones</span>: ' + nC,
       '<span class="c-green">Documentos</span>: ' + nD,
       '<span class="c-green">Usuarios</span>: ' + Object.keys(db.users||{}).length,
-      '<span class="c-green">Storage</span>: ' + Object.keys(db.storage||{}).length + ' objetos',
-      '<span class="c-green">Hosting</span>: ' + (db.hosting && db.hosting.deployedAt ? 'desplegado ' + db.hosting.deployedAt.slice(11,16) : 'sin deploy'),
+      '<span class="c-green">Hosting</span>: ' + (db.hosting && db.hosting.deployedAt ? 'deploy ' + db.hosting.deployedAt.slice(11,16) : 'sin deploy'),
       '<span class="c-green">Sheets</span>: hoja «' + SHEET + '»'
     ];
     const rows = Math.max(logo.length, info.length);
@@ -2555,12 +2531,9 @@ const TCMDS = {
     for(let i = 0; i < rows; i++) lines.push((logo[i] || '         ').padEnd(11) + (info[i] || ''));
     return { out: lines.join('\n') };
   },
-  deploy(){ return { out:'<span class="c-dim">usa el botón 🚀 DEPLOY de la cabecera</span>' }; },
-  history(){
-    return { out: Term.hist.map((h,i)=>String(i+1).padStart(4)+'  '+esc(h)).join('\n') };
-  },
-  clear(){ termMsgs.innerHTML = ''; return undefined; },
-  exit(){ return { out:'<span class="c-dim">la terminal vive mientras la pestaña exista</span>' }; }
+  deploy(){ return { out:'<span class="c-dim">usa el botón DEPLOY de la cabecera</span>' }; },
+  history(){ return { out: Term.hist.map((h,i)=>String(i+1).padStart(4)+'  '+esc(h)).join('\n') }; },
+  clear(){ termMsgs.innerHTML = ''; return undefined; }
 };
 async function tExec(raw){
   tPrint(tPromptHTML() + esc(raw));
@@ -2570,20 +2543,18 @@ async function tExec(raw){
   Term.histIdx = Term.hist.length;
   const toks = tTokenize(line);
   const cmd = toks[0], args = toks.slice(1);
-  /* redirección > y >> hacia documento json */
-  const gIdx = args.indexOf('>');
-  const ggIdx = args.indexOf('>>');
+  const gIdx = args.indexOf('>'), ggIdx = args.indexOf('>>');
   if(cmd === 'echo' && (gIdx >= 0 || ggIdx >= 0)){
     const mode = gIdx >= 0 ? '>' : '>>';
     const text = args.slice(1, gIdx >= 0 ? gIdx : ggIdx).join(' ');
     let file = args[(gIdx >= 0 ? gIdx : ggIdx) + 1];
-    if(!file) { tPrintText('echo: falta el documento destino','red'); return; }
+    if(!file){ tPrintText('echo: falta el documento destino','red'); return; }
     if(!file.endsWith('.json')) file += '.json';
     const parts = tNorm(file).split('/').filter(Boolean);
     if(parts.length !== 2){ tPrintText('echo: destino debe ser /coleccion/doc.json','red'); return; }
     const db = readFB();
     const col = parts[0], id = parts[1].replace(/\.json$/,'');
-    if(!(col in (db.collections||{}))){ tPrintText('echo: la colección no existe: ' + col + ' (mkdir ' + col + ')','red'); return; }
+    if(!(col in (db.collections||{}))){ tPrintText('echo: la colección no existe: ' + col,'red'); return; }
     let data;
     try{ data = JSON.parse(text); }catch(e){ data = { texto: text }; }
     const prev = db.collections[col][id];
@@ -2597,7 +2568,7 @@ async function tExec(raw){
   if(!(cmd in TCMDS)){
     const keys = Object.keys(TCMDS);
     const hit = keys.find(k => k.startsWith(cmd.slice(0,2)));
-    tPrint('<span class="c-red">' + esc(cmd) + ': orden no encontrada</span><span class="c-dim"> · ¿' + esc(hit || keys.slice(0,4).join(', ')) + '?</span>');
+    tPrint('<span class="c-red">' + esc(cmd) + ': orden no encontrada</span><span class="c-dim"> · ¿' + esc(hit || 'help') + '?</span>');
     return;
   }
   try{
@@ -2656,8 +2627,7 @@ function tTabComplete(){
   } else {
     const dirPart = word.includes('/') ? word.slice(0, word.lastIndexOf('/')) : '';
     const base = word.slice(word.lastIndexOf('/') + 1);
-    const dirAbs = tNorm(dirPart || '.');
-    const node = tNode(dirAbs);
+    const node = tNode(tNorm(dirPart || '.'));
     const db = readFB();
     if(node && node.kind === 'root'){
       cands = Object.keys(db.collections||{}).filter(c => c.startsWith(base)).map(c => (dirPart ? dirPart + '/' : '') + c + '/');
@@ -2679,7 +2649,6 @@ function tTabComplete(){
   tPrintText(cands.join('  '), 'dim');
   termInput.value = val;
 }
-/* keybar táctil para la terminal */
 const sticky = { ctrl:false };
 function tInsert(t){
   const s = termInput.selectionStart, epos = termInput.selectionEnd;
@@ -2692,7 +2661,7 @@ keybar.addEventListener('click', e=>{
   const act = b.dataset.act;
   if(act === 'enter'){
     const v = termInput.value; termInput.value='';
-    if(Term.pending){ const cb = Term.pending; Term.pending = null; sticky.ctrl = false; b.classList.remove('sticky'); cb(v); }
+    if(Term.pending){ const cb = Term.pending; Term.pending = null; cb(v); }
     else { tExec(v).then(()=>{ termPrompt.innerHTML = tPromptHTML(); termOut.scrollTop = termOut.scrollHeight; }); }
   }
   else if(act === 'tab') tTabComplete();
@@ -2708,19 +2677,19 @@ keybar.addEventListener('click', e=>{
 });
 function termWelcome(){
   tPrint('<span class="c-green">CachyOS · terminal del proyecto blocklab-demo</span>');
-  tPrintText('La raíz (/) es tu proyecto de Firebase: cada colección es una carpeta y cada documento un archivo .json.', 'dim');
+  tPrintText('La raíz (/) es tu proyecto: colecciones = carpetas, documentos = .json.', 'dim');
   tPrintText('Prueba: ls · tree · cd notas · nano nota1.json · users · neofetch · help', 'dim');
   tPrint('');
 }
 
-/* ═══ 19 · NANO (clicable en móvil) ════════════════════════ */
+/* ═══ NANO (clicable) ══════════════════════════════════════ */
 let nanoTarget = null, nanoDirty = false, nanoAsking = false;
 function openNanoDoc(col, id, content){
   nanoTarget = { col, id };
-  $('#nanoTitle').textContent = 'nano · /' + col + '/' + id + '.json' + '  ·  BLOCKLAB';
+  $('#nanoTitle').textContent = 'nano · /' + col + '/' + id + '.json';
   $('#nanoTA').value = content;
   nanoDirty = false; nanoAsking = false;
-  $('#nanoStatus').textContent = 'Guarda con el botón o Ctrl+O — el JSON se valida antes de escribir';
+  $('#nanoStatus').textContent = 'El JSON se valida antes de guardar';
   $('#nano').hidden = false;
   $('#nanoTA').focus();
 }
@@ -2778,14 +2747,14 @@ document.querySelectorAll('.nano-bar .nbtn').forEach(b => {
     const a = b.dataset.n;
     if(a === 'save') nanoSave();
     else if(a === 'cut') nanoCut();
-    else if(a === 'help') $('#nanoStatus').textContent = 'El JSON se valida al guardar · botones = atajos de teclado';
+    else if(a === 'help') $('#nanoStatus').textContent = 'El JSON se valida al guardar · los botones = atajos';
     else if(a === 'exit') nanoExit();
     $('#nanoTA').focus();
   });
 });
  $('#nanoTA').addEventListener('input', () => { nanoDirty = true; });
 
-/* ═══ 20 · CONSOLA DEL PROYECTO + DEPLOY ═══════════════════ */
+/* ═══ CONSOLA DEL PROYECTO + DEPLOY ════════════════════════ */
 function renderConsole(){
   const db = readFB();
   const body = $('#consBody');
@@ -2802,16 +2771,16 @@ function renderConsole(){
       Object.entries(docs).forEach(([id, d]) => {
         html += `<div class="c-doc"><div class="ci"><b>${esc(id)}</b>
           <pre>${esc(JSON.stringify(d.data, null, 1))}</pre></div>
-          <button class="iconbtn sm danger" data-del="doc" data-col="${esc(col)}" data-id="${esc(id)}" title="Eliminar"><i data-lucide="trash-2"></i></button></div>`;
+          <button class="iconbtn sm danger" data-del="doc" data-col="${esc(col)}" data-id="${esc(id)}" title="Eliminar">🗑</button></div>`;
       });
     });
   } else if(consTab === 'auth'){
     const us = Object.entries(db.users || {});
-    if(!us.length) html = '<div class="c-empty">Sin usuarios. Regístrate desde la app (mínimo 6 caracteres).</div>';
+    if(!us.length) html = '<div class="c-empty">Sin usuarios. Regístrate desde la app (mín. 6 caracteres).</div>';
     us.forEach(([uid, u]) => {
       html += `<div class="c-doc"><div class="ci"><b>${esc(u.email)}</b>
         <pre>uid: ${esc(uid)}\ncreado: ${esc((u.createdAt||'').slice(0,19).replace('T',' '))}</pre></div>
-        <button class="iconbtn sm danger" data-del="user" data-uid="${esc(uid)}" title="Eliminar"><i data-lucide="trash-2"></i></button></div>`;
+        <button class="iconbtn sm danger" data-del="user" data-uid="${esc(uid)}" title="Eliminar">🗑</button></div>`;
     });
   } else if(consTab === 'storage'){
     const ss = Object.entries(db.storage || {});
@@ -2819,17 +2788,17 @@ function renderConsole(){
     ss.forEach(([p, s]) => {
       html += `<div class="c-doc"><div class="ci"><b>${esc(p)}</b>
         <pre>tipo: ${esc(s.type)} · ${s.data.length} bytes\n${esc(s.data.slice(0,120))}${s.data.length>120?'…':''}</pre></div>
-        <button class="iconbtn sm danger" data-del="storage" data-path="${esc(p)}" title="Eliminar"><i data-lucide="trash-2"></i></button></div>`;
+        <button class="iconbtn sm danger" data-del="storage" data-path="${esc(p)}" title="Eliminar">🗑</button></div>`;
     });
   } else if(consTab === 'hosting'){
     if(db.hosting && db.hosting.html){
       html = `<div class="c-doc"><div class="ci"><b>index.html</b>
-        <pre>publicado: ${esc((db.hosting.deployedAt||'').slice(0,19).replace('T',' '))}\nhttps://blocklab-demo.web.app (simulado)\ntamaño: ${db.hosting.html.length} bytes</pre></div></div>
+        <pre>publicado: ${esc((db.hosting.deployedAt||'').slice(0,19).replace('T',' '))}\nhttps://blocklab-demo.web.app (simulado)</pre></div></div>
         <div class="dlg-foot" style="justify-content:flex-start;padding:12px 0 0">
-          <button class="btn btn-solid" id="btnVisit2"><i data-lucide="external-link"></i>Ver versión publicada</button>
+          <button class="btn btn-solid" id="btnVisit2">Ver versión publicada</button>
         </div>`;
     } else {
-      html = '<div class="c-empty">Nunca has desplegado. Pulsa el botón 🚀 DEPLOY.</div>';
+      html = '<div class="c-empty">Nunca has desplegado. Pulsa el botón DEPLOY.</div>';
     }
   } else {
     html = `<pre id="rules">rules_version = '2';
@@ -2879,7 +2848,6 @@ function visitDeployed(){
   const db = readFB();
   if(!(db.hosting && db.hosting.html)){ toast('Primero haz deploy','err'); return; }
   cset('hosting · ' + hora(db.hosting.deployedAt), 'ok'); tabDot('ok');
-  /* la versión publicada fija el HTML del deploy pero reutiliza CSS/JS actuales */
   const htmlKeep = ED_CONTENT.html; ED_CONTENT.html = db.hosting.html;
   frame.srcdoc = buildSrcdoc((db.hosting.deployedAt||'').slice(11,16));
   ED_CONTENT.html = htmlKeep;
@@ -2916,7 +2884,7 @@ function visitDeployed(){
 });
  $('#btnVisit').addEventListener('click', visitDeployed);
 
-/* ═══ 21 · TECLADO DEL EDITOR ══════════════════════════════ */
+/* ═══ TECLADO DEL EDITOR ═══════════════════════════════════ */
 ed.addEventListener('keydown', e=>{
   if(e.shiftKey && e.altKey && e.code === 'KeyF'){ e.preventDefault(); formatDoc(); return; }
   if(!sug.hidden){
@@ -2950,7 +2918,7 @@ ed.addEventListener('scroll', ()=>{ hl.scrollTop = ed.scrollTop; hl.scrollLeft =
   if(e.key==='Tab'){ e.preventDefault(); e.target.setRangeText('  ', e.target.selectionStart, e.target.selectionEnd, 'end'); }
 });
 
-/* ═══ 22 · BOTONES ═════════════════════════════════════════ */
+/* ═══ BOTONES ══════════════════════════════════════════════ */
  $('#btnFmt').addEventListener('click', formatDoc);
  $('#btnDict').addEventListener('click', ()=>{ renderDict(); $('#dlgDict').showModal(); refreshIcons(); });
 function manualSync(){
@@ -2978,10 +2946,13 @@ function manualSync(){
   armConfirm(e.currentTarget, ()=>{
     ED_CONTENT = { html: STARTER_HTML, css: STARTER_CSS, js: STARTER_JS };
     ['html','css','js'].forEach(t => { saveDraftLocal(t, ED_CONTENT[t]); pushDraftNow(t); });
-    setEdTab('html');
+    edTab = 'html';
+    document.querySelectorAll('#edTabs button').forEach(b=>b.classList.toggle('on', b.dataset.t==='html'));
+    $('#edTitle').textContent = ED_TITLES.html;
+    edWrap.hidden = false; $('#termPane').hidden = true; keybar.hidden = true;
     ed.value = ED_CONTENT.html;
     onEdInput();
-    toast('Ejemplo restablecido en las tres pestañas');
+    toast('Ejemplo restablecido');
   });
 });
 document.querySelectorAll('dialog').forEach(d=>{
@@ -2990,11 +2961,11 @@ document.querySelectorAll('dialog').forEach(d=>{
 });
  $('#q2').addEventListener('input', renderDict);
 window.addEventListener('resize', ()=>{
-  clearTimeout(rT);
-  rT = setTimeout(compile, 300);
+  clearTimeout(resizeT);
+  resizeT = setTimeout(compile, 300);
 });
 
-/* ═══ 23 · DICCIONARIO (diálogo) ═══════════════════════════ */
+/* ═══ DICCIONARIO ══════════════════════════════════════════ */
 function renderDict(){
   const q = ($('#q2').value||'').trim().toLowerCase();
   let arr = dict().slice().sort((a,b)=>a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
@@ -3013,13 +2984,13 @@ function renderDict(){
         <code class="d-c">${esc(one)}${String(e.code||'').length>52?'…':''}</code>
       </div>
       <div class="d-acts">
-        <button class="iconbtn sm" data-a="ins" title="Insertar en el editor"><i data-lucide="corner-down-left"></i></button>
-        <button class="iconbtn sm" data-a="edit" title="Editar"><i data-lucide="pencil"></i></button>
-        <button class="iconbtn sm danger" data-a="del" title="Eliminar"><i data-lucide="trash-2"></i></button>
+        <button class="iconbtn sm" data-a="ins" title="Insertar">↵</button>
+        <button class="iconbtn sm" data-a="edit" title="Editar">✎</button>
+        <button class="iconbtn sm danger" data-a="del" title="Eliminar">🗑</button>
       </div>
     </div>`;
   }
-  $('#dictList').innerHTML = html || '<div class="d-empty">Nada coincide con la búsqueda.</div>';
+  $('#dictList').innerHTML = html || '<div class="d-empty">Nada coincide.</div>';
   refreshIcons();
 }
  $('#dictList').addEventListener('click', e=>{
@@ -3028,7 +2999,7 @@ function renderDict(){
   if(!b) return;
   const a = btn.dataset.a;
   if(a==='ins'){
-    if(edTab === 'term'){ setEdTab('js'); }
+    if(edTab === 'term') setEdTab('js');
     $('#dlgDict').close(); insertSnippet(b);
   }
   else if(a==='edit') openSnip(b, {ret:'dict'});
@@ -3055,7 +3026,7 @@ function openSnip(entry, opts={}){
     name: f.name.value.trim(), tag: f.tag.value.trim() || 'firestore', code: f.code.value
   };
   upsertSnipLocal(b);
-  toast('"' + b.name + '" guardada — ' + (connected ? 'subiendo a Sheets' : 'en cola, se sube al conectar'));
+  toast('"' + b.name + '" guardada — ' + (connected ? 'subiendo a Sheets' : 'en cola'));
   f.closest('dialog').close();
   if(snipReturn==='insert' && !f.id.value) insertSnippet(b);
 });
@@ -3070,28 +3041,36 @@ function armConfirm(btn, fn){
   }, 2600);
 }
 
-/* ═══ 24 · ARRANQUE ════════════════════════════════════════ */
+/* ═══ ARRANQUE (defensivo: cada paso aislado) ══════════════ */
 (function init(){
-  loadQueue();
-  loadCache();
-  seedDict();
-  /* cargar los tres borradores: local → caché → ejemplo */
-  ['html','css','js'].forEach(tab => {
-    const d = DRAFTS[tab];
-    const local = (()=>{ try{ return localStorage.getItem(d.ls) || ''; }catch(e){ return ''; } })();
-    const cached = ((BLOCKS[SHEET]||[]).find(b=>b.id===d.sid)||{}).code || '';
-    const starter = { html:STARTER_HTML, css:STARTER_CSS, js:STARTER_JS }[tab];
-    const pick = local.trim() ? local : (cached.trim() && cached.trim().length > 4 ? cached : starter);
-    ED_CONTENT[tab] = pick;
-    d.lastPushed = pick;
-    saveDraftLocal(tab, pick);
-  });
-  rebuildLastRows();
+  try{ loadQueue(); }catch(e){ showFatal('cola: ' + e.message); }
+  try{ loadCache(); }catch(e){ showFatal('caché: ' + e.message); }
+  try{ seedDict(); }catch(e){ showFatal('semillas: ' + e.message); }
+
+  try{
+    ['html','css','js'].forEach(tab => {
+      const d = DRAFTS[tab];
+      let local = '';
+      try{ local = localStorage.getItem(d.ls) || ''; }catch(e){}
+      const cached = ((BLOCKS[SHEET]||[]).find(b=>b.id===d.sid)||{}).code || '';
+      const starter = { html:STARTER_HTML, css:STARTER_CSS, js:STARTER_JS }[tab];
+      let pick = local.trim() ? local : (cached.trim().length > 4 ? cached : starter);
+      if(tab === 'html' && !pick.includes('<')) pick = starter;   // guardia anti-basura
+      ED_CONTENT[tab] = pick;
+      d.lastPushed = pick;
+      saveDraftLocal(tab, pick);
+    });
+  }catch(e){ showFatal('borradores: ' + e.message); }
+
+  try{ rebuildLastRows(); }catch(e){ showFatal('fb rows: ' + e.message); }
+
   ed.value = ED_CONTENT.html;
-  syncHL(); refreshIcons(); renderConn();
-  ['html','css','js'].forEach(reconcileDraft);
-  termWelcome();
-  compile();
+  try{ syncHL(); }catch(e){ showFatal('resaltado: ' + e.message); }
+  refreshIcons(); renderConn();
+
+  try{ ['html','css','js'].forEach(reconcileDraft); }catch(e){ showFatal('reconciliar: ' + e.message); }
+  try{ termWelcome(); }catch(e){}
+  try{ compile(); }catch(e){ showFatal('compilar: ' + e.message); }
   sync();
 })();
 </script>

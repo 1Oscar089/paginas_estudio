@@ -3,140 +3,185 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#F4F1E9">
+<meta name="theme-color" content="#F8F9FC">
 <title>BLOCKLAB · playgrounds en tiempo real</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500..700;1,9..144,400..600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lucide@latest"></script>
 
 <style>
-/* ═══ Base ═════════════════════════════════════════════════ */
+/* ═══ MATERIAL THEME · misma paleta del proyecto ═══════════
+   primary = celeste #5BC0EB · error = rojo atardecer #E85D4A
+   success = turquesa #2BB6A3 · warning = naranja #F5822D
+   decorativos = lila #B8A9E8 · hueso #F5EFDC · gris #6C757D  ══ */
 :root{
-  --bg:#F4F1E9; --card:#FDFBF4; --ink:#1C1915; --mut:#6F675A;
-  --line:#DED6C5; --acc:#D6481C; --ok:#3F6B33; --warn:#9A7B1F;
-  --mono:'JetBrains Mono',monospace; --serif:'Fraunces',serif;
+  --md-primary:#5BC0EB;         --md-primary-dark:#2E9DC9;   --md-primary-light:#E3F4FC;
+  --md-secondary:#2BB6A3;       --md-secondary-dark:#1E8C7D;
+  --md-error:#E85D4A;           --md-error-dark:#C43F2E;     --md-error-light:#FDEEEB;
+  --md-warning:#F5822D;         --md-warning-dark:#D56A1A;
+  --md-decorative:#B8A9E8;      --md-decorative-dark:#9B87D6;
+  --md-bone:#F5EFDC;
+  --md-surface:#FFFFFF;         --md-bg:#F8F9FC;
+  --md-gray:#6C757D;            --md-gray-light:#B0B7BF;
+  --md-on-primary:#FFFFFF;
+  --md-text:#1F2429;            --md-text-sec:#5F6670;
+  --md-divider:#E1E4EC;
+  --md-e1:0 1px 3px rgba(31,36,41,.12),0 1px 2px rgba(31,36,41,.16);
+  --md-e2:0 1px 5px rgba(31,36,41,.16),0 2px 4px rgba(31,36,41,.12);
+  --md-e4:0 2px 4px rgba(31,36,41,.14),0 4px 8px rgba(31,36,41,.12);
+  --md-e8:0 4px 10px rgba(31,36,41,.16),0 8px 24px rgba(31,36,41,.14);
+  --md-radius:8px; --md-radius-sm:4px;
+  --mono:'JetBrains Mono',monospace; --sans:'Roboto',system-ui,sans-serif;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 [hidden]{display:none!important}
-body{background:var(--bg);color:var(--ink);font:400 14px/1.6 var(--mono)}
-::selection{background:var(--acc);color:var(--bg)}
-button,a{font-family:var(--mono)}
-.wrap{max-width:1080px;margin:0 auto;padding:0 16px}
+body{background:var(--md-bg);color:var(--md-text);font:400 14px/1.6 var(--sans)}
+::selection{background:rgba(91,192,235,.3)}
+button,a{font-family:var(--sans)}
 svg{flex:none}
 i[data-lucide]{display:inline-flex}
+.wrap{max-width:1080px;margin:0 auto;padding:0 16px}
 
-/* ═══ Botones ══════════════════════════════════════════════ */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:38px;padding:8px 13px;
-  font:600 10.5px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;
-  border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;text-decoration:none;
-  transition:background .15s,color .15s,border-color .15s}
-.btn:hover{background:var(--ink);color:var(--bg)}
-.btn-solid{background:var(--ink);color:var(--bg)}
-.btn-solid:hover{background:var(--acc);border-color:var(--acc)}
+/* ═══ Botones Material ═════════════════════════════════════ */
+.btn{position:relative;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  min-height:38px;padding:8px 18px;font:500 12px/1 var(--sans);letter-spacing:.04em;
+  border:none;border-radius:var(--md-radius-sm);background:var(--md-primary);color:var(--md-on-primary);
+  cursor:pointer;text-decoration:none;transition:box-shadow .2s,background .2s;box-shadow:var(--md-e1);
+  text-transform:uppercase}
+.btn:hover{background:var(--md-primary-dark);box-shadow:var(--md-e2)}
+.btn:active{box-shadow:var(--md-e1)}
+.btn-solid{background:var(--md-primary);color:var(--md-on-primary)}
+.btn-solid:hover{background:var(--md-primary-dark)}
+.btn-outline{background:var(--md-surface);color:var(--md-primary-dark);border:1px solid var(--md-primary);box-shadow:none}
+.btn-outline:hover{background:var(--md-primary-light)}
+.btn-text{background:transparent;color:var(--md-primary-dark);box-shadow:none}
+.btn-text:hover{background:var(--md-primary-light)}
 .btn svg{width:14px;height:14px}
-.iconbtn{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;flex:none;
-  border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;transition:all .15s}
-.iconbtn:hover{background:var(--ink);color:var(--bg)}
-.iconbtn.danger:hover{background:var(--acc);border-color:var(--acc);color:var(--bg)}
-.iconbtn svg{width:15px;height:15px}
-.iconbtn.armed{width:auto;padding:0 10px;font:700 10px/1 var(--mono);border-color:var(--acc);color:var(--acc)}
+.iconbtn{position:relative;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;
+  width:38px;height:38px;flex:none;border:none;border-radius:50%;background:transparent;color:var(--md-text-sec);
+  cursor:pointer;transition:background .2s,color .2s}
+.iconbtn:hover{background:rgba(91,192,235,.15);color:var(--md-primary-dark)}
+.iconbtn.danger:hover{background:var(--md-error-light);color:var(--md-error)}
+.iconbtn svg{width:17px;height:17px}
+.iconbtn.armed{width:auto;padding:0 12px;border-radius:var(--md-radius-sm);
+  font:700 10px/1 var(--mono);background:var(--md-error-light);color:var(--md-error-dark)}
 .spin svg{animation:rot 1s linear infinite}
 @keyframes rot{to{transform:rotate(360deg)}}
+/* Ripple */
+.ripple{position:absolute;border-radius:50%;transform:scale(0);animation:rip .5s linear;
+  background:rgba(255,255,255,.5);pointer-events:none}
+.iconbtn .ripple{background:rgba(91,192,235,.35)}
+@keyframes rip{to{transform:scale(3);opacity:0}}
 
-/* ═══ Cabecera (fija) ══════════════════════════════════════ */
-header{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1.5px solid var(--ink)}
+/* ═══ App Bar (elevación 4 + barra degradada de la paleta) ══ */
+header{position:sticky;top:0;z-index:20;background:var(--md-surface);box-shadow:var(--md-e4)}
+header::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;
+  background:linear-gradient(90deg,var(--md-primary),var(--md-secondary) 40%,var(--md-decorative) 70%,var(--md-warning))}
 .h-in{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;flex-wrap:wrap}
-.brand{font:700 14px/1 var(--mono);letter-spacing:.14em}
-.brand .star{color:var(--acc)}
-.h-right{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-.status{display:inline-flex;align-items:center;gap:8px;font:500 10px/1 var(--mono);letter-spacing:.08em;color:var(--mut);text-transform:uppercase}
-.dot{width:8px;height:8px;border-radius:50%;background:var(--mut)}
-.dot.ok{background:var(--ok)} .dot.err{background:var(--acc)}
-.dot.busy{background:var(--warn);animation:pulse 1.2s infinite} .dot.warn{background:var(--warn)}
+.brand{font:500 17px/1 var(--sans);letter-spacing:.01em}
+.brand .star{color:var(--md-error)}
+.h-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.status{display:inline-flex;align-items:center;gap:8px;font:500 11px/1 var(--sans);letter-spacing:.03em;color:var(--md-text-sec);text-transform:uppercase}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--md-gray-light)}
+.dot.ok{background:var(--md-secondary)} .dot.err{background:var(--md-error)}
+.dot.busy{background:var(--md-warning);animation:pulse 1.2s infinite} .dot.warn{background:var(--md-warning)}
 @keyframes pulse{50%{opacity:.3}}
-.qb{font:700 10px/1 var(--mono);color:var(--acc);border:1.5px solid var(--acc);padding:4px 7px}
+.qb{font:700 11px/1 var(--mono);color:var(--md-on-primary);background:var(--md-error);
+  min-width:22px;height:22px;border-radius:11px;display:inline-flex;align-items:center;justify-content:center;padding:0 7px}
 
-/* ═══ Titular ══════════════════════════════════════════════ */
-.hero{padding:34px 0 0}
-.hero h1{font:560 clamp(28px,6vw,50px)/1.12 var(--serif);letter-spacing:-.01em}
-.hero h1 em{font-style:italic;font-weight:500;color:var(--acc)}
-.hero p{margin-top:10px;color:var(--mut);font-size:12.5px;max-width:62ch}
+/* ═══ Hero (tipografía Material) ════════════════════════════ */
+.hero{padding:36px 0 0}
+.hero h1{font:400 clamp(28px,5.5vw,48px)/1.15 var(--sans);letter-spacing:-.01em;color:var(--md-text)}
+.hero h1 em{font-style:normal;font-weight:700;color:var(--md-primary-dark)}
+.hero p{margin-top:12px;color:var(--md-text-sec);font-size:14px;max-width:62ch}
 
-/* ═══ Barra de herramientas ════════════════════════════════ */
-.bar{display:flex;gap:10px;margin:26px 0 16px}
-#q{flex:1;min-width:0;font:500 13px/1 var(--mono);padding:0 4px;min-height:38px;
-  border:none;border-bottom:1.5px solid var(--ink);background:transparent;color:var(--ink);outline:none}
-#q::placeholder{color:var(--mut)}
-#q:focus{border-color:var(--acc)}
+/* ═══ Buscador (campo Material) ═════════════════════════════ */
+.bar{display:flex;gap:10px;margin:28px 0 18px}
+#q{flex:1;min-width:0;font:400 14px/1 var(--sans);padding:11px 16px 11px 42px;min-height:44px;
+  border:1px solid var(--md-gray-light);border-radius:22px;background:var(--md-surface);
+  color:var(--md-text);outline:none;transition:border-color .15s,box-shadow .15s;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='%236C757D'%3E%3Cpath d='M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:14px center}
+#q::placeholder{color:var(--md-text-sec)}
+#q:focus{border-color:var(--md-primary);box-shadow:0 0 0 1px var(--md-primary)}
 
-/* ═══ Cuadrícula de tarjetas ═══════════════════════════════ */
-.grid{display:grid;gap:14px;grid-template-columns:1fr;padding-bottom:10px}
-.card{border:1.5px solid var(--ink);background:var(--card);display:flex;flex-direction:column}
-.card.dim{opacity:.5}
+/* ═══ Tarjetas (Material Cards) ═════════════════════════════ */
+.grid{display:grid;gap:16px;grid-template-columns:1fr;padding-bottom:10px}
+.card{border-radius:var(--md-radius);background:var(--md-surface);display:flex;flex-direction:column;
+  box-shadow:var(--md-e1);transition:box-shadow .2s;overflow:hidden}
+.card:hover{box-shadow:var(--md-e2)}
+.card.dim{opacity:.55}
 .c-top{display:flex;align-items:baseline;gap:10px;padding:16px 16px 0}
-.num{font:600 12px/1 var(--mono);color:var(--acc)}
-.c-top h3{font:600 20px/1.15 var(--serif);flex:1;min-width:0}
-.engine{flex:none;font:500 9px/1 var(--mono);letter-spacing:.07em;text-transform:uppercase;
-  color:var(--mut);border:1px solid var(--line);padding:4px 6px;max-width:40%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.desc{padding:8px 16px 0;color:var(--mut);font-size:12px;line-height:1.55;
+.num{font:500 12px/1 var(--mono);color:var(--md-primary-dark)}
+.c-top h3{font:500 20px/1.2 var(--sans);flex:1;min-width:0}
+.engine{flex:none;font:500 10px/1 var(--sans);letter-spacing:.04em;text-transform:uppercase;
+  color:var(--md-primary-dark);background:var(--md-primary-light);padding:4px 10px;border-radius:999px;
+  max-width:40%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.desc{padding:8px 16px 0;color:var(--md-text-sec);font-size:13px;line-height:1.55;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:14px 16px 16px;margin-top:auto}
-.acts{display:flex;gap:6px;margin-left:auto}
-.hidtag{font:700 8.5px/1 var(--mono);letter-spacing:.1em;color:var(--acc);border:1px solid var(--acc);padding:3px 5px}
+.acts{display:flex;gap:4px;margin-left:auto}
+.hidtag{font:700 9px/1 var(--mono);letter-spacing:.08em;color:var(--md-error-dark);
+  background:var(--md-error-light);padding:3px 8px;border-radius:999px}
 
 /* Bandeja de bloques */
-.tray{border-top:1.5px dashed var(--line);background:var(--bg);padding:12px 16px 16px}
+.tray{border-top:1px solid var(--md-divider);background:var(--md-bg);padding:12px 16px 16px}
 .tray-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;
-  font:600 10px/1 var(--mono);letter-spacing:.1em;color:var(--mut);text-transform:uppercase}
-.tray-head b{color:var(--ink)}
-.blk{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--line)}
+  font:500 11px/1 var(--sans);letter-spacing:.05em;color:var(--md-text-sec);text-transform:uppercase}
+.tray-head b{color:var(--md-text);font-weight:500}
+.blk{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--md-divider)}
 .blk:last-of-type{border-bottom:none}
 .blk-info{flex:1;min-width:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.blk-info strong{font:700 12.5px/1.3 var(--mono);cursor:pointer}
-.blk-info strong:hover{color:var(--acc)}
-.tag{font:700 8.5px/1 var(--mono);letter-spacing:.07em;text-transform:uppercase;padding:3px 6px;background:var(--ink);color:var(--bg)}
-.blk-acts{display:flex;gap:5px}
+.blk-info strong{font:500 13px/1.3 var(--sans);cursor:pointer}
+.blk-info strong:hover{color:var(--md-primary-dark)}
+.tag{font:500 10px/1 var(--sans);letter-spacing:.04em;text-transform:uppercase;padding:3px 9px;
+  background:var(--md-gray);color:#fff;border-radius:999px}
+.blk-acts{display:flex;gap:2px}
 .blk-acts .iconbtn{width:32px;height:32px}
-.t-empty{font-size:11.5px;color:var(--mut);padding:6px 0 2px}
-.empty-list{border:1.5px dashed var(--line);padding:32px 16px;text-align:center;color:var(--mut);font-size:12px}
+.t-empty{font-size:12px;color:var(--md-text-sec);padding:6px 0 2px}
+.empty-list{border:1.5px dashed var(--md-divider);border-radius:var(--md-radius);padding:32px 16px;
+  text-align:center;color:var(--md-text-sec);font-size:13px}
 
-/* ═══ Diálogos ═════════════════════════════════════════════ */
-dialog{border:2px solid var(--ink);background:var(--card);color:var(--ink);
-  box-shadow:7px 7px 0 var(--ink);padding:0;width:min(540px,94vw);margin:auto}
-dialog::backdrop{background:rgba(28,25,21,.55)}
-.dlg-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:16px 18px;border-bottom:1.5px solid var(--ink)}
-.dlg-head h3{font:600 20px/1.15 var(--serif)}
-.dlg-head small{display:block;font:500 10px/1.5 var(--mono);letter-spacing:.08em;color:var(--mut);margin-top:5px}
-.dlg-body{padding:18px}
-.dlg-foot{display:flex;justify-content:flex-end;gap:10px;padding:0 18px 18px}
-.field{display:flex;flex-direction:column;gap:5px;margin-bottom:13px}
-.field label{font:700 9px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
-.field input,.field textarea{font:400 13px/1.6 var(--mono);padding:10px 12px;min-height:42px;
-  border:1.5px solid var(--ink);background:var(--bg);color:var(--ink);outline:none;width:100%}
-.field input:focus,.field textarea:focus{border-color:var(--acc)}
-.field textarea{min-height:170px;resize:vertical}
+/* ═══ Diálogos (tarjetas Material) ══════════════════════════ */
+dialog{border:none;border-radius:var(--md-radius);background:var(--md-surface);color:var(--md-text);
+  box-shadow:var(--md-e8);padding:0;width:min(560px,94vw);margin:auto;overflow:hidden}
+dialog::backdrop{background:rgba(31,36,41,.5)}
+.dlg-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:18px 22px 12px}
+.dlg-head h3{font:400 22px/1.2 var(--sans)}
+.dlg-head small{display:block;font:400 12px/1.5 var(--sans);color:var(--md-text-sec);margin-top:4px}
+.dlg-body{padding:4px 22px 8px}
+.dlg-foot{display:flex;justify-content:flex-end;gap:8px;padding:8px 22px 20px}
+.field{position:relative;margin-bottom:18px}
+.field label{position:absolute;left:12px;top:-8px;font:500 11px/1 var(--sans);letter-spacing:.02em;
+  color:var(--md-text-sec);background:var(--md-surface);padding:0 5px;z-index:1}
+.field input,.field textarea{font:400 13.5px/1.6 var(--sans);padding:12px 14px;min-height:44px;
+  border:1px solid var(--md-gray-light);border-radius:var(--md-radius-sm);background:var(--md-surface);
+  color:var(--md-text);outline:none;width:100%;transition:border-color .15s,box-shadow .15s}
+.field input:focus,.field textarea:focus{border-color:var(--md-primary);box-shadow:0 0 0 1px var(--md-primary)}
+.field textarea{min-height:170px;resize:vertical;font-family:var(--mono);font-size:13px}
 .field-row{display:grid;grid-template-columns:1fr;gap:0}
-@media(min-width:600px){.field-row{grid-template-columns:1fr 1fr;gap:13px}}
-#vCode{font:400 12px/1.7 var(--mono);background:var(--ink);color:#EDE7D8;padding:16px;
-  white-space:pre-wrap;word-break:break-word;max-height:55vh;overflow:auto}
+@media(min-width:600px){.field-row{grid-template-columns:1fr 1fr;gap:14px}}
+#vCode{font:400 12px/1.7 var(--mono);background:#323640;color:#EDEFF3;padding:16px;
+  white-space:pre-wrap;word-break:break-word;max-height:55vh;overflow:auto;border-radius:var(--md-radius-sm)}
 
-/* ═══ Toasts ═══════════════════════════════════════════════ */
-#toasts{position:fixed;left:16px;right:16px;bottom:16px;display:flex;flex-direction:column;align-items:center;gap:8px;z-index:99;pointer-events:none}
-.toast{display:flex;gap:9px;align-items:center;background:var(--ink);color:var(--bg);padding:11px 15px;
-  font:500 12px/1.4 var(--mono);max-width:100%;animation:tin .2s ease}
-.toast.err{background:var(--acc)}
-.toast svg{width:14px;height:14px}
-@keyframes tin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+/* ═══ Snackbar (toast Material) ═════════════════════════════ */
+#toasts{position:fixed;left:16px;right:16px;bottom:16px;display:flex;flex-direction:column;align-items:flex-start;gap:8px;z-index:99;pointer-events:none}
+.toast{display:flex;gap:12px;align-items:center;background:#323640;color:var(--md-surface);
+  padding:13px 18px;font:400 13px/1.4 var(--sans);max-width:min(420px,92vw);
+  border-radius:var(--md-radius-sm);box-shadow:var(--md-e8);animation:snack .25s cubic-bezier(.2,0,.2,1)}
+.toast.err{background:var(--md-error)}
+.toast svg{width:16px;height:16px;flex:none}
+@keyframes snack{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 
-footer{padding:26px 0 40px;text-align:center;color:var(--mut);font:400 10px/1.7 var(--mono);letter-spacing:.06em}
+footer{padding:28px 0 40px;text-align:center;color:var(--md-text-sec);font:400 11px/1.7 var(--sans);letter-spacing:.04em}
 
 /* ═══ Responsive ═══════════════════════════════════════════ */
 @media(min-width:640px){
   .wrap{padding:0 24px}
   .grid{grid-template-columns:1fr 1fr}
-  #toasts{left:auto;right:20px;align-items:flex-end}
+  #toasts{left:20px;right:auto}
 }
 @media(min-width:1024px){
   .wrap{padding:0 32px}
@@ -181,7 +226,7 @@ footer{padding:26px 0 40px;text-align:center;color:var(--mut);font:400 10px/1.7 
   <form id="fmMod" method="dialog">
     <div class="dlg-head">
       <div><h3 id="dlgModTitle">Nuevo módulo</h3><small>se creará pages/{archivo}.html y su hoja en Sheets</small></div>
-      <button type="button" class="iconbtn" data-close><i data-lucide="x"></i></button>
+      <button type="button" class="iconbtn" data-close><i data-lucide="close"></i></button>
     </div>
     <div class="dlg-body">
       <input type="hidden" name="id">
@@ -193,8 +238,8 @@ footer{padding:26px 0 40px;text-align:center;color:var(--mut);font:400 10px/1.7 
       <div class="field"><label>Descripción</label><input name="desc" placeholder="Qué se aprende aquí"></div>
     </div>
     <div class="dlg-foot">
-      <button type="button" class="btn" data-close>Cancelar</button>
-      <button type="submit" class="btn btn-solid">Guardar</button>
+      <button type="button" class="btn btn-text" data-close>Cancelar</button>
+      <button type="submit" class="btn">Guardar</button>
     </div>
   </form>
 </dialog>
@@ -204,7 +249,7 @@ footer{padding:26px 0 40px;text-align:center;color:var(--mut);font:400 10px/1.7 
   <form id="fmBlk" method="dialog">
     <div class="dlg-head">
       <div><h3>Nuevo bloque</h3><small>hoja: <span id="blkSheet">—</span></small></div>
-      <button type="button" class="iconbtn" data-close><i data-lucide="x"></i></button>
+      <button type="button" class="iconbtn" data-close><i data-lucide="close"></i></button>
     </div>
     <div class="dlg-body">
       <div class="field-row">
@@ -216,8 +261,8 @@ footer{padding:26px 0 40px;text-align:center;color:var(--mut);font:400 10px/1.7 
       </div>
     </div>
     <div class="dlg-foot">
-      <button type="button" class="btn" data-close>Cancelar</button>
-      <button type="submit" class="btn btn-solid">Guardar</button>
+      <button type="button" class="btn btn-text" data-close>Cancelar</button>
+      <button type="submit" class="btn">Guardar</button>
     </div>
   </form>
 </dialog>
@@ -226,10 +271,10 @@ footer{padding:26px 0 40px;text-align:center;color:var(--mut);font:400 10px/1.7 
 <dialog id="dlgView">
   <div class="dlg-head">
     <div><h3 id="vTitle">—</h3><small id="vTag"></small></div>
-    <button type="button" class="iconbtn" data-close><i data-lucide="x"></i></button>
+    <button type="button" class="iconbtn" data-close><i data-lucide="close"></i></button>
   </div>
-  <div class="dlg-body" style="padding:14px"><pre id="vCode"></pre></div>
-  <div class="dlg-foot"><button type="button" class="btn btn-solid" id="btnViewCopy">Copiar</button></div>
+  <div class="dlg-body" style="padding:14px 22px"><pre id="vCode"></pre></div>
+  <div class="dlg-foot"><button type="button" class="btn" id="btnViewCopy"><i data-lucide="content-copy"></i>Copiar</button></div>
 </dialog>
 
 <div id="toasts"></div>
@@ -306,8 +351,24 @@ const slugify = s => String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\
   .replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'') || 'modulo';
 const refreshIcons = () => { if(window.lucide) lucide.createIcons(); };
 const countBlocks = () => Object.values(BLOCKS).reduce((a,b)=>a+b.length,0);
+/* El borrador del editor de pdfmake vive como fila __draft__ en su hoja:
+   no debe mostrarse en la bandeja ni contar en las tarjetas */
+const visibleBlocks = sheet => (BLOCKS[sheet]||[]).filter(b => b.id !== '__draft__');
 
-/* ═══ 3 · CACHÉ LOCAL ══════════════════════════════════════ */
+/* ═══ 3 · RIPPLE Material ══════════════════════════════════ */
+document.addEventListener('pointerdown', e=>{
+  const b = e.target.closest('.btn, .iconbtn');
+  if(!b) return;
+  const r = b.getBoundingClientRect();
+  const d = Math.max(r.width, r.height) * 1.2;
+  const rip = document.createElement('span');
+  rip.className = 'ripple';
+  rip.style.cssText = `width:${d}px;height:${d}px;left:${e.clientX-r.left-d/2}px;top:${e.clientY-r.top-d/2}px`;
+  b.appendChild(rip);
+  setTimeout(()=>rip.remove(), 520);
+});
+
+/* ═══ 4 · CACHÉ LOCAL ══════════════════════════════════════ */
 function saveCache(){ try{ localStorage.setItem(LS_DB, JSON.stringify({modules:MODULES, blocks:BLOCKS, ts:nowISO()})); }catch(e){} }
 function loadCache(){
   try{
@@ -319,7 +380,7 @@ function loadCache(){
 const saveQueue = () => { try{ localStorage.setItem(LS_Q, JSON.stringify(queue)); }catch(e){} };
 const loadQueue = () => { try{ queue = JSON.parse(localStorage.getItem(LS_Q)||'[]'); }catch(e){ queue=[]; } };
 
-/* ═══ 4 · ESTADO VISIBLE (un solo punto) ═══════════════════ */
+/* ═══ 5 · ESTADO VISIBLE ═══════════════════════════════════ */
 function setStatus(txt, cls){
   $('#stTxt').textContent = txt;
   $('#stDot').className = 'dot ' + (cls||'');
@@ -330,12 +391,13 @@ function setStatus(txt, cls){
 function toast(msg, kind){
   const t = document.createElement('div');
   t.className = 'toast' + (kind==='err'?' err':'');
-  t.innerHTML = `<i data-lucide="${kind==='err'?'alert-triangle':'check'}"></i><span>${esc(msg)}</span>`;
+  t.innerHTML = `<i data-lucide="${kind==='err'?'alert-triangle':'check-circle'}"></i><span>${esc(msg)}</span>`;
   $('#toasts').appendChild(t); refreshIcons();
-  setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity .25s'; setTimeout(()=>t.remove(),260); }, 3000);
+  setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translateY(10px)'; t.style.transition='all .25s';
+    setTimeout(()=>t.remove(),260); }, 3000);
 }
 
-/* ═══ 5 · RED — POST text/plain (sin preflight) + fallback JSONP ══ */
+/* ═══ 6 · RED — POST text/plain (sin preflight) + fallback JSONP ══ */
 function jsonpGet(action, params={}){
   return new Promise((res,rej)=>{
     const cb = '__bl_'+Date.now();
@@ -377,7 +439,7 @@ async function flushQueue(){
   setStatus(ok ? 'Sync ok' : 'Pendientes ↑'+queue.length, ok?'ok':'warn');
 }
 
-/* ═══ 6 · SYNC (stale-while-revalidate) ════════════════════ */
+/* ═══ 7 · SYNC (stale-while-revalidate) ════════════════════ */
 const normModule = o => ({ id:String(o.id||''), name:String(o.name||''), desc:String(o.desc||''),
   engine:String(o.engine||''), page:String(o.page||o.id||''), order:Number(o.order)||0,
   hidden:(o.hidden===true||String(o.hidden).toUpperCase()==='TRUE') });
@@ -410,7 +472,7 @@ async function sync(){
   }
 }
 
-/* ═══ 7 · MUTACIONES (optimistas) ══════════════════════════ */
+/* ═══ 8 · MUTACIONES (optimistas) ══════════════════════════ */
 function upsertModuleLocal(m){
   m.updatedAt = nowISO();
   const i = MODULES.findIndex(x=>x.id===m.id);
@@ -446,7 +508,7 @@ function deleteBlockFlow(sheet, id){
   pushOp({action:'deleteBlock', sheet, id});
 }
 
-/* ═══ 8 · RENDER ═══════════════════════════════════════════ */
+/* ═══ 9 · RENDER ═══════════════════════════════════════════ */
 const fmtDate = iso => iso ? new Date(iso).toLocaleDateString('es',{day:'2-digit',month:'short'}) : '';
 
 function blkRow(b){
@@ -454,22 +516,22 @@ function blkRow(b){
     <div class="blk-info">
       <strong data-action="viewblock" data-bid="${esc(b.id)}">${esc(b.name)}</strong>
       ${b.tag?`<span class="tag">${esc(b.tag)}</span>`:''}
-      <span style="font-size:10px;color:var(--mut)">${fmtDate(b.updatedAt)}</span>
+      <span style="font-size:11px;color:var(--md-text-sec)">${fmtDate(b.updatedAt)}</span>
     </div>
     <div class="blk-acts">
-      <button class="iconbtn" data-action="copyblock" data-bid="${esc(b.id)}" title="Copiar"><i data-lucide="copy"></i></button>
-      <button class="iconbtn danger" data-action="delblock" data-bid="${esc(b.id)}" title="Eliminar"><i data-lucide="trash-2"></i></button>
+      <button class="iconbtn" data-action="copyblock" data-bid="${esc(b.id)}" title="Copiar"><i data-lucide="content-copy"></i></button>
+      <button class="iconbtn danger" data-action="delblock" data-bid="${esc(b.id)}" title="Eliminar"><i data-lucide="delete"></i></button>
     </div>
   </div>`;
 }
 function trayHTML(m){
-  const sheet = m.page||m.id, arr = BLOCKS[sheet]||[];
+  const sheet = m.page||m.id, arr = visibleBlocks(sheet);
   return `<div class="tray-head"><span>hoja <b>${esc(sheet)}</b> · ${arr.length}</span>
-    <button class="btn" data-action="newblock"><i data-lucide="plus"></i>Bloque</button></div>
+    <button class="btn btn-outline" data-action="newblock"><i data-lucide="plus"></i>Bloque</button></div>
     ${arr.length ? arr.map(blkRow).join('') : '<p class="t-empty">Sin bloques todavía.</p>'}`;
 }
 function cardHTML(m, i){
-  const sheet = m.page||m.id, n = (BLOCKS[sheet]||[]).length;
+  const sheet = m.page||m.id, n = visibleBlocks(sheet).length;
   return `<article class="card ${m.hidden?'dim':''}" data-id="${esc(m.id)}">
     <div class="c-top">
       <span class="num">${String(i+1).padStart(2,'0')}</span>
@@ -478,12 +540,12 @@ function cardHTML(m, i){
     </div>
     <p class="desc">${esc(m.desc||'')}</p>
     <div class="meta">
-      <button class="btn" data-action="tray"><i data-lucide="${openTrayId===m.id?'chevron-up':'chevron-down'}"></i>${n} bloque${n===1?'':'s'}</button>
+      <button class="btn btn-outline" data-action="tray"><i data-lucide="${openTrayId===m.id?'expand-less':'expand-more'}"></i>${n} bloque${n===1?'':'s'}</button>
       <div class="acts">
         <a class="btn btn-solid" href="${PAGES_DIR+encodeURIComponent(sheet)}.html">Abrir</a>
-        <button class="iconbtn" data-action="edit" title="Editar"><i data-lucide="pencil"></i></button>
-        <button class="iconbtn" data-action="toggle" title="${m.hidden?'Mostrar':'Ocultar'}"><i data-lucide="${m.hidden?'eye-off':'eye'}"></i></button>
-        <button class="iconbtn danger" data-action="del" title="Eliminar"><i data-lucide="trash-2"></i></button>
+        <button class="iconbtn" data-action="edit" title="Editar"><i data-lucide="edit"></i></button>
+        <button class="iconbtn" data-action="toggle" title="${m.hidden?'Mostrar':'Ocultar'}"><i data-lucide="${m.hidden?'visibility-off':'visibility'}"></i></button>
+        <button class="iconbtn danger" data-action="del" title="Eliminar"><i data-lucide="delete"></i></button>
       </div>
     </div>
     <div class="tray" hidden></div>
@@ -517,7 +579,7 @@ function armConfirm(btn, fn){
   }, 2600);
 }
 
-/* ═══ 9 · DIÁLOGOS ═════════════════════════════════════════ */
+/* ═══ 10 · DIÁLOGOS ════════════════════════════════════════ */
 document.querySelectorAll('dialog').forEach(d=>{
   d.addEventListener('click', e => { if(e.target===d) d.close(); });
   d.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', ()=>d.close()));
@@ -593,7 +655,7 @@ function copyText(txt, msg){
   navigator.clipboard?.writeText ? navigator.clipboard.writeText(txt).then(done).catch(fb) : fb();
 }
 
-/* ═══ 10 · EVENTOS ═════════════════════════════════════════ */
+/* ═══ 11 · EVENTOS ═════════════════════════════════════════ */
  $('#list').addEventListener('click', e=>{
   const act = e.target.closest('[data-action]'); if(!act) return;
   const card = act.closest('.card'); if(!card) return;
@@ -629,7 +691,7 @@ function copyText(txt, msg){
  $('#btnNew').addEventListener('click', ()=>openModDialog(null));
  $('#btnSync').addEventListener('click', sync);
 
-/* ═══ 11 · ARRANQUE ════════════════════════════════════════ */
+/* ═══ 12 · ARRANQUE ════════════════════════════════════════ */
 (function init(){
   loadQueue();
   if(!loadCache() || !MODULES.length){

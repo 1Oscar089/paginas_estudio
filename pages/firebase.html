@@ -971,7 +971,26 @@ let compileT = null, draftT = null, resizeT = null;
 let connected = false, connLabel = '', connDetail = '';
 let diagDone = false, diagRunning = false, dlgAutoShown = false;
 
-const $   = s => document.querySelector(s);
+let __missing = {};
+const $ = s => {
+  const el = document.querySelector(s);
+  if(el) return el;
+  if(!__missing[s]){
+    __missing[s] = true;
+    showFatal('Falta el elemento ' + s + ' → tu copia de firebase.html está incompleta: re-copia el archivo completo.');
+  }
+  const noop = () => {};
+  return { addEventListener: noop, removeEventListener: noop, click: noop, focus: noop, blur: noop,
+    appendChild: noop, removeChild: noop, remove: noop, submit: noop, reset: noop,
+    setAttribute: noop, removeAttribute: noop, setSelectionRange: noop, setRangeText: noop,
+    scrollIntoView: noop, closest: () => null, querySelector: () => null, querySelectorAll: () => [],
+    classList: { toggle: noop, add: noop, remove: noop, contains: () => false },
+    style: {}, dataset: {}, contentWindow: null,
+    value: '', textContent: '', innerHTML: '', scrollTop: 0, scrollLeft: 0,
+    hidden: true, checked: false, disabled: false };
+};
+
+
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 const nowISO = () => new Date().toISOString();
 const hora = iso => new Date(iso).toLocaleTimeString('es',{hour12:false});

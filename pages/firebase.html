@@ -61,6 +61,9 @@ header{flex:none;border-bottom:1.5px solid var(--ink);background:var(--bg)}
 .qb{font:700 10px/1 var(--mono);color:var(--acc);border:1.5px solid var(--acc);padding:4px 6px}
 @media(max-width:720px){#stTxt{display:none}.btn .lbl{display:none}.h-in{gap:6px}}
 
+/* ═══ UNA barra de pestañas: Código | Consola | App ═════════
+   Móvil: 3 vistas exclusivas. PC: App oculto (el panel derecho
+   ya está siempre visible junto al editor).                   ══ */
 .tabs{flex:none;display:flex;border-bottom:1.5px solid var(--ink);background:var(--bg)}
 .tabs button{flex:1;display:flex;justify-content:center;align-items:center;gap:8px;min-height:46px;
   font:600 11.5px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;
@@ -70,21 +73,23 @@ header{flex:none;border-bottom:1.5px solid var(--ink);background:var(--bg)}
 .tabs button svg{width:14px;height:14px}
 .tdot{width:8px;height:8px;border-radius:50%;background:var(--mut)}
 .tdot.ok{background:#7FCB6A}.tdot.err{background:#FF8A5C}
-#devCount{font:700 10px/1 var(--mono);color:var(--acc)}
+@media(min-width:1024px){
+  .tabs button[data-v="app"]{display:none}   /* en PC el App ya está a la derecha */
+}
 
 .panes{flex:1;min-height:0;display:grid;grid-template-columns:1fr}
 .pane{display:flex;flex-direction:column;min-height:0;min-width:0}
-.pv-app,.pv-dev{display:none}
-body.pv-app-mode .pv-app{display:flex}
-body.pv-dev-mode .pv-dev{display:flex}
-body.pv-dev-mode .ed{display:none}
-@media(max-width:1023px){
-  body.pv-app-mode .ed,body.pv-dev-mode .ed{display:none}
-}
+.pv-app{display:none}
+/* móvil: solo la vista activa */
+body.view-code .ed{display:flex}
+body.view-term .ed{display:flex}
+body.view-app  .pv-app{display:flex}
+body.view-app  .ed{display:none}
 @media(min-width:1024px){
   .panes{grid-template-columns:minmax(0,46%) minmax(0,54%)}
   .ed{display:flex!important;border-right:1.5px solid var(--ink)}
-  .pv-tabs{display:none}
+  .pv-app{display:flex!important}          /* PC: App siempre a la derecha */
+  body.view-app .ed{display:flex!important} /* robustez */
 }
 .pane-head{flex:none;display:flex;justify-content:space-between;align-items:center;gap:10px;
   padding:8px 14px;border-bottom:1px solid var(--line);
@@ -96,6 +101,8 @@ body.pv-dev-mode .ed{display:none}
 #hl,#ed{position:absolute;inset:0;margin:0;padding:14px;border:none;outline:none;
   font:400 13px/1.7 var(--mono);tab-size:2;
   white-space:pre-wrap;word-wrap:break-word;overflow-wrap:break-word;overflow-y:scroll;overflow-x:hidden}
+/* PARIDAD de scrollbar: ambas capas reservan el mismo ancho → el caret
+   nunca se desalinea del texto coloreado */
 #ed{background:transparent;color:transparent;caret-color:var(--ink);resize:none;-webkit-text-fill-color:transparent;
   scrollbar-width:thin;scrollbar-color:rgba(28,25,21,.3) transparent}
 #ed::-webkit-scrollbar{width:14px}
@@ -130,6 +137,7 @@ body.pv-dev-mode .ed{display:none}
 .err{flex:none;margin:10px 12px 0;padding:10px 12px;border:1.5px solid var(--acc);color:var(--acc);
   background:#FBEFE9;font:500 11px/1.55 var(--mono);max-height:110px;overflow:auto;white-space:pre-wrap}
 
+/* ═══ Terminal Firestore ════════════════════════════════════ */
 #termPane{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--term);color:var(--tpaper)}
 #termOut{flex:1;min-height:0;overflow-y:auto;padding:12px 14px;cursor:text;font:400 12.5px/1.55 var(--mono)}
 #termOut::-webkit-scrollbar{width:10px}
@@ -152,6 +160,7 @@ body.pv-dev-mode .ed{display:none}
 .kbtn.wide{min-width:64px}
 @media (hover:hover) and (pointer:fine){#keybar{display:none}}
 
+/* ═══ nano (pantalla completa, clicable) ════════════════════ */
 #nano{position:fixed;inset:0;z-index:60;background:var(--term);display:flex;flex-direction:column;font:inherit}
 .nano-top{flex:none;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 14px;
   background:var(--bg);color:var(--ink);font-weight:700;font-size:12px;border-bottom:2px solid var(--acc)}
@@ -165,24 +174,7 @@ body.pv-dev-mode .ed{display:none}
 .nano-bar .nbtn:active{background:var(--ink);color:var(--bg)}
 .nano-bar .nb-save{color:var(--ok)}
 
-.pv-dev{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--term);color:var(--tpaper)}
-.dev-head{flex:none;display:flex;justify-content:space-between;align-items:center;padding:8px 12px;
-  border-bottom:1.5px solid rgba(237,231,216,.25);font:600 10px/1 var(--mono);letter-spacing:.1em;color:var(--tmut);text-transform:uppercase}
-.dev-head button{border:none;background:none;color:var(--tmut);font:600 10px var(--mono);letter-spacing:.1em;cursor:pointer;text-transform:uppercase}
-.dev-head button:hover{color:var(--tred)}
-.dev-list{flex:1;min-height:0;overflow-y:auto;padding:8px 12px;font:400 12px/1.6 var(--mono)}
-.dev-list::-webkit-scrollbar{width:10px}
-.dev-list::-webkit-scrollbar-thumb{background:rgba(237,231,216,.2)}
-.dv{white-space:pre-wrap;word-break:break-word;padding:2px 0;border-bottom:1px solid rgba(237,231,216,.06)}
-.dv-log{color:var(--tpaper)} .dv-info{color:var(--tblue)} .dv-warn{color:var(--tyellow)}
-.dv-error{color:var(--tred)} .dv-sys{color:var(--tmut);font-style:italic}
-.dv-in{color:var(--tmut)} .dv-in b{color:var(--tgreen)}
-.dv .tm{color:var(--tmut);font-size:10px;margin-right:8px}
-.dev-form{flex:none;display:flex;align-items:center;gap:8px;padding:10px 12px;border-top:1.5px solid rgba(237,231,216,.25)}
-.dev-form .pr{color:var(--tgreen);font-weight:700}
-#devInput{flex:1;min-width:40px;background:transparent;border:none;outline:none;color:var(--tpaper);
-  caret-color:var(--acc);font:400 12.5px/1.5 var(--mono)}
-
+/* ═══ Preview App ═══════════════════════════════════════════ */
 .pv-app{flex:1;min-height:0;display:flex;flex-direction:column}
 .pages{flex:1;min-height:0;display:flex;flex-direction:column;padding:12px;background:#E9E4D6}
 #frame{flex:1;min-height:0;width:100%;border:1.5px solid var(--ink);background:#fff;border-radius:3px;
@@ -250,7 +242,7 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
 @media(min-width:640px){#toasts{left:auto;right:20px;align-items:flex-end}}
 </style>
 </head>
-<body class="pv-app-mode">
+<body class="view-code">
 
 <header>
   <div class="wrap-x h-in">
@@ -267,24 +259,22 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
   </div>
 </header>
 
-<nav class="tabs" id="edTabs">
-  <button type="button" data-t="code" class="on"><i data-lucide="code-2"></i>Código</button>
-  <button type="button" data-t="term"><i data-lucide="terminal"></i>Consola</button>
-</nav>
-
-<nav class="tabs pv-tabs" id="pvTabs">
-  <button type="button" data-p="app" class="on"><i data-lucide="eye"></i>App<span class="tdot" id="tabDot"></span></button>
-  <button type="button" data-p="dev"><i data-lucide="terminal-square"></i>F12<span id="devCount"></span></button>
+<!-- Una barra: Código | Consola | App (App se oculta en PC) -->
+<nav class="tabs" id="tabs">
+  <button type="button" data-v="code" class="on"><i data-lucide="code-2"></i>Código</button>
+  <button type="button" data-v="term"><i data-lucide="terminal"></i>Consola</button>
+  <button type="button" data-v="app"><i data-lucide="eye"></i>App<span class="tdot" id="tabDot"></span></button>
 </nav>
 
 <main class="panes">
+  <!-- ══ Editor: documento completo HTML+CSS+JS ══ -->
   <section class="pane ed">
     <div class="pane-head">
       <span>Documento · HTML + CSS + JS</span>
       <span class="r">
         <span class="saved" id="draftInfo">—</span>
         <button class="iconbtn sm" id="btnFmt" title="Formatear · Shift+Alt+F"><i data-lucide="wand-2"></i></button>
-        <button class="iconbtn sm danger" id="btnReset" title="Restablecer ejemplo"><i data-lucide="rotate-ccw"></i></button>
+        <button class="iconbtn sm danger" id="btnReset" title="Vaciar documento"><i data-lucide="rotate-ccw"></i></button>
       </span>
     </div>
     <div class="ed-wrap" id="edWrap">
@@ -293,6 +283,7 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
       <div class="sug" id="sug" hidden></div>
     </div>
 
+    <!-- Terminal Firestore -->
     <div id="termPane" hidden>
       <div id="termOut"><div id="termMsgs"></div></div>
       <div id="termIn"><span id="termPrompt"></span><input id="termInput" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="terminal"></div>
@@ -315,6 +306,7 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
     </div>
   </section>
 
+  <!-- ══ Preview: App (sin F12) ══ -->
   <section class="pane pv-app">
     <div class="pane-head">
       <span>App en vivo · proyecto «blocklab-demo»</span>
@@ -324,18 +316,6 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
     <div class="pages">
       <iframe id="frame" title="Vista previa" sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-popups"></iframe>
     </div>
-  </section>
-
-  <section class="pane pv-dev">
-    <div class="dev-head">
-      <span>Consola · console.log · errores · evalúa JS de tu app</span>
-      <button id="devClear" type="button">limpiar</button>
-    </div>
-    <div class="dev-list" id="devList"></div>
-    <form class="dev-form" id="devForm">
-      <span class="pr">›</span>
-      <input id="devInput" autocomplete="off" spellcheck="false" placeholder="expresión JS — ej.: firebase.apps.length">
-    </form>
   </section>
 </main>
 
@@ -396,7 +376,7 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
       <button data-t="rules">Reglas</button>
     </div>
     <div class="c-list" id="consBody"></div>
-    <p class="c-note"><b>Todo persiste:</b> colecciones, documentos, usuarios y archivos viven como filas en la hoja «firebase» de Sheets (las colecciones vacías también). Créalos desde la app o la terminal — en cualquier dispositivo aparecerán al sincronizar. Terminal: <b>ls → cd notas → nano nota1.json</b>.</p>
+    <p class="c-note"><b>Todo persiste:</b> colecciones (aunque vacías), documentos, usuarios y archivos viven como filas en la hoja «firebase» de Sheets. Terminal: <b>ls → mkdir personas → cd personas → nano p1.json</b>.</p>
   </div>
 </dialog>
 
@@ -412,6 +392,7 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
   </div>
 </dialog>
 
+<!-- nano a pantalla completa, con botones para móvil -->
 <div id="nano" hidden>
   <div class="nano-top">
     <span id="nanoTitle">nano</span>
@@ -440,7 +421,6 @@ const LS_DB     = 'blocklab.db.v1';
 const LS_Q      = 'blocklab.queue.v1';
 const LS_DRAFT  = 'blocklab.draft.firebase.v1';
 const LS_DRAFT_T= 'blocklab.draft.firebase.t';
-const LS_SEEDED = 'blocklab.firebase.seeds.v1';
 const LS_FB     = 'blocklab.fb.db.v1';
 const DRAFT_ID   = '__draft__';
 const DRAFT_NAME = 'BORRADOR · editor';
@@ -448,159 +428,26 @@ const CLOSE_SCRIPT = '\u003c/script>';
 const CMT_OPEN = '\u003c!--';
 const RE_SCRIPT = new RegExp('<' + 'script[\\s\\S]*?<' + '/script>', 'gi');
 
-/* STARTER: documento completo HTML+CSS+JS. SDK EMBEBIDO (no CDN). ══ */
-const STARTER = CMT_OPEN + ` HTML+CSS+JS en un solo documento.
-  El SDK de Firebase (simulado) ya viene EMBEBIDO en la página:
-  NO agregues el script de gstatic — usaría el real y rompería el sim.
-  Auth · Firestore · Storage · Functions funcionan aquí.
-  Tus datos aparecen en la Consola (botón base de datos), en la
-  terminal (pestaña Consola) y en la hoja «firebase» de Sheets. --` + `>
+/* SIN demo: el documento arranca vacío y el vacío se respeta
+   (se guarda en Sheets como fila __draft__ con código '').    ══ */
+const STARTER = '';
 
-<div class="card">
-  <h1>Mis notas</h1>
-
-  <div id="authBox">
-    <input id="email" placeholder="correo@demo.com" value="ana@demo.com">
-    <input id="pass" type="password" placeholder="contraseña (mín. 6)" value="123456">
-    <div class="row">
-      <button id="btnUp">Crear cuenta</button>
-      <button id="btnIn" class="alt">Entrar</button>
-    </div>
-  </div>
-
-  <div id="appBox" hidden>
-    <p>Hola, <b id="who"></b></p>
-    <div class="row">
-      <input id="texto" placeholder="escribe una nota…">
-      <button id="btnAdd">Guardar</button>
-    </div>
-    <ul id="notas"></ul>
-    <button id="btnOut" class="alt">Cerrar sesión</button>
-  </div>
-</div>
-
-<style>
-  body { font-family: system-ui, sans-serif; background: #FAF7F0; margin: 0; padding: 24px; }
-  .card { max-width: 420px; margin: 0 auto; background: #fff; border: 2px solid #222;
-          padding: 22px; box-shadow: 6px 6px 0 rgba(34, 34, 34, .9); }
-  h1 { margin: 0 0 16px; font-size: 22px; }
-  input { width: 100%; padding: 10px; margin-bottom: 8px; border: 1.5px solid #222; font-size: 14px; }
-  .row { display: flex; gap: 8px; }
-  .row input { flex: 1; }
-  button { padding: 10px 14px; border: 1.5px solid #222; background: #FFCA28;
-           font-weight: 700; cursor: pointer; }
-  button.alt { background: #fff; }
-  ul { padding-left: 18px; }
-  li { margin: 6px 0; }
-  li button { padding: 2px 8px; font-size: 11px; margin-left: 8px; }
-</style>
-
-<script>
-  // SDK modular: mismas funciones globales que el v9 real
-  const app  = initializeApp({ apiKey: 'demo-key', projectId: 'blocklab-demo' });
-  const db   = getFirestore();
-  const auth = getAuth();
-
-  const authBox = document.querySelector('#authBox');
-  const appBox  = document.querySelector('#appBox');
-  let quitar = null;
-
-  onAuthStateChanged(auth, user => {
-    if (quitar) { quitar(); quitar = null; }
-    document.querySelector('#notas').innerHTML = '';
-    if (user) {
-      authBox.hidden = true; appBox.hidden = false;
-      document.querySelector('#who').textContent = user.email;
-      const q = query(
-        collection(db, 'notas'),
-        where('uid', '==', user.uid),
-        orderBy('creado', 'desc')
-      );
-      quitar = onSnapshot(q, snap => {
-        const ul = document.querySelector('#notas');
-        ul.innerHTML = '';
-        snap.forEach(d => {
-          const li = document.createElement('li');
-          li.textContent = d.data().texto;
-          const b = document.createElement('button');
-          b.textContent = 'borrar';
-          b.onclick = () => deleteDoc(d.ref);
-          li.appendChild(b);
-          ul.appendChild(li);
-        });
-      });
-    } else {
-      authBox.hidden = false; appBox.hidden = true;
-    }
-  });
-
-  document.querySelector('#btnUp').onclick = async () => {
-    try {
-      await createUserWithEmailAndPassword(auth,
-        document.querySelector('#email').value,
-        document.querySelector('#pass').value);
-    } catch (e) { console.error(e.code + ': ' + e.message); }
-  };
-
-  document.querySelector('#btnIn').onclick = async () => {
-    try {
-      await signInWithEmailAndPassword(auth,
-        document.querySelector('#email').value,
-        document.querySelector('#pass').value);
-    } catch (e) { console.error(e.code + ': ' + e.message); }
-  };
-
-  document.querySelector('#btnOut').onclick = () => signOut(auth);
-
-  document.querySelector('#btnAdd').onclick = async () => {
-    const user = auth.currentUser;
-    const texto = document.querySelector('#texto').value.trim();
-    if (!user || !texto) return;
-    await addDoc(collection(db, 'notas'), {
-      uid: user.uid,
-      texto: texto,
-      creado: serverTimestamp()
-    });
-    document.querySelector('#texto').value = '';
-  };
-` + CLOSE_SCRIPT;
-
-/* ═══ SHIM: consola F12 + eval remoto ═══════════════════════ */
+/* ═══ MINI-SHIM: solo errores de la app → recuadro rojo ═════
+   (la vista F12 fue retirada; esto no es una vista)          ══ */
 const SHIM_SRC = `
 (function(){
-  function fmt(v){
-    try{
-      if(typeof v === 'string') return v;
-      if(v instanceof Error) return v.stack || (v.name+': '+v.message);
-      var s = JSON.stringify(v, null, 2);
-      return (s === undefined) ? String(v) : s;
-    }catch(e){ return String(v); }
-  }
-  function send(level, args){
-    try{ parent.postMessage({ source:'bl-dev', type:'log', level:level,
-      text: Array.prototype.map.call(args, function(a){ return fmt(a); }).join(' ') }, '*'); }catch(e){}
-  }
-  ['log','warn','error','info','debug'].forEach(function(m){
-    var orig = console[m] ? console[m].bind(console) : function(){};
-    console[m] = function(){ send(m === 'debug' ? 'log' : m, arguments); orig.apply(null, arguments); };
-  });
   window.addEventListener('error', function(ev){
-    send('error', [ (ev.message||'error') + '  (' + (ev.lineno||'?') + ':' + (ev.colno||'?') + ')' ]);
+    try{ parent.postMessage({ source:'bl-dev', type:'error',
+      message:(ev.message||'error')+' ('+(ev.lineno||'?')+':'+(ev.colno||'?')+')' }, '*'); }catch(e){}
   });
   window.addEventListener('unhandledrejection', function(ev){
-    send('error', [ 'Promesa rechazada sin catch: ' + ((ev.reason && (ev.reason.stack || ev.reason.message)) || ev.reason) ]);
-  });
-  window.addEventListener('message', function(e){
-    var d = e.data;
-    if(!d || d.source !== 'bl-parent' || d.type !== 'dev-eval') return;
-    var out, ok = true;
-    try{ out = window.eval(d.code); }catch(err){ ok = false; out = (err && err.message) || String(err); }
-    try{ parent.postMessage({ source:'bl-dev', type:'dev-eval-res', id:d.id, ok:ok, text: fmt(out) }, '*'); }catch(e2){}
+    try{ parent.postMessage({ source:'bl-dev', type:'error',
+      message:'Promesa rechazada sin catch: '+((ev.reason&&(ev.reason.message))||ev.reason) }, '*'); }catch(e){}
   });
 })();
 `;
 
-/* ═══ SDK SIMULADO (embebido, no CDN) ═══════════════════════ */
+/* ═══ SDK SIMULADO (embebido, no CDN): compat + modular ═════ */
 const SDK_SRC = `
 'use strict';
 (function(){
@@ -620,7 +467,6 @@ const SDK_SRC = `
   function clone(v){ return v === undefined ? undefined : JSON.parse(JSON.stringify(v)); }
   function deepEq(a, b){ return JSON.stringify(a) === JSON.stringify(b); }
   function getField(obj, path){ return String(path).split('.').reduce(function(o, k){ return o == null ? undefined : o[k]; }, obj); }
-  /* asegurar metadatos de colección (fecha de creación para Sheets) */
   function ensureColMeta(col){
     if(!DB.colMeta) DB.colMeta = {};
     if(!DB.colMeta[col]) DB.colMeta[col] = nowISO();
@@ -715,7 +561,7 @@ const SDK_SRC = `
       get path(){ return col + '/' + id; },
       set: function(data, opts){
         var c = DB.collections[col] || (DB.collections[col] = {});
-        ensureColMeta(col);                    // colección implícita también persiste
+        ensureColMeta(col);
         var prev = c[id];
         var merged;
         if(opts && opts.merge && prev) merged = mergeData(prev, data);
@@ -856,11 +702,10 @@ const SDK_SRC = `
     var ctx = { define: function(name, fn){
       if(typeof fn !== 'function') throw fbErr('invalid-argument', 'define() espera una funci\u00F3n async.');
       window.__blFunctions[name] = fn;
-      console.info('[functions] registrada: ' + name);
     } };
     document.querySelectorAll('script[type="firebase-functions"]').forEach(function(s){
       try{ new Function('functions', s.textContent)(ctx); }
-      catch(e){ try{ parent.postMessage({ source:'bl-fb', type:'error', message:'functions: ' + e.message }, '*'); }catch(e2){} }
+      catch(e){ try{ parent.postMessage({ source:'bl-dev', type:'error', message:'functions: ' + e.message }, '*'); }catch(e2){} }
     });
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initFunctions);
@@ -939,17 +784,16 @@ const SDK_SRC = `
 /* ═══ ESTADO ═══════════════════════════════════════════════ */
 let MODULES = [], BLOCKS = {}, queue = [], syncing = false;
 let seq = 0, lastBuf = null, currentDD = null, libTries = 0;
-let edTab = 'code';
+let edTab = 'code';                       // code | term (dentro del editor)
 let sugItems = [], sugNew = null, sugActive = 0;
 let snipReturn = 'dict';
 let lastRows = {}, fbPushT = null;
 let consTab = 'firestore';
-let devLog = [], devEvalId = 0, devCount = 0;
 let compileT = null, draftT = null, resizeT = null;
 
 let connected = false, connLabel = '', connDetail = '';
 let diagDone = false, diagRunning = false, dlgAutoShown = false;
-let lastPushedDraft = '';
+let lastPushedDraft = null;   // null = forzar primer push (aunque sea vacío)
 
 let __missing = {};
 const $ = s => {
@@ -993,7 +837,7 @@ function showFatal(msg){
 window.addEventListener('error', e => showFatal(e.message + ' @' + (e.lineno||'?')));
 
 const ICON_FALLBACK = { 'book-open':'☰','database':'▦','rocket':'🚀','refresh-cw':'⟳','trash-2':'🗑',
-  'code-2':'❮❯','terminal':'▸','terminal-square':'▸','eye':'◉','x':'✕','wand-2':'✎','rotate-ccw':'↺',
+  'code-2':'❮❯','terminal':'▸','eye':'◉','x':'✕','wand-2':'✎','rotate-ccw':'↺',
   'external-link':'↗','corner-down-left':'↵','edit':'✎','delete':'🗑','content-copy':'⧉',
   'check-circle':'✓','alert-triangle':'⚠','plus':'+','download':'⬇' };
 function refreshIcons(){
@@ -1107,12 +951,7 @@ function reconcileOps(data){
   renderConn();
 }
 
-/* ═══ PROYECTO FB SIMULADO ↔ Sheets ════════════════════════
-   Persistencia COMPLETA:
-   · fcol:<col>  (tag 'collection') → la colección, aunque esté vacía
-   · fs:<col>/<id> (tag 'firestore') → cada documento
-   · auth:<uid> · st:<ruta> · host:index
-   Tras cada sync se sube lo que exista aquí y no en Sheets.   ══ */
+/* ═══ PROYECTO FB SIMULADO ↔ Sheets (persistencia completa) ══ */
 const normBlock = o => ({ id:String(o.id||''), name:String(o.name||''), tag:String(o.tag||''),
   code:(o.code==null?'':String(o.code)), createdAt:String(o.createdAt||''), updatedAt:String(o.updatedAt||'') });
 
@@ -1124,7 +963,6 @@ function readFB(){
   return db;
 }
 function writeFB(db){ try{ localStorage.setItem(LS_FB, JSON.stringify(db)); }catch(e){} }
-/* migración: colecciones creadas antes de colMeta reciben fecha */
 function migrateFB(){
   const db = readFB();
   let changed = false;
@@ -1165,13 +1003,12 @@ function pushFbDiffs(){
       block:{ id:rid, name:r.name, tag:r.tag, code:r.code, createdAt: lastRows[rid] ? undefined : r.updated, updatedAt: r.updated } });
     lastRows[rid] = sig;
   }
-  /* algo borrado localmente → borrarlo también en Sheets */
   for(const rid of Object.keys(lastRows)){
     if(!rows[rid]){ pushOp({ action:'deleteBlock', sheet:SHEET, id: rid }); delete lastRows[rid]; }
   }
 }
-/* lastRows se alimenta de lo que REALMENTE está en Sheets (respuesta
-   del bootstrap), no de lo local — así lo local sin confirmar se sube. */
+/* lastRows = SOLO lo confirmado en Sheets (respuesta bootstrap);
+   lo local sin confirmar se sube tras cada sync.             ══ */
 function rebuildLastRowsFromRemote(remoteBlocks){
   lastRows = {};
   for(const raw of (remoteBlocks||[])){
@@ -1191,43 +1028,7 @@ function rebuildLastRowsFromRemote(remoteBlocks){
   }
 }
 
-/* ═══ SEMILLAS del diccionario (una sola vez) ══════════════ */
-const SEED = [
-  { id:'fb-init',    name:'initializeApp', tag:'raíz',      code:"initializeApp({\n  apiKey: 'demo-key',\n  projectId: 'blocklab-demo'\n});" },
-  { id:'fb-getfs',   name:'getFirestore',  tag:'raíz',      code:"const db = getFirestore();\nconst auth = getAuth();" },
-  { id:'fb-auth-up', name:'createUser',    tag:'auth',      code:"await createUserWithEmailAndPassword(auth, '$0', '123456');" },
-  { id:'fb-auth-in', name:'signIn',        tag:'auth',      code:"await signInWithEmailAndPassword(auth, '$0', '123456');" },
-  { id:'fb-auth-st', name:'onAuthState',   tag:'auth',      code:"onAuthStateChanged(auth, user => {\n  if (user) {\n    $0\n  }\n});" },
-  { id:'fb-auth-out',name:'signOut',       tag:'auth',      code:'signOut(auth);' },
-  { id:'fb-fs-add',  name:'addDoc',        tag:'firestore', code:"await addDoc(collection(db, '$1'), {\n  campo: 'valor',\n  creado: serverTimestamp()\n});" },
-  { id:'fb-fs-set',  name:'setDoc',        tag:'firestore', code:"await setDoc(doc(db, '$1', 'id'), {\n  campo: 'valor'\n}, { merge: true });" },
-  { id:'fb-fs-get1', name:'getDoc',        tag:'firestore', code:"const snap = await getDoc(doc(db, '$1', 'id'));\nif (snap.exists()) {\n  console.log(snap.id, snap.data());\n}" },
-  { id:'fb-fs-getall',name:'getDocs',      tag:'firestore', code:"const snap = await getDocs(collection(db, '$1'));\nsnap.forEach(d => {\n  console.log(d.id, d.data());\n});" },
-  { id:'fb-fs-query',name:'query',         tag:'firestore', code:"const q = query(\n  collection(db, '$1'),\n  where('campo', '==', 'valor'),\n  orderBy('creado', 'desc'),\n  limit(10)\n);\nconst snap = await getDocs(q);" },
-  { id:'fb-fs-snap', name:'onSnapshot',    tag:'firestore', code:"onSnapshot(collection(db, '$1'), snap => {\n  snap.forEach(d => console.log(d.id, d.data()));\n});" },
-  { id:'fb-fs-upd',  name:'updateDoc',     tag:'firestore', code:"await updateDoc(doc(db, '$1', 'id'), {\n  campo: 'nuevo-valor'\n});" },
-  { id:'fb-fs-del',  name:'deleteDoc',     tag:'firestore', code:"await deleteDoc(doc(db, '$1', 'id'));" },
-  { id:'fb-fs-inc',  name:'increment',     tag:'firestore', code:"await updateDoc(ref, { contador: increment(1) });" },
-  { id:'fb-fs-arr',  name:'arrayUnion',    tag:'firestore', code:"await updateDoc(ref, { etiquetas: arrayUnion('$0') });" },
-  { id:'fb-st-put',  name:'putString',     tag:'storage',   code:"const ref = getStorage().ref('textos/$0.txt');\nawait ref.putString('contenido del archivo');\nconst url = await ref.getDownloadURL();" },
-  { id:'fb-fn-call', name:'httpsCallable', tag:'functions', code:"const saludar = getFunctions().httpsCallable('saludar');\nconst res = await saludar({ nombre: '$0' });\nconsole.log(res.data.mensaje);" },
-  { id:'fb-host',    name:'deploy',        tag:'hosting',   code:'/* Pulsa el botón DEPLOY de la cabecera:\n   simula "firebase deploy" y publica esta página\n   como index.html del proyecto. */' }
-];
-function seedDict(){
-  if(localStorage.getItem(LS_SEEDED)) return;
-  const have = new Set((BLOCKS[SHEET]||[]).map(b=>b.id));
-  const t = nowISO();
-  SEED.forEach(s=>{
-    if(!have.has(s.id)){
-      const row = Object.assign({createdAt:t, updatedAt:t}, s);
-      (BLOCKS[SHEET] = BLOCKS[SHEET]||[]).push(normBlock(row));
-      pushOp({action:'saveBlock', sheet:SHEET, block:row});
-    }
-  });
-  (BLOCKS[SHEET]||[]).sort((a,b)=>a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
-  saveCache();
-  localStorage.setItem(LS_SEEDED,'1');
-}
+/* SIN seed: el diccionario vive solo en la hoja «firebase» ══ */
 
 /* ═══ SYNC + DIAGNÓSTICO ═══════════════════════════════════ */
 async function sync(){
@@ -1292,17 +1093,14 @@ async function sync(){
     }
     writeFB(db);
 
-    /* lastRows = SOLO lo confirmado en Sheets; luego se sube lo local
-       que falte (colecciones vacías, docs de sesiones anteriores, etc.) */
     rebuildLastRowsFromRemote(data.blocks);
-    scheduleFbPush();
+    scheduleFbPush();   // sube lo local que falte en Sheets
 
     try{ frame.contentWindow && frame.contentWindow.postMessage({ source:'bl-parent', type:'fb-merge' }, '*'); }catch(e){}
 
     reconcileOps(data);
     retryPending();
     reconcileDraft();
-    seedDict();
     renderDict();
   }catch(err){
     if(!connected){
@@ -1336,30 +1134,24 @@ window.addEventListener('message', e => {
   const d = e.data;
   if(!d) return;
   if(d.source === 'bl-fb'){
-    if(d.type === 'ready'){ cset('listo · ' + hora(nowISO()), 'ok'); tabDot('ok'); addDev('sys','SDK simulado listo — auth · firestore · storage · functions'); }
-    if(d.type === 'error'){ failNow(d.message); addDev('error', d.message); }
+    if(d.type === 'ready'){ cset('listo · ' + hora(nowISO()), 'ok'); tabDot('ok'); }
+    if(d.type === 'error'){ failNow(d.message); }
     if(d.type === 'change'){
       scheduleFbPush();
       if($('#dlgConsole').open) renderConsole();
     }
   }
-  if(d.source === 'bl-dev'){
-    if(d.type === 'log'){ addDev(d.level, d.text); if(d.level==='error') tabDot('err'); }
-    if(d.type === 'dev-eval-res'){
-      const p = devPending[d.id];
-      if(p){ clearTimeout(p.to); p.res(d); delete devPending[d.id]; }
-    }
-  }
+  if(d.source === 'bl-dev' && d.type === 'error'){ failNow(d.message); }
 });
 
-/* ═══ BORRADOR ↔ Sheets ════════════════════════════════════ */
+/* ═══ BORRADOR (aunque esté VACÍO se guarda en Sheets) ══════ */
 const getDraftRemote = () => (BLOCKS[SHEET]||[]).find(b => b.id === DRAFT_ID);
 function saveDraftLocal(txt){
   try{ localStorage.setItem(LS_DRAFT, txt); localStorage.setItem(LS_DRAFT_T, nowISO()); }catch(e){}
 }
 function pushDraftNow(){
   const txt = ed.value;
-  if(txt === lastPushedDraft) return;
+  if(txt === lastPushedDraft) return;   // null inicial fuerza el primer push
   lastPushedDraft = txt;
   const prev = getDraftRemote();
   const row = { id:DRAFT_ID, name:DRAFT_NAME, tag:'sistema', code:txt,
@@ -1376,7 +1168,9 @@ function reconcileDraft(){
   const rem = getDraftRemote();
   const localT = localStorage.getItem(LS_DRAFT_T) || '';
   const typing = (edTab === 'code' && document.activeElement === ed);
-  if(rem && rem.code != null && rem.code.trim()){
+  /* el draft vacío TAMBIÉN se acepta: si en Sheets está '' y aquí hay
+     contenido viejo, Sheets manda (el usuario lo vació a propósito) */
+  if(rem && rem.code != null){
     const remoteNewer = !localT || (rem.updatedAt && rem.updatedAt > localT);
     if(!typing && remoteNewer && rem.code !== ed.value){
       ed.value = rem.code;
@@ -1386,8 +1180,6 @@ function reconcileDraft(){
     } else if(!remoteNewer && ed.value !== rem.code){
       pushDraftSoon();
     }
-  } else if(ed.value.trim()){
-    pushDraftNow();
   }
 }
 
@@ -1616,11 +1408,10 @@ document.addEventListener('pointerdown', e=>{
   if(!e.target.closest('#sug') && e.target!==ed) hideSug();
 });
 
-/* ═══ PESTAÑAS (Código | Consola) ══════════════════════════ */
+/* ═══ PESTAÑAS (Código | Consola | App) ═════════════════════ */
 function setEdTab(t){
   if(t === edTab) return;
   edTab = t;
-  document.querySelectorAll('#edTabs button').forEach(b=>b.classList.toggle('on', b.dataset.t===t));
   hideSug();
   if(t === 'term'){
     edWrap.hidden = true;
@@ -1635,8 +1426,17 @@ function setEdTab(t){
     ed.focus();
   }
 }
- $('#edTabs').addEventListener('click', e=>{
-  const b = e.target.closest('button[data-t]'); if(b) setEdTab(b.dataset.t);
+function setView(v){
+  document.body.classList.toggle('view-code', v==='code');
+  document.body.classList.toggle('view-term', v==='term');
+  document.body.classList.toggle('view-app',  v==='app');
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on', b.dataset.v===v));
+  if(v === 'code')      setEdTab('code');
+  else if(v === 'term') setEdTab('term');
+  hideSug();
+}
+ $('#tabs').addEventListener('click', e=>{
+  const b = e.target.closest('button[data-v]'); if(b) setView(b.dataset.v);
 });
 
 /* ═══ FORMATEO HÍBRIDO ═════════════════════════════════════ */
@@ -1769,6 +1569,7 @@ function reindentMixed(src){
 }
 function formatDoc(){
   const src = ed.value;
+  if(!src.trim()){ toast('El documento está vacío'); return; }
   const out = reindentMixed(src);
   if(out === src){ toast('El código ya está formateado'); return; }
   const cp = ed.selectionStart;
@@ -1841,7 +1642,15 @@ function okNow(){
   tabDot('ok');
 }
 function buildSrcdoc(banner){
-  const safe = ed.value.replace(/<\/script/gi, '\u003c/script').replace(/<\/style/gi, '\u003c/style');
+  const src = ed.value;
+  if(!src.trim()){
+    /* documento vacío → mensaje dentro del iframe, sin SDK */
+    return '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>' +
+      '<div style="font-family:system-ui,sans-serif;padding:48px 24px;text-align:center;color:#6F675A">' +
+      '<div style="font-size:34px;margin-bottom:10px">▢</div>' +
+      'Documento vacío — escribe tu HTML+CSS+JS en el editor<br>y aparecerá aquí, en vivo.</div></body></html>';
+  }
+  const safe = src.replace(/<\/script/gi, '\u003c/script').replace(/<\/style/gi, '\u003c/style');
   return '<!DOCTYPE html><html><head><meta charset="utf-8">' +
     '<scr' + 'ipt>' + SHIM_SRC + CLOSE_SCRIPT +
     '<scr' + 'ipt>' + SDK_SRC + CLOSE_SCRIPT +
@@ -1852,10 +1661,7 @@ function buildSrcdoc(banner){
 function compile(){
   cset('montando…','busy'); tabDot('');
   $('#errBox').hidden = true;
-  devLog = []; devCount = 0; $('#devCount').textContent = '';
-  $('#devList').innerHTML = '';
   frame.srcdoc = buildSrcdoc('');
-  addDev('sys','— app recargada · ' + hora(nowISO()) + ' —');
 }
 function scheduleCompile(ms=650){ clearTimeout(compileT); compileT = setTimeout(compile, ms); }
 function onEdInput(){
@@ -1866,56 +1672,12 @@ function saveDraftSoon(){
   clearTimeout(draftT);
   draftT = setTimeout(()=>{
     saveDraftLocal(ed.value);
-    $('#draftInfo').textContent = 'guardado ' + hora(nowISO());
+    $('#draftInfo').textContent = ed.value.trim() ? 'guardado ' + hora(nowISO()) : 'vacío guardado ' + hora(nowISO());
   }, 700);
 }
 
-/* ═══ VISTAS DEL PREVIEW ═══════════════════════════════════ */
-function setPv(p){
-  document.body.classList.toggle('pv-app-mode', p==='app');
-  document.body.classList.toggle('pv-dev-mode', p==='dev');
-  document.querySelectorAll('#pvTabs button').forEach(b=>b.classList.toggle('on', b.dataset.p===p));
-  if(p==='dev') $('#devInput').focus();
-}
- $('#pvTabs').addEventListener('click', e=>{
-  const b = e.target.closest('button[data-p]'); if(b) setPv(b.dataset.p);
-});
-
-/* ═══ DEVTOOLS: log + eval ═════════════════════════════════ */
-function addDev(level, text){
-  devLog.push({ level, text, t: nowISO() });
-  const el = document.createElement('div');
-  el.className = 'dv dv-' + (level==='sys' ? 'sys' : level);
-  el.innerHTML = (level==='in' ? '<b>›</b> ' : '<span class="tm">' + hora(nowISO()) + '</span>') + esc(text);
-  const list = $('#devList');
-  list.appendChild(el);
-  while(list.children.length > 400) list.firstChild.remove();
-  list.scrollTop = list.scrollHeight;
-  if(level !== 'in' && level !== 'sys'){
-    devCount++;
-    $('#devCount').textContent = devCount > 99 ? '(99+)' : '(' + devCount + ')';
-  }
-}
- $('#devClear').addEventListener('click', ()=>{
-  devLog = []; devCount = 0; $('#devCount').textContent = '';
-  $('#devList').innerHTML = '';
-  addDev('sys','consola limpiada');
-});
-const devPending = {};
- $('#devForm').addEventListener('submit', e=>{
-  e.preventDefault();
-  const code = $('#devInput').value.trim();
-  if(!code) return;
-  $('#devInput').value = '';
-  addDev('in', code);
-  const id = ++devEvalId;
-  const to = setTimeout(()=>{
-    if(devPending[id]){ addDev('error','sin respuesta (¿el preview está detenido?)'); delete devPending[id]; }
-  }, 2500);
-  devPending[id] = { to, res: d => { addDev(d.ok ? 'log' : 'error', d.text); }};
-  try{ frame.contentWindow.postMessage({ source:'bl-parent', type:'dev-eval', id, code }, '*'); }
-  catch(err){ addDev('error','el preview no está activo'); clearTimeout(to); delete devPending[id]; }
-});
+/* ═══ VISTA APP (móvil) ═════════════════════════════════════ */
+/* setPv eliminado: setView cubre todo */
 
 /* ═══ TERMINAL FIRESTORE (CachyOS) ═════════════════════════ */
 const Term = { cwd:'/', hist:[], histIdx:-1, pending:null };
@@ -2598,7 +2360,7 @@ function visitDeployed(){
   frame.srcdoc = buildSrcdoc((db.hosting.deployedAt||'').slice(11,16));
   ed.value = keep;
   $('#dlgDeploy').close(); $('#dlgConsole').close();
-  setPv('app');
+  setView('app');
 }
  $('#btnDeploy').addEventListener('click', async ()=>{
   const log = $('#depLog');
@@ -2690,12 +2452,12 @@ function manualSync(){
 });
  $('#btnReset').addEventListener('click', e=>{
   armConfirm(e.currentTarget, ()=>{
-    ed.value = STARTER;
-    saveDraftLocal(STARTER);
+    ed.value = '';
+    saveDraftLocal('');
     lastPushedDraft = '';
-    pushDraftNow();
+    pushDraftNow();        // el VACÍO también viaja a Sheets
     onEdInput();
-    toast('Ejemplo restablecido');
+    toast('Documento vacío — el vacío se guarda en Sheets');
   });
 });
 document.querySelectorAll('dialog').forEach(d=>{
@@ -2743,6 +2505,7 @@ function renderDict(){
   const a = btn.dataset.a;
   if(a==='ins'){
     if(edTab === 'term') setEdTab('code');
+    setView('code');
     $('#dlgDict').close(); insertSnippet(b);
   }
   else if(a==='edit') openSnip(b, {ret:'dict'});
@@ -2788,16 +2551,20 @@ function armConfirm(btn, fn){
 (function init(){
   try{ loadQueue(); }catch(e){ showFatal('cola: ' + e.message); }
   try{ loadCache(); }catch(e){ showFatal('caché: ' + e.message); }
-  try{ seedDict(); }catch(e){ showFatal('semillas: ' + e.message); }
 
   try{ migrateFB(); }catch(e){ showFatal('migrar: ' + e.message); }
   lastRows = {};   // nada se asume confirmado: tras el primer sync se sube lo que falte
 
-  const draft = (()=>{ try{ return localStorage.getItem(LS_DRAFT) || ''; }catch(e){ return ''; } })();
-  const draftOK = draft && draft.trim().startsWith('<');
-  ed.value = draftOK ? draft : STARTER;
-  if(!draftOK && draft){ try{ localStorage.removeItem(LS_DRAFT); }catch(e){} }
-  lastPushedDraft = ed.value;
+  /* documento vacío por defecto; el VACÍO también se persiste */
+  const hadDraft = (()=>{ try{ return localStorage.getItem(LS_DRAFT) !== null; }catch(e){ return false; } })();
+  let draft = '';
+  try{ draft = localStorage.getItem(LS_DRAFT) || ''; }catch(e){}
+  ed.value = draft;
+  lastPushedDraft = hadDraft ? draft : null;   // null fuerza el primer push
+  if(!hadDraft){
+    saveDraftLocal('');
+    pushDraftNow();                            // crea la fila __draft__ ('') en Sheets
+  }
 
   try{ syncHL(); }catch(e){ showFatal('resaltado: ' + e.message); }
   refreshIcons(); renderConn();

@@ -63,7 +63,6 @@ header{flex:none;border-bottom:1.5px solid var(--ink);background:var(--bg)}
 .qb{font:700 10px/1 var(--mono);color:var(--acc);border:1.5px solid var(--acc);padding:4px 6px}
 @media(max-width:720px){#stTxt{display:none}.btn .lbl{display:none}.h-in{gap:6px}}
 
-/* ═══ Pestañas (móvil): Código | Consola ════════════════════ */
 .tabs{flex:none;display:flex;border-bottom:1.5px solid var(--ink);background:var(--bg)}
 .tabs button{flex:1;display:flex;justify-content:center;align-items:center;gap:8px;min-height:46px;
   font:600 11.5px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;
@@ -93,8 +92,6 @@ body.view-con .pv-con{display:flex}
 #hl,#ed{position:absolute;inset:0;margin:0;padding:14px;border:none;outline:none;
   font:400 13px/1.7 var(--mono);tab-size:4;
   white-space:pre-wrap;word-wrap:break-word;overflow-wrap:break-word;overflow-y:scroll;overflow-x:hidden}
-/* PARIDAD de scrollbar: ambas capas reservan el mismo ancho → el caret
-   nunca se desalinea del texto coloreado */
 #ed{background:transparent;color:transparent;caret-color:var(--ink);resize:none;-webkit-text-fill-color:transparent;
   scrollbar-width:thin;scrollbar-color:rgba(28,25,21,.3) transparent}
 #ed::-webkit-scrollbar{width:14px}
@@ -105,13 +102,13 @@ body.view-con .pv-con{display:flex}
 #hl::-webkit-scrollbar{width:14px}
 #hl::-webkit-scrollbar-thumb{background:transparent}
 #hl::-webkit-scrollbar-track{background:transparent}
-#hl .e{color:#0F6FA8;font-weight:700}   /* builtins/def */
-#hl .p{color:#A63A0A}                   /* keywords */
-#hl .s{color:#2F7D2F}                   /* cadenas */
-#hl .n{color:#B07D10}                   /* números */
-#hl .k{color:#8E44AD;font-weight:700}   /* decoradores/self */
-#hl .b{color:#6E7B8B}                   /* llaves */
-#hl .c{color:#9A927F;font-style:italic} /* comentarios */
+#hl .e{color:#0F6FA8;font-weight:700}
+#hl .p{color:#A63A0A}
+#hl .s{color:#2F7D2F}
+#hl .n{color:#B07D10}
+#hl .k{color:#8E44AD;font-weight:700}
+#hl .b{color:#6E7B8B}
+#hl .c{color:#9A927F;font-style:italic}
 
 .sug{position:absolute;z-index:8;min-width:240px;max-width:360px;max-height:280px;overflow:auto;
   background:var(--card);border:1.5px solid var(--ink);box-shadow:5px 5px 0 rgba(28,25,21,.18);
@@ -125,7 +122,6 @@ body.view-con .pv-con{display:flex}
 .sug .newrow{color:var(--acc);font-weight:700;border-top:1px solid var(--line)}
 .sug .newrow:hover{background:var(--acc);color:var(--bg)}
 
-/* ═══ Consola (terminal PC simulada) ════════════════════════ */
 .pv-con{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--term);color:var(--tpaper)}
 .term-head{flex:none;display:flex;justify-content:space-between;align-items:center;padding:8px 12px;
   border-bottom:1.5px solid rgba(237,231,216,.25);font:600 10px/1 var(--mono);letter-spacing:.1em;color:var(--tmut);text-transform:uppercase}
@@ -148,10 +144,9 @@ body.view-con .pv-con{display:flex}
   border:1.5px solid rgba(237,231,216,.4);background:transparent;color:var(--tpaper);
   border-radius:6px;cursor:pointer;user-select:none;-webkit-user-select:none;touch-action:manipulation}
 .kbtn:active{background:var(--tpaper);color:var(--term)}
-.kbtn.sticky{background:var(--acc);border-color:var(--acc);color:#fff}
+.kbtn.wide{min-width:64px}
 @media (hover:hover) and (pointer:fine){#keybar{display:none}}
 
-/* ═══ Ventanas flotantes (matplotlib/pygame/turtle) ═════════ */
 .fwin{position:fixed;z-index:70;background:var(--card);border:1.5px solid var(--ink);
   box-shadow:6px 6px 0 rgba(28,25,21,.35);border-radius:3px;overflow:hidden}
 .fwin-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 12px;
@@ -162,7 +157,6 @@ body.view-con .pv-con{display:flex}
 .fwin-body img{display:block;max-width:100%;height:auto}
 .fwin-body canvas{display:block}
 
-/* ═══ nano (editor de archivos de la PC simulada) ═══════════ */
 #nano{position:fixed;inset:0;z-index:60;background:var(--term);display:flex;flex-direction:column;font:inherit}
 .nano-top{flex:none;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 14px;
   background:var(--bg);color:var(--ink);font-weight:700;font-size:12px;border-bottom:2px solid var(--acc)}
@@ -242,7 +236,6 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
 </nav>
 
 <main class="panes">
-  <!-- ══ Editor (estilo Geany: código a la izquierda) ══ -->
   <section class="pane ed">
     <div class="pane-head">
       <span>Editor · Python</span>
@@ -259,7 +252,6 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
     </div>
   </section>
 
-  <!-- ══ Consola (PC simulada) ══ -->
   <section class="pane pv-con">
     <div class="term-head">
       <span>Consola · Pyodide (CPython en WebAssembly) · PC simulada</span>
@@ -333,6 +325,22 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
   </form>
 </dialog>
 
+<!-- ══ NANO: TODOS los ids presentes (nanoTA incluido) ══ -->
+<div id="nano" hidden>
+  <div class="nano-top">
+    <span id="nanoTitle">nano</span>
+    <button type="button" class="iconbtn sm" id="nanoCloseBtn" title="Salir">✕</button>
+  </div>
+  <textarea id="nanoTA" spellcheck="false" autocapitalize="off"></textarea>
+  <div id="nanoStatus"></div>
+  <div class="nano-bar">
+    <button type="button" class="nbtn nb-run" data-n="run">▶ Ejecutar</button>
+    <button type="button" class="nbtn nb-save" data-n="save">💾 Guardar</button>
+    <button type="button" class="nbtn" data-n="exit">✕ Salir</button>
+    <button type="button" class="nbtn" data-n="cut">✂ Cortar línea</button>
+  </div>
+</div>
+
 <div id="toasts"></div>
 
 <script>
@@ -351,24 +359,24 @@ const DRAFT_ID   = '__draft__';
 const DRAFT_NAME = 'BORRADOR · editor';
 const PYODIDE_BASE = 'https://cdn.jsdelivr.net/pyodide/v0.25.1/full/';
 
-/* Sin demo: el documento arranca VACÍO y el vacío se persiste. ══ */
+/* SIN demo: arranca vacío y el vacío se persiste en Sheets. */
 const STARTER = '';
 
 /* ═══ ESTADO ═══════════════════════════════════════════════ */
 let MODULES = [], BLOCKS = {}, queue = [], syncing = false;
-let sugItems = [], sugNew = null, sugActive = 0;
+let sugItems = [], sugActive = 0;
 let snipReturn = 'dict';
 let lastRows = {}, pushT = null;
 let compileT = null, draftT = null, resizeT = null;
-let view = 'code';                        // code | con
+let view = 'code';
 
 let connected = false, connLabel = '', connDetail = '';
 let diagDone = false, diagRunning = false, dlgAutoShown = false;
-let lastPushedDraft = null;               // null fuerza el primer push (vacío incluido)
+let lastPushedDraft = null;
 
 let pyodide = null, pyLoading = false, pyWaiters = [], pyLibTries = 0;
-let FS = {};                              // nombre → {content, mtime}
-let installs = new Set();                 // paquetes pip instalados
+let FS = {};
+let installs = new Set();
 
 let __missing = {};
 const $ = s => {
@@ -407,8 +415,8 @@ function showFatal(msg){
 window.addEventListener('error', e => showFatal(e.message + ' @' + (e.lineno||'?')));
 
 const ICON_FALLBACK = { 'play':'▶','book-open':'☰','rotate-ccw':'↺','refresh-cw':'⟳','trash-2':'🗑',
-  'save':'💾','x':'✕','wand-2':'✎','corner-down-left':'↵','edit':'✎','delete':'🗑',
-  'code-2':'❮❯','terminal':'▸','check-circle':'✓','alert-triangle':'⚠','plus':'+' };
+  'save':'💾','x':'✕','corner-down-left':'↵','edit':'✎','delete':'🗑',
+  'code-2':'❮❯','terminal':'▸','check-circle':'✓','alert-triangle':'⚠' };
 function refreshIcons(){
   if(window.lucide){ try{ lucide.createIcons(); return; }catch(e){} }
   document.querySelectorAll('i[data-lucide]').forEach(el => {
@@ -416,7 +424,7 @@ function refreshIcons(){
   });
 }
 
-/* ═══ CACHÉ / COLA / RED (patrón no-CORS del proyecto) ══════ */
+/* ═══ CACHÉ / COLA / RED ═══════════════════════════════════ */
 function saveCache(){ try{ localStorage.setItem(LS_DB, JSON.stringify({modules:MODULES, blocks:BLOCKS, ts:nowISO()})); }catch(e){} }
 function loadCache(){
   try{
@@ -517,7 +525,7 @@ function reconcileOps(data){
   renderConn();
 }
 
-/* ═══ FS VIRTUAL (archivos .py en la PC simulada) ═══════════ */
+/* ═══ FS VIRTUAL ═══════════════════════════════════════════ */
 function readFS(){ try{ return JSON.parse(localStorage.getItem(LS_FS)||'null') || {}; }catch(e){ return {}; } }
 function writeFS(){ try{ localStorage.setItem(LS_FS, JSON.stringify(FS)); }catch(e){} }
 function saveFile(name, content){
@@ -601,7 +609,6 @@ async function sync(){
     BLOCKS[SHEET] = merged.sort((a,b)=>a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
     saveCache();
 
-    /* Sheets → FS virtual (gana el más reciente) */
     for(const b of merged){
       if(b.id === DRAFT_ID) continue;
       try{
@@ -618,9 +625,8 @@ async function sync(){
     writeFS(); savePkgs();
 
     rebuildLastRowsFromRemote(data.blocks);
-    schedulePush();          // sube lo local que falte en Sheets
+    schedulePush();
 
-    /* paquetes pendientes de instalar (si el runtime ya está listo) */
     if(pyodide) reinstallPkgs(true);
 
     reconcileOps(data);
@@ -655,7 +661,7 @@ setInterval(()=>{ if(!connected) sync(); else retryPending(); }, 25000);
 setInterval(()=>{ if(connected) sync(); }, 5*60*1000);
 window.addEventListener('online', ()=>{ if(!connected) sync(); else { retryPending(); scheduleSync(500); } });
 
-/* ═══ BORRADOR (vacío también se persiste) ══════════════════ */
+/* ═══ BORRADOR (vacío incluido) ════════════════════════════ */
 const getDraftRemote = () => (BLOCKS[SHEET]||[]).find(b => b.id === DRAFT_ID);
 function saveDraftLocal(txt){
   try{ localStorage.setItem(LS_DRAFT, txt); localStorage.setItem(LS_DRAFT_T, nowISO()); }catch(e){}
@@ -726,7 +732,7 @@ function tPrintText(text, cls){
 }
 function tFocus(){ termInput.focus(); }
 
-/* ═══ PYODIDE (runtime de Python) ═══════════════════════════ */
+/* ═══ PYODIDE ═══════════════════════════════════════════════ */
 function loadScript(src){
   return new Promise((res, rej)=>{
     const s = document.createElement('script');
@@ -816,8 +822,21 @@ async function runCode(code, label){
   try{ py = await ensurePy(); }
   catch(e){ return false; }
   tPrint(C('dim', '▶ ' + (label || 'documento') + ' — ejecutando…'));
+  /* magia: líneas «!comando» se ejecutan en la PC simulada */
+  const magic = [];
+  const pyLines = [];
+  code.split('\n').forEach(l => {
+    if(l.trim().startsWith('!')) magic.push(l.trim().slice(1).trim());
+    else pyLines.push(l);
+  });
+  code = pyLines.join('\n');
+  for(const m of magic){
+    if(!m) continue;
+    tPrint(C('dim','! ' + m));
+    await tExec(m);
+  }
   try{ await py.loadPackagesFromImports(code); }
-  catch(e){ tPrintText('paquetes: ' + (e.message||e), 'dim'); }
+  catch(e){ /* paquete sin binario: el import fallará abajo con mensaje claro */ }
   let ok = true;
   try{
     const val = await py.runPythonAsync(code);
@@ -827,10 +846,8 @@ async function runCode(code, label){
   }catch(e){
     ok = false;
     const m = (e && e.message) ? e.message : String(e);
-    const clean = m.split('\n').filter(l => !/pyodide|File "<exec>|^\s*\^/.test(l) || /Error/.test(l)).join('\n');
-    tPrintText(clean.trim() || m, 'red');
+    tPrintText(m.trim(), 'red');
   }
-  /* figuras matplotlib → ventana flotante */
   try{
     const figs = JSON.parse(await py.runPythonAsync(FIG_CAPTURE));
     figs.forEach((url, i) => {
@@ -842,7 +859,8 @@ async function runCode(code, label){
   return ok;
 }
 
-/* ═══ SHIMS pygame + turtle (Python sobre canvas flotante) ══ */
+/* ═══ SHIM pygame + turtle (puente 100% JSON) ═══════════════
+   Todo cruce JS↔Python viaja como string JSON: cero proxies.  ══ */
 const PY_SHIM = `
 import json as _json, math as _math, types as _types
 import js as _js
@@ -861,9 +879,9 @@ class Surface:
     def fill(self, color):
         _js.__blPy.draw(self._id, _json.dumps({'op':'fill','color':_col(color)}))
     def get_width(self):
-        return _js.__blPy.wsize(self._id)[0]
+        return _json.loads(str(_js.__blPy.wsize(self._id)))[0]
     def get_height(self):
-        return _js.__blPy.wsize(self._id)[1]
+        return _json.loads(str(_js.__blPy.wsize(self._id)))[1]
 
 class _Display:
     def set_mode(self, size):
@@ -907,7 +925,8 @@ class Event:
 
 def event_get():
     out = []
-    for e in _js.__blPy.events():
+    data = _json.loads(str(_js.__blPy.events()))
+    for e in data:
         if e.get('t') == MOUSEBUTTONDOWN:
             out.append(Event(MOUSEBUTTONDOWN, tuple(e.get('pos', [0, 0]))))
     if _js.__blPy.anyClosed():
@@ -930,7 +949,7 @@ def init():
     return 0
 
 _pm = _types.ModuleType('pygame')
-_pm.init = init; _pm.display = display; _pm.draw = draw; _pm.event = types_ = _types
+_pm.init = init; _pm.display = _Display(); _pm.draw = _Draw()
 class _EventMod:
     get = staticmethod(event_get)
 _pm.event = _EventMod()
@@ -992,7 +1011,7 @@ _tu.Turtle = _Turtle
 _sys.modules['turtle'] = _tu
 `;
 
-/* ═══ VENTANAS FLOTANTES (matplotlib/pygame/turtle) ═════════ */
+/* ═══ VENTANAS FLOTANTES ════════════════════════════════════ */
 let winSeq = 0;
 const WINS = {};
 function openFloatWin(title, w){
@@ -1008,7 +1027,6 @@ function openFloatWin(title, w){
   const rec = { id, el, body: el.querySelector('.fwin-body'), closed: false, events: [] };
   WINS[id] = rec;
   el.querySelector('.fwin-x').addEventListener('click', ()=>{ rec.closed = true; el.remove(); });
-  /* arrastrable */
   const bar = el.querySelector('.fwin-bar');
   bar.addEventListener('pointerdown', e=>{
     if(e.target.classList.contains('fwin-x')) return;
@@ -1028,18 +1046,20 @@ window.__blPy = {
     r.body.appendChild(c);
     r.canvas = c; r.ctx = c.getContext('2d');
     r.ctx.fillStyle = '#FFFFFF'; r.ctx.fillRect(0, 0, w, h);
-    /* eventos de mouse sobre el canvas */
     c.addEventListener('pointerdown', e=>{
       const rect = c.getBoundingClientRect();
       r.events.push({ t: 1025, pos: [Math.round(e.clientX - rect.left), Math.round(e.clientY - rect.top)] });
     });
     return r.id;
   },
-  title(t){ /* la ventana más reciente */
+  title(t){
     const list = Object.values(WINS).filter(x => !x.closed);
     if(list.length) list[list.length-1].el.querySelector('.fwin-title').textContent = t;
   },
-  wsize(id){ const r = WINS[id]; return r && r.canvas ? [r.canvas.width, r.canvas.height] : [0, 0]; },
+  wsize(id){
+    const r = WINS[id];
+    return JSON.stringify(r && r.canvas ? [r.canvas.width, r.canvas.height] : [0, 0]);
+  },
   draw(id, json){
     const r = WINS[id]; if(!r || !r.ctx) return;
     let o; try{ o = JSON.parse(json); }catch(e){ return; }
@@ -1064,7 +1084,7 @@ window.__blPy = {
     const list = Object.values(WINS).filter(x => !x.closed);
     const out = [];
     list.forEach(r => { out.push(...r.events); r.events = []; });
-    return JSON.parse(JSON.stringify(out));
+    return JSON.stringify(out);
   },
   anyClosed(){ return Object.values(WINS).some(x => x.closed); },
   wait(ms){ return new Promise(r => setTimeout(r, Math.max(0, ms))); }
@@ -1102,7 +1122,6 @@ function tTokenize(str){
   return toks;
 }
 
-/* REPL interactivo real (runPythonAsync soporta await top-level) */
 let replBusy = false;
 async function replLine(v){
   if(replBusy){ tPrintText('…espera, se está ejecutando algo', 'dim'); return; }
@@ -1114,11 +1133,11 @@ async function replLine(v){
   if(t !== '') Term.repl.buf.push(v);
   const code = Term.repl.buf.join('\n');
   const opens = countOpen(code);
-  if(t === '' ){
+  if(t === ''){
     if(opens > 0){ tPrintText('…bloque incompleto (faltan cierres)','dim'); Term.repl.buf = []; showPrompt(); return; }
     Term.repl.buf = [];
   } else if(opens > 0 || /:\s*$/.test(v)){
-    showPrompt(); return;   // continúa el bloque
+    showPrompt(); return;
   } else {
     Term.repl.buf = [];
   }
@@ -1155,7 +1174,6 @@ function countOpen(code){
   return d;
 }
 
-/* ═══ COMANDOS de la PC simulada ════════════════════════════ */
 const TCMDS = {
   help(){
     return C('yellow','── PC SIMULADA · Python ──────────────────────') + '\n' +
@@ -1163,11 +1181,12 @@ const TCMDS = {
       C('blue','archivos:  ') + 'ls · cat archivo.py · nano archivo.py · rm archivo.py · echo "…" > archivo.py' + '\n' +
       C('blue','librerías: ') + 'pip install <pkg> · pip list · pip uninstall <pkg>' + '\n' +
       '<span class="c-blue">sistema:   </span>neofetch · uname · date · whoami · history · clear · help' + '\n' +
-      '<span class="c-dim">· el editor de la izquierda también ejecuta con el botón Run (Ctrl+Enter)</span>\n' +
-      '<span class="c-dim">· gráficas matplotlib y ventanas pygame/turtle se abren flotantes</span>\n' +
+      '<span class="c-dim">· el editor de la izquierda ejecuta con Run (Ctrl+Enter)</span>\n' +
+      '<span class="c-dim">· si el documento son solo líneas «pip install …», se instalan</span>\n' +
+      '<span class="c-dim">· matplotlib y pygame/turtle abren ventanas flotantes</span>\n' +
       '<span class="c-dim">· todo (archivos y paquetes) se guarda en la hoja «python» de Sheets</span>';
   },
-  ls(){ 
+  ls(){
     const names = Object.keys(FS).sort();
     if(!names.length) return C('dim','(sin archivos — nano main.py para crear uno)');
     return names.map(n => (n.endsWith('.py') ? C('blue', n) : esc(n)) + '  ' + C('dim', (FS[n].content.length) + 'B')).join('\n');
@@ -1226,7 +1245,7 @@ const TCMDS = {
     }
     return C('red','pip: usa install · list · uninstall');
   },
-  echo(args, raw){
+  echo(args){
     return { out: args.join(' ') };
   },
   clear(){ termMsgs.innerHTML = ''; return undefined; },
@@ -1257,7 +1276,6 @@ async function tExec(raw){
   if(!line) return;
   Term.hist.push(raw);
   Term.histIdx = Term.hist.length;
-  /* redirección: echo "…" > archivo.py */
   const toks = tTokenize(line);
   const cmd = toks[0];
   const gi = toks.indexOf('>');
@@ -1331,9 +1349,9 @@ function tTabComplete(){
   const isFirst = before.trim().split(/\s+/).length <= 1 && !before.endsWith(' ');
   let cands = [];
   if(isFirst){
-    cands = Object.keys(TCMDS).concat(['python']).filter(c => c.startsWith(word)).sort();
+    cands = Object.keys(TCMDS).filter(c => c.startsWith(word)).sort();
   } else {
-    cands = Object.keys(FS).concat(Object.keys(installs)).filter(c => c.startsWith(word)).sort();
+    cands = Object.keys(FS).concat([...installs]).filter(c => c.startsWith(word)).sort();
   }
   if(!cands.length) return;
   const common = cands.reduce((a,b)=>{ let i=0; while(i<a.length&&i<b.length&&a[i]===b[i]) i++; return a.slice(0,i); });
@@ -1349,7 +1367,6 @@ function tTabComplete(){
   tPrintText(cands.join('  '), 'dim');
   termInput.value = val;
 }
-const sticky = { none:false };
 function tInsert(t){
   const s = termInput.selectionStart, epos = termInput.selectionEnd;
   termInput.value = termInput.value.slice(0, s) + t + termInput.value.slice(epos);
@@ -1382,7 +1399,7 @@ function termWelcome(){
   tPrint('');
 }
 
-/* ═══ NANO (editor de archivos de la PC) ════════════════════ */
+/* ═══ NANO ══════════════════════════════════════════════════ */
 let nanoTarget = null, nanoDirty = false, nanoAsking = false;
 function openNano(name, content){
   nanoTarget = name;
@@ -1459,14 +1476,15 @@ document.querySelectorAll('.nano-bar .nbtn').forEach(b => {
     $('#nanoTA').focus();
   });
 });
+ $('#nanoCloseBtn').addEventListener('click', ()=>{ if(!nanoAsking) nanoExit(); });
  $('#nanoTA').addEventListener('input', () => { nanoDirty = true; });
 
-/* ═══ RESALTADO PYTHON (con triples entre líneas) ═══════════ */
+/* ═══ RESALTADO PYTHON ══════════════════════════════════════ */
 const PY_KW = new Set(['def','class','import','from','as','if','elif','else','for','while','try','except','finally','with','lambda','return','yield','global','nonlocal','pass','break','continue','raise','assert','del','in','is','not','and','or','async','await','None','True','False']);
-const PY_BI = new Set(['print','range','len','str','int','float','bool','list','dict','set','tuple','sum','min','max','abs','sorted','reversed','enumerate','zip','map','filter','input','open','type','isinstance','issubclass','super','round','any','all','repr','getattr','setattr','hasattr','id','hash','iter','next','callable','ord','chr','bin','hex','oct','divmod','pow','format','frozenset','bytes','bytearray','complex','self','__init__','__name__','__main__']);
+const PY_BI = new Set(['print','range','len','str','int','float','bool','list','dict','set','tuple','sum','min','max','abs','sorted','reversed','enumerate','zip','input','open','type','isinstance','issubclass','super','round','any','all','repr','getattr','setattr','hasattr','id','hash','iter','next','callable','ord','chr','bin','hex','oct','divmod','pow','format','frozenset','bytes','bytearray','complex','self','__init__','__name__','__main__']);
 function hledPy(src){
   const lines = src.split('\n');
-  let inTpl = null;   // "'''" o '"""'
+  let inTpl = null;
   return lines.map(line => {
     let out = '';
     let i = 0;
@@ -1529,27 +1547,27 @@ function syncHL(){
   hl.scrollTop = ed.scrollTop; hl.scrollLeft = ed.scrollLeft;
 }
 
-/* ═══ AUTOCOMPLETADO (builtins + métodos + diccionario + buffer) ══ */
+/* ═══ AUTOCOMPLETADO ════════════════════════════════════════ */
 const AC_PY = [
   ...PY_KW,
   ...PY_BI,
   'append','extend','insert','pop','remove','clear','copy','count','index','sort','reverse',
-  'keys','values','items','get','update','setdefault','popitem',
+  'keys','values','items','get','update','setdefault',
   'split','rsplit','join','strip','lstrip','rstrip','replace','find','rfind','startswith','endswith',
-  'upper','lower','title','capitalize','format','encode','decode','isdigit','isalpha','splitlines','zfill','ljust','rjust',
-  'group','groups','search','match','sub','findall','compile',
-  'mean','sum','median','std','read_csv','DataFrame','Series','head','describe','plot','scatter','hist','bar','xlabel','ylabel','legend','show','title','grid','savefig','figure','subplot','imshow',
-  'array','arange','linspace','zeros','ones','reshape','shape','dot','random','seed','sqrt','exp','sin','cos','pi',
+  'upper','lower','title','capitalize','format','isdigit','isalpha','splitlines','zfill','ljust','rjust',
+  'group','search','match','sub','findall','compile',
+  'mean','median','std','read_csv','DataFrame','Series','head','describe','plot','scatter','hist','bar','xlabel','ylabel','legend','show','title','grid','savefig','figure','subplot','imshow',
+  'array','arange','linspace','zeros','ones','reshape','shape','dot','seed','sqrt','exp','sin','cos','pi',
   'simplify','solve','Symbol','symbols','diff','integrate','factor','expand',
   'load','dump','dumps','loads','path','join','exists','mkdir','getcwd','listdir',
   'sleep','randint','choice','shuffle','uniform','sample',
   'import math','import random','import json','import sys','import os','import statistics',
   'from collections import','import numpy as np','import matplotlib.pyplot as plt','import pandas as pd'
 ].map(x => ({ name: x }));
-function acContext(){
+function acWord(){
   const before = ed.value.slice(0, ed.selectionStart);
   const m = before.match(/[A-Za-z0-9_]+$/);
-  return { word: m ? m[0] : '' };
+  return m ? m[0] : '';
 }
 function caretXY(){
   const div = document.createElement('div');
@@ -1564,7 +1582,7 @@ function caretXY(){
   div.remove(); return r;
 }
 function showSug(){
-  const w = acContext().word;
+  const w = acWord();
   if(!w || w.length < 2){ hideSug(); return; }
   const lw = w.toLowerCase();
   const bufferNames = new Set();
@@ -1576,7 +1594,7 @@ function showSug(){
   AC_PY.forEach(x => { if(x.name.toLowerCase().startsWith(lw) && !seen.has(x.name)){ seen.add(x.name); list.push({ name:x.name, tag:'py' }); } });
   list = list.slice(0, 8);
   if(!list.length){ hideSug(); return; }
-  sugItems = list; sugNew = null; sugActive = 0;
+  sugItems = list; sugActive = 0;
   sug.innerHTML = list.map((e,i)=>
       `<button type="button" data-i="${i}" class="${i===0?'on':''}"><b>${esc(e.name)}</b>${e.tag?`<span class="tag">${esc(e.tag)}</span>`:''}</button>`
     ).join('');
@@ -1591,7 +1609,7 @@ function showSug(){
   if(top  > maxY) top  = Math.max(8, c.y - ed.scrollTop - sug.offsetHeight - c.lh - 6);
   sug.style.left = left+'px'; sug.style.top = top+'px';
 }
-function hideSug(){ sug.hidden = true; sugItems=[]; sugNew=null; sugActive=0; }
+function hideSug(){ sug.hidden = true; sugItems=[]; sugActive=0; }
 function markActive(){
   sug.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('on', i===sugActive));
   const el = sug.querySelectorAll('button')[sugActive];
@@ -1622,10 +1640,8 @@ function insertSnippet(sn){
   hideSug(); ed.focus(); onEdInput();
 }
 function acceptActive(){
-  const btns = sug.querySelectorAll('button');
-  const el = btns[sugActive];
-  if(!el) return;
-  insertSnippet(sugItems[sugActive]);
+  const el = sug.querySelectorAll('button')[sugActive];
+  if(el) insertSnippet(sugItems[sugActive]);
 }
 sug.addEventListener('pointerdown', e=>{
   const b = e.target.closest('button'); if(!b) return;
@@ -1636,7 +1652,7 @@ document.addEventListener('pointerdown', e=>{
   if(!e.target.closest('#sug') && e.target!==ed) hideSug();
 });
 
-/* ═══ PESTAÑAS (Código | Consola) ═══════════════════════════ */
+/* ═══ PESTAÑAS ══════════════════════════════════════════════ */
 function setView(v){
   view = v;
   document.body.classList.toggle('view-code', v==='code');
@@ -1701,7 +1717,6 @@ function saveDraftSoon(){
 }
 ed.addEventListener('keydown', e=>{
   if(e.key === 'Enter' && (e.ctrlKey || e.metaKey)){ e.preventDefault(); runEditor(); return; }
-  if(e.shiftKey && e.altKey && e.code === 'KeyF'){ e.preventDefault(); /* sin formateo en python */ toast('Python: usa Run para ejecutar'); return; }
   if(!sug.hidden){
     if(e.key==='ArrowDown'){ e.preventDefault(); moveActive(1); return; }
     if(e.key==='ArrowUp'){   e.preventDefault(); moveActive(-1); return; }
@@ -1726,11 +1741,22 @@ ed.addEventListener('scroll', ()=>{ hl.scrollTop = ed.scrollTop; hl.scrollLeft =
   if(e.key==='Tab'){ e.preventDefault(); e.target.setRangeText('    ', e.target.selectionStart, e.target.selectionEnd, 'end'); }
 });
 
-/* ═══ BOTONES ═══════════════════════════════════════════════ */
+/* ═══ EJECUCIÓN DEL EDITOR ══════════════════════════════════ */
 async function runEditor(){
   setView('con');
   const code = ed.value;
   if(!code.trim()){ tPrintText('El documento está vacío — escribe código Python primero', 'yellow'); return; }
+  /* documento de solo líneas «pip install/uninstall …» → modo pip */
+  const lines = code.split('\n').map(l=>l.trim()).filter(l=>l);
+  const isPipDoc = lines.length > 0 && lines.every(l => /^pip (install|uninstall)\b/.test(l));
+  if(isPipDoc){
+    for(const l of lines){
+      const toks = tTokenize(l);
+      await TCMDS.pip(toks.slice(1));
+    }
+    tPrintText('✓ paquetes procesados', 'green');
+    return;
+  }
   await runCode(code, 'documento');
 }
  $('#btnRun').addEventListener('click', runEditor);
@@ -1859,8 +1885,20 @@ function armConfirm(btn, fn){
   }, 2600);
 }
 
-/* ═══ ARRANQUE (defensivo) ══════════════════════════════════ */
+/* ═══ ARRANQUE (defensivo + autochequeo de IDs) ═════════════ */
 (function init(){
+  /* autochequeo: todos los ids que el JS usa deben existir */
+  const CRITICAL = ['#ed','#hl','#sug','#edWrap','#termOut','#termMsgs','#termIn',
+    '#termInput','#termPrompt','#keybar','#nano','#nanoTA','#nanoTitle',
+    '#nanoStatus','#nanoCloseBtn','#btnRun','#btnDict','#btnSync','#btnWipe',
+    '#btnRestart','#btnSave','#btnReset','#btnFmt','#draftInfo','#qb','#stDot',
+    '#stTxt','#stPill','#tabDot','#errBox','#toasts','#dlgDict','#dlgSnip',
+    '#dictList','#dictCount','#q2','#snipTA'];
+  const missing = CRITICAL.filter(s => !document.querySelector(s));
+  if(missing.length){
+    showFatal('Faltan elementos: ' + missing.join(', ') + ' → re-copia el archivo completo.');
+  }
+
   try{ loadQueue(); }catch(e){ showFatal('cola: ' + e.message); }
   try{ loadCache(); }catch(e){ showFatal('caché: ' + e.message); }
   try{ loadFSLocal(); }catch(e){ showFatal('fs: ' + e.message); }
@@ -1881,7 +1919,7 @@ function armConfirm(btn, fn){
 
   try{ reconcileDraft(); }catch(e){ showFatal('reconciliar: ' + e.message); }
   try{ termWelcome(); }catch(e){}
-  ensurePy().catch(e => showFatal('pyodide: ' + (e.message||e)));   // runtime en segundo plano
+  ensurePy().catch(e => showFatal('pyodide: ' + (e.message||e)));
   sync();
 })();
 </script>

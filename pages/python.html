@@ -1543,22 +1543,12 @@ function syncHL(){
 }
 
 /* ═══ AUTOCOMPLETADO ════════════════════════════════════════ */
-const AC_PY = [
-  ...PY_KW,
-  ...PY_BI,
-  'append','extend','insert','pop','remove','clear','copy','count','index','sort','reverse',
-  'keys','values','items','get','update','setdefault',
-  'split','rsplit','join','strip','lstrip','rstrip','replace','find','rfind','startswith','endswith',
-  'upper','lower','title','capitalize','format','isdigit','isalpha','splitlines','zfill','ljust','rjust',
-  'group','search','match','sub','findall','compile',
-  'mean','median','std','read_csv','DataFrame','Series','head','describe','plot','scatter','hist','bar','xlabel','ylabel','legend','show','title','grid','savefig','figure','subplot','imshow',
-  'array','arange','linspace','zeros','ones','reshape','shape','dot','seed','sqrt','exp','sin','cos','pi',
-  'simplify','solve','Symbol','symbols','diff','integrate','factor','expand',
-  'load','dump','dumps','loads','path','join','exists','mkdir','getcwd','listdir',
-  'sleep','randint','choice','shuffle','uniform','sample',
-  'import math','import random','import json','import sys','import os','import statistics',
-  'from collections import','import numpy as np','import matplotlib.pyplot as plt','import pandas as pd'
-].map(x => ({ name: x }));
+/* Autocompletado: SOLO funciones del diccionario (hoja «python» en
+   Sheets, cacheadas en localStorage). Nada embebido en el HTML.
+   Para añadir funciones: botón «+ Nueva» del diccionario, o escribir
+   una palabra nueva en el editor y elegir «＋ guardar». */
+
+
 function acWord(){
   const before = ed.value.slice(0, ed.selectionStart);
   const m = before.match(/[A-Za-z0-9_]+$/);
@@ -1580,19 +1570,19 @@ function showSug(){
   const w = acWord();
   if(!w || w.length < 2){ hideSug(); return; }
   const lw = w.toLowerCase();
-  const bufferNames = new Set();
-  (ed.value.match(/[A-Za-z_]\w*/g) || []).forEach(n => { if(n.length > 2) bufferNames.add(n); });
+  /* ÚNICA fuente: el diccionario (Sheets/localStorage) */
   let list = [];
-  dict().forEach(e => { if(e.name.toLowerCase().startsWith(lw) || e.name.toLowerCase().split(/\s+/).some(t=>t.startsWith(lw))) list.push(e); });
-  const seen = new Set(list.map(e => e.name));
-  bufferNames.forEach(n => { if(n.toLowerCase().startsWith(lw) && !seen.has(n)){ seen.add(n); list.push({ name:n, tag:'def' }); } });
-  AC_PY.forEach(x => { if(x.name.toLowerCase().startsWith(lw) && !seen.has(x.name)){ seen.add(x.name); list.push({ name:x.name, tag:'py' }); } });
-  list = list.slice(0, 8);
-  if(!list.length){ hideSug(); return; }
-  sugItems = list; sugActive = 0;
+  dict().forEach(e => {
+    if(e.name.toLowerCase().startsWith(lw) ||
+       e.name.toLowerCase().split(/\s+/).some(t => t.startsWith(lw))) list.push(e);
+  });
+  const exact = list.some(e => e.name.toLowerCase() === w.toLowerCase());
+  const canNew = !exact;   // no existe → ofrecer «＋ guardar» (va a Sheets)
+  if(!list.length && !canNew){ hideSug(); return; }
+  sugItems = list; sugNew = canNew ? w : null; sugActive = 0;
   sug.innerHTML = list.map((e,i)=>
       `<button type="button" data-i="${i}" class="${i===0?'on':''}"><b>${esc(e.name)}</b>${e.tag?`<span class="tag">${esc(e.tag)}</span>`:''}</button>`
-    ).join('');
+    ).join('') + (canNew ? `<button type="button" data-new="1" class="newrow">＋ guardar «${esc(w)}» en el diccionario…</button>` : '');
   sug.hidden = false;
   const c = caretXY();
   let left = c.x - ed.scrollLeft + 2;
@@ -1604,6 +1594,7 @@ function showSug(){
   if(top  > maxY) top  = Math.max(8, c.y - ed.scrollTop - sug.offsetHeight - c.lh - 6);
   sug.style.left = left+'px'; sug.style.top = top+'px';
 }
+
 function hideSug(){ sug.hidden = true; sugItems=[]; sugActive=0; }
 function markActive(){
   sug.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('on', i===sugActive));
@@ -1628,21 +1619,24 @@ function insertSnippet(sn){
   let off = code.length;
   const i0 = code.indexOf('$0');
   if(i0 >= 0){ code = code.slice(0, i0) + code.slice(i0 + 2); off = i0; }
-  const i1 = code.indexOf('$1');
-  if(i1 >= 0){ code = code.slice(0, i1) + code.slice(i1 + 2); }
   ed.setRangeText(code, start, selEnd, 'end');
   ed.selectionStart = ed.selectionEnd = start + off;
   hideSug(); ed.focus(); onEdInput();
 }
 function acceptActive(){
-  const el = sug.querySelectorAll('button')[sugActive];
-  if(el) insertSnippet(sugItems[sugActive]);
+  const btns = sug.querySelectorAll('button');
+  const el = btns[sugActive];
+  if(!el) return;
+  if(el.dataset.new) openSnip(null, {name:sugNew, ret:'insert'});
+  else if(sugItems[sugActive]) insertSnippet(sugItems[sugActive]);
 }
 sug.addEventListener('pointerdown', e=>{
   const b = e.target.closest('button'); if(!b) return;
   e.preventDefault();
-  insertSnippet(sugItems[+b.dataset.i]);
+  if(b.dataset.new) openSnip(null, {name:sugNew, ret:'insert'});
+  else insertSnippet(sugItems[+b.dataset.i]);
 });
+
 document.addEventListener('pointerdown', e=>{
   if(!e.target.closest('#sug') && e.target!==ed) hideSug();
 });
@@ -1831,8 +1825,7 @@ function renderDict(){
       </div>
     </div>`;
   }
-  $('#dictList').innerHTML = html || '<div class="d-empty">Nada coincide.</div>';
-  refreshIcons();
+    $('#dictList').innerHTML = html || '<div class="d-empty">Sin entradas todavía.<br>Crea la primera con «+ Nueva» — se guardará en la hoja «python» de Sheets y aparecerá en el autocompletado.</div>';
 }
  $('#dictList').addEventListener('click', e=>{
   const btn = e.target.closest('[data-a]'); if(!btn) return;

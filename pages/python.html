@@ -119,8 +119,6 @@ body.view-con .pv-con{display:flex}
 .sug button.on,.sug button:hover{background:var(--ink);color:var(--bg)}
 .sug button.on .tag,.sug button:hover .tag{background:var(--bg);color:var(--ink)}
 .tag{font:700 8.5px/1 var(--mono);letter-spacing:.07em;text-transform:uppercase;padding:3px 6px;background:var(--ink);color:var(--bg);flex:none}
-.sug .newrow{color:var(--acc);font-weight:700;border-top:1px solid var(--line)}
-.sug .newrow:hover{background:var(--acc);color:var(--bg)}
 
 .pv-con{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--term);color:var(--tpaper)}
 .term-head{flex:none;display:flex;justify-content:space-between;align-items:center;padding:8px 12px;
@@ -280,7 +278,6 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
   </section>
 </main>
 
-<!-- Diccionario -->
 <dialog id="dlgDict">
   <div class="dlg-head">
     <div><h3>Diccionario</h3><small id="dictCount">—</small></div>
@@ -295,7 +292,6 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
   </div>
 </dialog>
 
-<!-- Entrada -->
 <dialog id="dlgSnip">
   <form id="fmSnip" method="dialog">
     <div class="dlg-head">
@@ -325,7 +321,6 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
   </form>
 </dialog>
 
-<!-- ══ NANO: TODOS los ids presentes (nanoTA incluido) ══ -->
 <div id="nano" hidden>
   <div class="nano-top">
     <span id="nanoTitle">nano</span>
@@ -367,14 +362,14 @@ let MODULES = [], BLOCKS = {}, queue = [], syncing = false;
 let sugItems = [], sugActive = 0;
 let snipReturn = 'dict';
 let lastRows = {}, pushT = null;
-let compileT = null, draftT = null, resizeT = null;
+let draftT = null, resizeT = null, pyTries = 0;
 let view = 'code';
 
 let connected = false, connLabel = '', connDetail = '';
 let diagDone = false, diagRunning = false, dlgAutoShown = false;
 let lastPushedDraft = null;
 
-let pyodide = null, pyLoading = false, pyWaiters = [], pyLibTries = 0;
+let pyodide = null, pyLoading = false, pyWaiters = [];
 let FS = {};
 let installs = new Set();
 
@@ -757,7 +752,7 @@ async function ensurePy(){
     await reinstallPkgs(true);
     pyWaiters.forEach(r => r(pyodide)); pyWaiters = [];
   }catch(e){
-    if(++pyLibTries < 4){
+    if(++pyTries < 4){
       tPrintText('python: reintentando carga…', 'dim');
       setTimeout(()=>{ pyLoading = false; ensurePy(); }, 2500);
       return new Promise(r => pyWaiters.push(r));
@@ -822,7 +817,7 @@ async function runCode(code, label){
   try{ py = await ensurePy(); }
   catch(e){ return false; }
   tPrint(C('dim', '▶ ' + (label || 'documento') + ' — ejecutando…'));
-  /* magia: líneas «!comando» se ejecutan en la PC simulada */
+  /* magia: líneas «!comando» van a la terminal; «pip install x» solo también */
   const magic = [];
   const pyLines = [];
   code.split('\n').forEach(l => {
@@ -836,7 +831,7 @@ async function runCode(code, label){
     await tExec(m);
   }
   try{ await py.loadPackagesFromImports(code); }
-  catch(e){ /* paquete sin binario: el import fallará abajo con mensaje claro */ }
+  catch(e){ }
   let ok = true;
   try{
     const val = await py.runPythonAsync(code);
@@ -859,8 +854,7 @@ async function runCode(code, label){
   return ok;
 }
 
-/* ═══ SHIM pygame + turtle (puente 100% JSON) ═══════════════
-   Todo cruce JS↔Python viaja como string JSON: cero proxies.  ══ */
+/* ═══ SHIM pygame + turtle (puente 100% JSON) ═══════════════ */
 const PY_SHIM = `
 import json as _json, math as _math, types as _types
 import js as _js
@@ -1183,6 +1177,7 @@ const TCMDS = {
       '<span class="c-blue">sistema:   </span>neofetch · uname · date · whoami · history · clear · help' + '\n' +
       '<span class="c-dim">· el editor de la izquierda ejecuta con Run (Ctrl+Enter)</span>\n' +
       '<span class="c-dim">· si el documento son solo líneas «pip install …», se instalan</span>\n' +
+      '<span class="c-dim">· dentro del código también: «!pip install numpy» (estilo notebook)</span>\n' +
       '<span class="c-dim">· matplotlib y pygame/turtle abren ventanas flotantes</span>\n' +
       '<span class="c-dim">· todo (archivos y paquetes) se guarda en la hoja «python» de Sheets</span>';
   },
@@ -1746,7 +1741,6 @@ async function runEditor(){
   setView('con');
   const code = ed.value;
   if(!code.trim()){ tPrintText('El documento está vacío — escribe código Python primero', 'yellow'); return; }
-  /* documento de solo líneas «pip install/uninstall …» → modo pip */
   const lines = code.split('\n').map(l=>l.trim()).filter(l=>l);
   const isPipDoc = lines.length > 0 && lines.every(l => /^pip (install|uninstall)\b/.test(l));
   if(isPipDoc){
@@ -1885,14 +1879,14 @@ function armConfirm(btn, fn){
   }, 2600);
 }
 
-/* ═══ ARRANQUE (defensivo + autochequeo de IDs) ═════════════ */
+/* ═══ ARRANQUE (defensivo + autochequeo) ════════════════════ */
 (function init(){
-  /* autochequeo: todos los ids que el JS usa deben existir */
+  /* AUTOCHQUEO: esta lista DEBE reflejar exactamente los ids del HTML */
   const CRITICAL = ['#ed','#hl','#sug','#edWrap','#termOut','#termMsgs','#termIn',
-    '#termInput','#termPrompt','#keybar','#nano','#nanoTA','#nanoTitle',
+    '#termInput','#termPrompt','#keybar','#termClear','#nano','#nanoTA','#nanoTitle',
     '#nanoStatus','#nanoCloseBtn','#btnRun','#btnDict','#btnSync','#btnWipe',
-    '#btnRestart','#btnSave','#btnReset','#btnFmt','#draftInfo','#qb','#stDot',
-    '#stTxt','#stPill','#tabDot','#errBox','#toasts','#dlgDict','#dlgSnip',
+    '#btnRestart','#btnSave','#btnReset','#draftInfo','#qb','#stDot',
+    '#stTxt','#stPill','#toasts','#dlgDict','#dlgSnip',
     '#dictList','#dictCount','#q2','#snipTA'];
   const missing = CRITICAL.filter(s => !document.querySelector(s));
   if(missing.length){

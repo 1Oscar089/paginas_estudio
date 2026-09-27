@@ -211,6 +211,28 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
 .toast svg{width:14px;height:14px}
 @keyframes tin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @media(min-width:640px){#toasts{left:auto;right:20px;align-items:flex-end}}
+
+/* ═══ Modal input() de Python (pre-recolección de valores) ══ */
+#pyInput{position:fixed;inset:0;z-index:80;background:rgba(20,18,15,.72);
+  display:flex;align-items:center;justify-content:center;padding:16px}
+.pyin-box{width:min(440px,92vw);background:var(--card);border:2px solid var(--ink);
+  box-shadow:7px 7px 0 var(--ink);border-radius:3px;overflow:hidden;max-height:86vh;display:flex;flex-direction:column}
+.pyin-title{background:var(--ink);color:var(--bg);font:700 11px/1 var(--mono);
+  letter-spacing:.1em;text-transform:uppercase;padding:10px 14px;border-bottom:2px solid var(--acc)}
+.pyin-sub{padding:12px 14px 4px;font:400 11px/1.5 var(--mono);color:var(--mut)}
+#pyinFields{padding:8px 14px 4px;overflow-y:auto}
+.pyin-field{margin-bottom:12px}
+.pyin-field label{display:block;font:700 10px/1.4 var(--mono);color:var(--mut);
+  white-space:pre-wrap;word-break:break-word;margin-bottom:4px}
+.pyin-field input{display:block;width:100%;padding:10px 12px;font:400 14px/1.4 var(--mono);
+  border:1.5px solid var(--ink);background:var(--bg);color:var(--ink);outline:none}
+.pyin-field input:focus{border-color:var(--acc)}
+.pyin-btns{display:flex;justify-content:flex-end;gap:10px;padding:10px 14px 16px}
+.pyin-btns .nbtn{border:1.5px solid var(--ink);background:none;color:var(--ink);
+  font:700 11px/1 var(--mono);padding:11px 16px;cursor:pointer;touch-action:manipulation}
+.pyin-btns .nbtn:active{background:var(--ink);color:var(--bg)}
+.pyin-btns .nb-ok{background:var(--ok);border-color:var(--ok);color:var(--bg)}
+.pyin-btns .nb-ok:active{background:#2E5227}
 </style>
 </head>
 <body class="view-code">
@@ -338,6 +360,19 @@ dialog::backdrop{background:rgba(28,25,21,.55)}
   </div>
 </div>
 
+<!-- ══ Modal input() de Python: recoge los valores ANTES de ejecutar ══ -->
+<div id="pyInput" hidden>
+  <div class="pyin-box">
+    <div class="pyin-title">Python · input()</div>
+    <div class="pyin-sub">Tu código usa <b>input()</b> — ingresa los valores y se los entrego al programa al ejecutar:</div>
+    <div id="pyinFields"></div>
+    <div class="pyin-btns">
+      <button type="button" class="nbtn" id="pyinCancel">✕ Cancelar</button>
+      <button type="button" class="nbtn nb-ok" id="pyinOk">▶ Ejecutar con estos valores</button>
+    </div>
+  </div>
+</div>
+
 <div id="toasts"></div>
 
 <script>
@@ -376,6 +411,7 @@ let FS = {};
 let installs = new Set();
 let PYODIDE_PKGS = null;
 let PKGLIST_TRY = false;
+let pyStdinQueue = [];      // valores de input() recolectados por el modal
 
 let __missing = {};
 const $ = s => {
@@ -731,7 +767,7 @@ function tPrintText(text, cls){
 }
 function tFocus(){ termInput.focus(); }
 
-/* ═══ PYODIDE — con STDIN funcional (input() real) ══════════ */
+/* ═══ PYODIDE — STDIN alimentado por el modal de input() ════ */
 function loadScript(src){
   return new Promise((res, rej)=>{
     const s = document.createElement('script');
@@ -749,19 +785,21 @@ async function ensurePy(){
     pyodide = await loadPyodide({ indexURL: PYODIDE_BASE });
     pyodide.setStdout({ batched: s => tPrintText(s) });
     pyodide.setStderr({ batched: s => tPrintText(s, 'red') });
-    /* STDIN: input() abre un diálogo del navegador pidiendo el valor.
-       Sin esto, cualquier input() revienta con OSError [Errno 29]. */
+    /* STDIN: los valores los recolecta el MODAL antes de ejecutar
+       (uno por cada input("prompt") detectado en el código). Si no
+       hay valores precargados, devuelve cadena vacía con aviso. */
     pyodide.setStdin({
       stdin: () => {
-        const v = window.prompt('input() — ingresa el valor:');
-        return (v === null) ? '' : v;
+        if(pyStdinQueue.length) return String(pyStdinQueue.shift());
+        tPrintText('input(): sin valor precargado (se esperaba el modal) — devolviendo cadena vacía', 'yellow');
+        return '';
       },
       autoEOF: true
     });
     try{ await pyodide.runPythonAsync('import matplotlib; matplotlib.use("AGG")'); }catch(e){}
     await pyodide.runPythonAsync(PY_SHIM);
     const ver = pyodide.runPython('import sys; sys.version.split()[0]');
-    tPrintText('python: listo — CPython ' + ver + ' (Pyodide). input() abre un diálogo. pip install <paquete> para librerías.', 'green');
+    tPrintText('python: listo — CPython ' + ver + ' (Pyodide). input() usa un modal. pip install <paquete> para librerías.', 'green');
     await reinstallPkgs(true);
     pyWaiters.forEach(r => r(pyodide)); pyWaiters = [];
   }catch(e){
@@ -776,13 +814,11 @@ async function ensurePy(){
   }
   return pyodide;
 }
-/* restauración silenciosa: sin spam, solo resumen */
 async function reinstallPkgs(silent){
   if(!pyodide || !installs.size) return;
   const lista = [...installs];
-  if(!silent) lista.forEach(p => tPrintText('pip: instalando ' + p + ' …', 'dim'));
   for(const p of lista) await pipInstall([p], true);
-  if(silent) tPrintText('pip: paquetes restaurados — ' + lista.join(', '), 'dim');
+  tPrintText('pip: paquetes restaurados — ' + lista.join(', '), 'dim');
 }
 async function pipInstall(pkgs, silent){
   await ensurePy();
@@ -846,9 +882,7 @@ const ALTERNATIVAS = {
   'transformers':'scikit-learn (ML clásico)'
 };
 
-/* lista oficial de paquetes del runtime */
-let PKGLIST = null;
-PKGLIST_TRY = false;
+/* Lista oficial de paquetes del runtime */
 async function loadPkgList(){
   if(PKGLIST) return PKGLIST;
   if(PKGLIST_TRY) return new Set();
@@ -876,24 +910,65 @@ const FIG_CAPTURE = [
   '_j.dumps(_out)'
 ].join('\n');
 
-/* Limpia tracebacks: quita la basura interna de Pyodide */
-function cleanTrace(m){
-  const lines = String(m).split('\n');
-  const out = [];
-  for(const l of lines){
-    if(/pyodide[\\/]base\.py|_pyodide[\\/]|eval_code_async|run_async|coroutine = eval|^\s*\^+|^\s*~~~~/.test(l)) continue;
-    if(/^Traceback \(most recent call last\):$/.test(l) &&
-       out.length && /File "/.test(lines[lines.indexOf(l)+1] || '')) continue;
-    out.push(l);
+/* Detección de input("prompt") en el código del usuario */
+function extractPrompts(code){
+  const prompts = [];
+  const re = /input\(\s*(["'])((?:\\.|(?!\1).)*)\1\s*[\),]/g;
+  let m;
+  while((m = re.exec(code)) !== null){
+    let txt = m[2].replace(/\\n/g, ' ').replace(/\\"/g,'"').replace(/\\'/g,"'").trim();
+    if(!txt) txt = 'Ingresa un valor:';
+    prompts.push(txt);
   }
-  return out.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  return prompts;
+}
+/* Modal: recolecta los valores; resuelve con el arreglo o null si cancelan */
+function askPyInputs(prompts){
+  return new Promise(res => {
+    if(!prompts.length){ res(null); return; }   // sin input() → sin modal
+    const box = $('#pyInput');
+    const fields = $('#pyinFields');
+    fields.innerHTML = '';
+    prompts.forEach((p, i) => {
+      const d = document.createElement('div');
+      d.className = 'pyin-field';
+      d.innerHTML = '<label>' + esc(p) + '</label>' +
+        '<input type="text" data-i="' + i + '" autocomplete="off">';
+      fields.appendChild(d);
+    });
+    box.hidden = false;
+    const first = fields.querySelector('input');
+    if(first) first.focus();
+    const done = vals => {
+      box.hidden = true;
+      $('#pyinOk').onclick = null;
+      $('#pyinCancel').onclick = null;
+      document.removeEventListener('keydown', keyH);
+      res(vals);
+    };
+    const collect = () => [...fields.querySelectorAll('input')].map(inp => inp.value);
+    const keyH = e => {
+      if(e.key === 'Enter'){
+        e.preventDefault();
+        const all = fields.querySelectorAll('input');
+        const lastEmpty = [...all].reverse().find(x => !x.value);
+        if(lastEmpty){ lastEmpty.focus(); return; }
+        done(collect());
+      }
+      else if(e.key === 'Escape'){ e.preventDefault(); done(null); }
+    };
+    document.addEventListener('keydown', keyH);
+    $('#pyinOk').onclick = () => done(collect());
+    $('#pyinCancel').onclick = () => done(null);
+  });
 }
 
-async function runCode(code, label){
+async function runCode(code, label, preInputs){
   let py;
   try{ py = await ensurePy(); }
   catch(e){ return false; }
   tPrint(C('dim', '▶ ' + (label || 'documento') + ' — ejecutando…'));
+  /* magia: líneas «!comando» van a la terminal */
   const magic = [];
   const pyLines = [];
   code.split('\n').forEach(l => {
@@ -905,6 +980,17 @@ async function runCode(code, label){
     if(!m) continue;
     tPrint(C('dim','! ' + m));
     await tExec(m);
+  }
+  /* input(): modal con un campo por cada input("prompt") del código */
+  const prompts = extractPrompts(code);
+  if(prompts.length && !preInputs){
+    const vals = await askPyInputs(prompts);
+    if(vals === null){ tPrintText('✗ ejecución cancelada', 'red'); return false; }
+    pyStdinQueue = vals;
+  } else if(preInputs){
+    pyStdinQueue = preInputs.slice();
+  } else {
+    pyStdinQueue = [];
   }
   try{ await py.loadPackagesFromImports(code); }
   catch(e){ }
@@ -927,6 +1013,17 @@ async function runCode(code, label){
   }catch(e){}
   tPrintText(ok ? '✓ fin de ejecución' : '✗ ejecución con errores', ok ? 'green' : 'red');
   return ok;
+}
+
+/* Limpia tracebacks: quita la basura interna de Pyodide */
+function cleanTrace(m){
+  const lines = String(m).split('\n');
+  const out = [];
+  for(const l of lines){
+    if(/pyodide[\\/]base\.py|_pyodide[\\/]|eval_code_async|run_async|coroutine = eval|^\s*\^+|^\s*~~~~/.test(l)) continue;
+    out.push(l);
+  }
+  return out.join('\n').replace(/\n{3,}/g, '\n\n').trim();
 }
 
 /* ═══ SHIM pygame + turtle (puente 100% JSON) ═══════════════ */
@@ -1252,8 +1349,7 @@ const TCMDS = {
       '<span class="c-blue">sistema:   </span>neofetch · uname · date · whoami · history · clear · help' + '\n' +
       '<span class="c-dim">· el editor de la izquierda ejecuta con Run (Ctrl+Enter)</span>\n' +
       '<span class="c-dim">· si el documento son solo líneas «pip install …», se instalan</span>\n' +
-      '<span class="c-dim">· dentro del código también: «!pip install numpy» (estilo notebook)</span>\n' +
-      '<span class="c-dim">· input() abre un diálogo para pedir datos al usuario</span>\n' +
+      '<span class="c-dim">· input() con prompt literal abre un modal antes de ejecutar</span>\n' +
       '<span class="c-dim">· matplotlib y pygame/turtle abren ventanas flotantes</span>\n' +
       '<span class="c-dim">· todo (archivos y paquetes) se guarda en la hoja «python» de Sheets</span>';
   },
@@ -1285,7 +1381,7 @@ const TCMDS = {
   async python(args){
     if(!args.length){
       Term.repl = { buf: [] };
-      tPrint(C('green','Python REPL (Pyodide)') + C('dim',' · exit() para salir · input() abre un diálogo'));
+      tPrint(C('green','Python REPL (Pyodide)') + C('dim',' · exit() para salir · input() con prompt literal abre el modal'));
       showPrompt();
       return undefined;
     }
@@ -1474,9 +1570,9 @@ keybar.addEventListener('click', e=>{
 });
 function termWelcome(){
   tPrint('<span class="c-green">PC simulada · Python (Pyodide/CPython en WebAssembly)</span>');
-  tPrintText('Sin usuario ni contraseña. Archivos y paquetes se guardan en la hoja «python» de Sheets.', 'dim');
+  tPrintText('Sin usuario ni contraseña. Los archivos y paquetes se guardan en la hoja «python» de Sheets.', 'dim');
   tPrintText('Prueba: help · python (REPL) · pip search pandas · pip install matplotlib · neofetch', 'dim');
-  tPrintText('input() abre un diálogo para pedir datos. matplotlib y pygame abren ventanas flotantes.', 'dim');
+  tPrintText('input() con prompt literal abre un modal antes de ejecutar. matplotlib y pygame abren ventanas flotantes.', 'dim');
   tPrint('');
 }
 
@@ -1816,16 +1912,24 @@ async function runEditor(){
   const code = ed.value;
   if(!code.trim()){ tPrintText('El documento está vacío — escribe código Python primero', 'yellow'); return; }
   const lines = code.split('\n').map(l=>l.trim()).filter(l=>l);
-  const isPipDoc = lines.length > 0 && lines.every(l => /^pip (install|uninstall)\b/.test(l));
+  const isPipDoc = lines.length > 0 && lines.every(l => /^(pip (install|uninstall)\b|!pip )/.test(l) || /^pip\b/.test(l));
   if(isPipDoc){
     for(const l of lines){
-      const toks = tTokenize(l);
-      await TCMDS.pip(toks.slice(1));
+      const clean = l.replace(/^!/, '').trim();
+      const toks = tTokenize(clean);
+      if(toks[0] === 'pip'){ await TCMDS.pip(toks.slice(1)); }
     }
     tPrintText('✓ paquetes procesados', 'green');
     return;
   }
-  await runCode(code, 'documento');
+  /* input(): modal con los valores ANTES de ejecutar */
+  const prompts = extractPrompts(code);
+  let pre = null;
+  if(prompts.length){
+    pre = await askPyInputs(prompts);
+    if(pre === null){ tPrintText('✗ ejecución cancelada', 'red'); return; }
+  }
+  await runCode(code, 'documento', pre);
 }
  $('#btnRun').addEventListener('click', runEditor);
  $('#btnSave').addEventListener('click', ()=>{
@@ -1955,13 +2059,14 @@ function armConfirm(btn, fn){
 
 /* ═══ ARRANQUE (defensivo + autochequeo) ════════════════════ */
 (function init(){
-  /* AUTOCHQUEO: esta lista refleja exactamente los ids del HTML */
+  /* AUTOCHQUEO: esta lista DEBE reflejar exactamente los ids del HTML */
   const CRITICAL = ['#ed','#hl','#sug','#edWrap','#termOut','#termMsgs','#termIn',
     '#termInput','#termPrompt','#keybar','#termClear','#nano','#nanoTA','#nanoTitle',
     '#nanoStatus','#nanoCloseBtn','#btnRun','#btnDict','#btnSync','#btnWipe',
     '#btnRestart','#btnSave','#btnReset','#draftInfo','#qb','#stDot',
     '#stTxt','#stPill','#toasts','#dlgDict','#dlgSnip',
-    '#dictList','#dictCount','#q2','#snipTA'];
+    '#dictList','#dictCount','#q2','#snipTA',
+    '#pyInput','#pyinFields','#pyinOk','#pyinCancel'];
   const missing = CRITICAL.filter(s => !document.querySelector(s));
   if(missing.length){
     showFatal('Faltan elementos: ' + missing.join(', ') + ' → re-copia el archivo completo.');

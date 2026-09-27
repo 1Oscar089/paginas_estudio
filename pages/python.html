@@ -1,0 +1,1889 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#F4F1E9">
+<title>BLOCKLAB · python</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500..700;1,9..144,400..600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+
+<style>
+:root{
+  --bg:#F4F1E9; --card:#FDFBF4; --ink:#1C1915; --mut:#6F675A;
+  --line:#DED6C5; --acc:#D6481C; --ok:#3F6B33; --warn:#9A7B1F;
+  --term:#14120F; --tpaper:#EDE7D8; --tmut:#8A8272;
+  --tgreen:#7FCB6A; --tblue:#6FB5E0; --tred:#FF8A5C; --tyellow:#E8C15A; --tmag:#D98BC0;
+  --mono:'JetBrains Mono',monospace; --serif:'Fraunces',serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden;
+  background:var(--bg);color:var(--ink);font:400 14px/1.6 var(--mono)}
+::selection{background:rgba(214,72,28,.25)}
+button,a{font-family:var(--mono)}
+svg{flex:none}
+i[data-lucide]{display:inline-flex}
+.wrap-x{max-width:1400px;width:100%;margin:0 auto}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:38px;padding:8px 14px;
+  font:600 10.5px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;
+  border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;
+  transition:background .15s,color .15s,border-color .15s}
+.btn:hover{background:var(--ink);color:var(--bg)}
+.btn-solid{background:var(--ink);color:var(--bg)}
+.btn-solid:hover{background:var(--acc);border-color:var(--acc)}
+.btn svg{width:14px;height:14px}
+.iconbtn{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;flex:none;
+  border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;transition:all .15s}
+.iconbtn:hover{background:var(--ink);color:var(--bg)}
+.iconbtn.danger:hover{background:var(--acc);border-color:var(--acc);color:var(--bg)}
+.iconbtn.sm{width:32px;height:32px}
+.iconbtn.sm svg{width:14px;height:14px}
+.iconbtn.armed{width:auto;padding:0 9px;font:700 10px/1 var(--mono);border-color:var(--acc);color:var(--acc)}
+.iconbtn svg{width:15px;height:15px}
+.spin svg{animation:rot 1s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+header{flex:none;border-bottom:1.5px solid var(--ink);background:var(--bg)}
+.h-in{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px}
+.brand{font:700 14px/1 var(--mono);letter-spacing:.12em;white-space:nowrap}
+.brand .star{color:var(--acc)}
+.bsub{color:var(--mut);font-weight:500;letter-spacing:.06em}
+.h-right{display:flex;align-items:center;gap:6px}
+.status{display:inline-flex;align-items:center;gap:7px;font:500 10px/1 var(--mono);letter-spacing:.06em;color:var(--mut);text-transform:uppercase;margin-right:4px;cursor:pointer}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--mut);flex:none}
+.dot.ok{background:var(--ok)} .dot.err{background:var(--acc)}
+.dot.busy{background:var(--warn);animation:pulse 1.2s infinite} .dot.warn{background:var(--warn)}
+@keyframes pulse{50%{opacity:.3}}
+.qb{font:700 10px/1 var(--mono);color:var(--acc);border:1.5px solid var(--acc);padding:4px 6px}
+@media(max-width:720px){#stTxt{display:none}.btn .lbl{display:none}.h-in{gap:6px}}
+
+/* ═══ Pestañas (móvil): Código | Consola ════════════════════ */
+.tabs{flex:none;display:flex;border-bottom:1.5px solid var(--ink);background:var(--bg)}
+.tabs button{flex:1;display:flex;justify-content:center;align-items:center;gap:8px;min-height:46px;
+  font:600 11.5px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;
+  background:none;border:none;border-right:1.5px solid var(--ink);color:var(--mut);cursor:pointer}
+.tabs button:last-child{border-right:none}
+.tabs button.on{background:var(--ink);color:var(--bg)}
+.tabs button svg{width:14px;height:14px}
+
+.panes{flex:1;min-height:0;display:grid;grid-template-columns:1fr}
+.pane{display:flex;flex-direction:column;min-height:0;min-width:0}
+.pv-con{display:none}
+body.view-con .ed{display:none}
+body.view-con .pv-con{display:flex}
+@media(min-width:1024px){
+  .tabs{display:none}
+  .panes{grid-template-columns:minmax(0,50%) minmax(0,50%)}
+  .ed,.pv-con{display:flex!important}
+  .ed{border-right:1.5px solid var(--ink)}
+}
+.pane-head{flex:none;display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:8px 14px;border-bottom:1px solid var(--line);
+  font:600 10px/1 var(--mono);letter-spacing:.12em;color:var(--mut);text-transform:uppercase}
+.pane-head .r{display:flex;align-items:center;gap:6px}
+.saved{font:500 9.5px/1 var(--mono);letter-spacing:.06em;color:var(--mut);text-transform:none}
+
+.ed-wrap{flex:1;min-height:0;position:relative;margin:12px;border:1.5px solid var(--ink);background:var(--card)}
+#hl,#ed{position:absolute;inset:0;margin:0;padding:14px;border:none;outline:none;
+  font:400 13px/1.7 var(--mono);tab-size:4;
+  white-space:pre-wrap;word-wrap:break-word;overflow-wrap:break-word;overflow-y:scroll;overflow-x:hidden}
+/* PARIDAD de scrollbar: ambas capas reservan el mismo ancho → el caret
+   nunca se desalinea del texto coloreado */
+#ed{background:transparent;color:transparent;caret-color:var(--ink);resize:none;-webkit-text-fill-color:transparent;
+  scrollbar-width:thin;scrollbar-color:rgba(28,25,21,.3) transparent}
+#ed::-webkit-scrollbar{width:14px}
+#ed::-webkit-scrollbar-thumb{background:rgba(28,25,21,.28)}
+#ed::-webkit-scrollbar-track{background:transparent}
+#hl{background:var(--card);pointer-events:none;color:var(--ink);
+  scrollbar-width:thin;scrollbar-color:transparent transparent}
+#hl::-webkit-scrollbar{width:14px}
+#hl::-webkit-scrollbar-thumb{background:transparent}
+#hl::-webkit-scrollbar-track{background:transparent}
+#hl .e{color:#0F6FA8;font-weight:700}   /* builtins/def */
+#hl .p{color:#A63A0A}                   /* keywords */
+#hl .s{color:#2F7D2F}                   /* cadenas */
+#hl .n{color:#B07D10}                   /* números */
+#hl .k{color:#8E44AD;font-weight:700}   /* decoradores/self */
+#hl .b{color:#6E7B8B}                   /* llaves */
+#hl .c{color:#9A927F;font-style:italic} /* comentarios */
+
+.sug{position:absolute;z-index:8;min-width:240px;max-width:360px;max-height:280px;overflow:auto;
+  background:var(--card);border:1.5px solid var(--ink);box-shadow:5px 5px 0 rgba(28,25,21,.18);
+  font:400 12px/1.4 var(--mono)}
+.sug button{display:flex;width:100%;align-items:center;gap:8px;padding:8px 11px;border:0;
+  background:none;text-align:left;cursor:pointer;font:inherit;color:var(--ink)}
+.sug button b{font-weight:700}
+.sug button.on,.sug button:hover{background:var(--ink);color:var(--bg)}
+.sug button.on .tag,.sug button:hover .tag{background:var(--bg);color:var(--ink)}
+.tag{font:700 8.5px/1 var(--mono);letter-spacing:.07em;text-transform:uppercase;padding:3px 6px;background:var(--ink);color:var(--bg);flex:none}
+.sug .newrow{color:var(--acc);font-weight:700;border-top:1px solid var(--line)}
+.sug .newrow:hover{background:var(--acc);color:var(--bg)}
+
+/* ═══ Consola (terminal PC simulada) ════════════════════════ */
+.pv-con{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--term);color:var(--tpaper)}
+.term-head{flex:none;display:flex;justify-content:space-between;align-items:center;padding:8px 12px;
+  border-bottom:1.5px solid rgba(237,231,216,.25);font:600 10px/1 var(--mono);letter-spacing:.1em;color:var(--tmut);text-transform:uppercase}
+.term-head button{border:none;background:none;color:var(--tmut);font:600 10px var(--mono);letter-spacing:.1em;cursor:pointer;text-transform:uppercase}
+.term-head button:hover{color:var(--tred)}
+#termOut{flex:1;min-height:0;overflow-y:auto;padding:12px 14px;cursor:text;font:400 12.5px/1.55 var(--mono)}
+#termOut::-webkit-scrollbar{width:10px}
+#termOut::-webkit-scrollbar-thumb{background:rgba(237,231,216,.2)}
+.tl{white-space:pre-wrap;word-break:break-word;min-height:19px}
+.tl .c-red{color:var(--tred)} .tl .c-green{color:var(--tgreen)} .tl .c-blue{color:var(--tblue)}
+.tl .c-yellow{color:var(--tyellow)} .tl .c-mag{color:var(--tmag)} .tl .c-dim{color:var(--tmut)}
+#termIn{display:flex;align-items:baseline;padding:6px 14px 8px}
+#termPrompt{white-space:pre}
+#termInput{flex:1;min-width:50px;background:transparent;border:none;outline:none;
+  color:var(--tpaper);caret-color:var(--acc);font:inherit;padding:0}
+#keybar{display:flex;gap:6px;padding:7px 10px;overflow-x:auto;
+  border-top:1.5px solid rgba(237,231,216,.22);background:#0D0C0A}
+#keybar::-webkit-scrollbar{display:none}
+.kbtn{flex:none;min-width:44px;min-height:42px;padding:0 9px;font:700 11.5px/1 var(--mono);
+  border:1.5px solid rgba(237,231,216,.4);background:transparent;color:var(--tpaper);
+  border-radius:6px;cursor:pointer;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.kbtn:active{background:var(--tpaper);color:var(--term)}
+.kbtn.sticky{background:var(--acc);border-color:var(--acc);color:#fff}
+@media (hover:hover) and (pointer:fine){#keybar{display:none}}
+
+/* ═══ Ventanas flotantes (matplotlib/pygame/turtle) ═════════ */
+.fwin{position:fixed;z-index:70;background:var(--card);border:1.5px solid var(--ink);
+  box-shadow:6px 6px 0 rgba(28,25,21,.35);border-radius:3px;overflow:hidden}
+.fwin-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 12px;
+  background:var(--ink);color:var(--bg);font:700 11px/1 var(--mono);cursor:grab;user-select:none}
+.fwin-bar .fwin-x{border:none;background:var(--acc);color:var(--bg);font:700 11px/1 var(--mono);
+  width:22px;height:22px;cursor:pointer;border-radius:2px;flex:none}
+.fwin-body{padding:0;font:400 12px/1.5 var(--mono);background:#fff;max-height:70vh;overflow:auto}
+.fwin-body img{display:block;max-width:100%;height:auto}
+.fwin-body canvas{display:block}
+
+/* ═══ nano (editor de archivos de la PC simulada) ═══════════ */
+#nano{position:fixed;inset:0;z-index:60;background:var(--term);display:flex;flex-direction:column;font:inherit}
+.nano-top{flex:none;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 14px;
+  background:var(--bg);color:var(--ink);font-weight:700;font-size:12px;border-bottom:2px solid var(--acc)}
+#nanoTA{flex:1;min-height:0;background:var(--term);color:var(--tpaper);border:none;outline:none;resize:none;
+  font:400 14px/1.7 var(--mono);padding:14px 16px;tab-size:4}
+#nanoStatus{flex:none;padding:7px 14px;min-height:30px;font-weight:700;font-size:12px;background:var(--bg);color:var(--ink)}
+.nano-bar{flex:none;display:flex;flex-wrap:wrap;background:var(--bg);color:var(--ink);border-top:1.5px solid var(--ink)}
+.nano-bar .nbtn{border:none;background:none;color:var(--ink);font:700 12px/1 var(--mono);
+  padding:13px 16px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;touch-action:manipulation;
+  border-right:1.5px solid var(--line)}
+.nano-bar .nbtn:active{background:var(--ink);color:var(--bg)}
+.nano-bar .nb-run{color:var(--ok)}
+.nano-bar .nb-save{color:var(--acc)}
+
+dialog{border:2px solid var(--ink);background:var(--card);color:var(--ink);
+  box-shadow:7px 7px 0 var(--ink);padding:0;width:min(600px,94vw);margin:auto;font:400 13px/1.6 var(--mono)}
+dialog::backdrop{background:rgba(28,25,21,.55)}
+.dlg-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:15px 18px;border-bottom:1.5px solid var(--ink)}
+.dlg-head h3{font:600 20px/1.15 var(--serif)}
+.dlg-head small{display:block;font:500 10px/1.5 var(--mono);letter-spacing:.06em;color:var(--mut);margin-top:4px}
+.dlg-body{padding:16px 18px}
+.dlg-foot{display:flex;justify-content:flex-end;gap:10px;padding:0 18px 18px;flex-wrap:wrap}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:13px}
+.field label{font:700 9px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+.field input,.field textarea{font:400 13px/1.6 var(--mono);padding:10px 12px;min-height:42px;
+  border:1.5px solid var(--ink);background:var(--bg);color:var(--ink);outline:none;width:100%}
+.field input:focus,.field textarea:focus{border-color:var(--acc)}
+.field textarea{min-height:150px;resize:vertical}
+.hint{font:400 10px/1.5 var(--mono);color:var(--mut)}
+.hint code{color:var(--acc);font-weight:700}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:560px){.field-row{grid-template-columns:1fr}}
+
+.d-tools{display:flex;gap:8px;margin-bottom:12px}
+#q2{flex:1;min-width:0;font:500 13px/1 var(--mono);padding:0 4px;min-height:38px;
+  border:none;border-bottom:1.5px solid var(--ink);background:transparent;outline:none}
+#q2:focus{border-color:var(--acc)}
+.d-list{max-height:56vh;overflow:auto;border-top:1.5px solid var(--ink)}
+.dl-l{font:600 11px/1 var(--serif);padding:10px 4px 6px;color:var(--acc);letter-spacing:.1em;position:sticky;top:0;background:var(--card)}
+.drow{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid var(--line)}
+.d-main{flex:1;min-width:0}
+.d-main .t{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.d-main strong{font:700 12.5px/1.3 var(--mono)}
+.d-c{display:block;font:400 10.5px/1.4 var(--mono);color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}
+.d-acts{display:flex;gap:5px}
+.d-empty{padding:24px 8px;text-align:center;color:var(--mut);font-size:12px}
+
+#toasts{position:fixed;left:16px;right:16px;bottom:16px;display:flex;flex-direction:column;align-items:center;gap:8px;z-index:99;pointer-events:none}
+.toast{display:flex;gap:9px;align-items:center;background:var(--ink);color:var(--bg);padding:11px 15px;
+  font:500 12px/1.4 var(--mono);max-width:100%;animation:tin .2s ease}
+.toast.err{background:var(--acc)}
+.toast svg{width:14px;height:14px}
+@keyframes tin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media(min-width:640px){#toasts{left:auto;right:20px;align-items:flex-end}}
+</style>
+</head>
+<body class="view-code">
+
+<header>
+  <div class="wrap-x h-in">
+    <div class="brand">BLOCKLAB<span class="star">*</span><span class="bsub"> / python</span></div>
+    <div class="h-right">
+      <span class="qb" id="qb" hidden>↑0</span>
+      <span class="status" id="stPill" title=""><span class="dot" id="stDot"></span><span id="stTxt">—</span></span>
+      <button class="btn btn-solid" id="btnRun" title="Ejecutar (Ctrl+Enter)"><i data-lucide="play"></i><span class="lbl">Run</span></button>
+      <button class="iconbtn" id="btnDict" title="Diccionario de snippets (Sheets)"><i data-lucide="book-open"></i></button>
+      <button class="iconbtn" id="btnRestart" title="Reiniciar runtime de Python"><i data-lucide="rotate-ccw"></i></button>
+      <button class="iconbtn" id="btnSync" title="Sincronizar con Sheets"><i data-lucide="refresh-cw"></i></button>
+      <button class="iconbtn danger" id="btnWipe" title="Borrar archivos y paquetes"><i data-lucide="trash-2"></i></button>
+    </div>
+  </div>
+</header>
+
+<nav class="tabs" id="tabs">
+  <button type="button" data-v="code" class="on"><i data-lucide="code-2"></i>Código</button>
+  <button type="button" data-v="con"><i data-lucide="terminal"></i>Consola</button>
+</nav>
+
+<main class="panes">
+  <!-- ══ Editor (estilo Geany: código a la izquierda) ══ -->
+  <section class="pane ed">
+    <div class="pane-head">
+      <span>Editor · Python</span>
+      <span class="r">
+        <span class="saved" id="draftInfo">—</span>
+        <button class="iconbtn sm" id="btnSave" title="Guardar documento"><i data-lucide="save"></i></button>
+        <button class="iconbtn sm danger" id="btnReset" title="Vaciar documento"><i data-lucide="rotate-ccw"></i></button>
+      </span>
+    </div>
+    <div class="ed-wrap" id="edWrap">
+      <pre id="hl" aria-hidden="true"></pre>
+      <textarea id="ed" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" aria-label="Código Python"></textarea>
+      <div class="sug" id="sug" hidden></div>
+    </div>
+  </section>
+
+  <!-- ══ Consola (PC simulada) ══ -->
+  <section class="pane pv-con">
+    <div class="term-head">
+      <span>Consola · Pyodide (CPython en WebAssembly) · PC simulada</span>
+      <button id="termClear" type="button">limpiar</button>
+    </div>
+    <div id="termOut"><div id="termMsgs"></div></div>
+    <div id="termIn"><span id="termPrompt"></span><input id="termInput" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="consola"></div>
+    <div id="keybar" hidden>
+      <button class="kbtn" data-act="tab">Tab</button>
+      <button class="kbtn" data-act="up">↑</button>
+      <button class="kbtn" data-act="down">↓</button>
+      <button class="kbtn" data-ch=":">:</button>
+      <button class="kbtn" data-ch="_">_</button>
+      <button class="kbtn" data-ch="&quot;">"</button>
+      <button class="kbtn" data-ch="'">'</button>
+      <button class="kbtn" data-ch="(">(</button>
+      <button class="kbtn" data-ch=")">)</button>
+      <button class="kbtn" data-ch="[">[</button>
+      <button class="kbtn" data-ch="]">]</button>
+      <button class="kbtn" data-ch="=">=</button>
+      <button class="kbtn" data-ch=".">.</button>
+      <button class="kbtn" data-ch="%">%</button>
+      <button class="kbtn wide" data-act="space">espacio</button>
+      <button class="kbtn wide" data-act="enter">⏎</button>
+    </div>
+  </section>
+</main>
+
+<!-- Diccionario -->
+<dialog id="dlgDict">
+  <div class="dlg-head">
+    <div><h3>Diccionario</h3><small id="dictCount">—</small></div>
+    <button type="button" class="iconbtn" data-close>✕</button>
+  </div>
+  <div class="dlg-body">
+    <div class="d-tools">
+      <input id="q2" type="text" placeholder="Buscar snippet…" autocomplete="off">
+      <button class="btn btn-solid" id="btnNewSnip">+ Nueva</button>
+    </div>
+    <div class="d-list" id="dictList"></div>
+  </div>
+</dialog>
+
+<!-- Entrada -->
+<dialog id="dlgSnip">
+  <form id="fmSnip" method="dialog">
+    <div class="dlg-head">
+      <div><h3 id="snipTitle">Nueva entrada</h3><small>hoja «python» en Sheets</small></div>
+      <button type="button" class="iconbtn" data-close>✕</button>
+    </div>
+    <div class="dlg-body">
+      <input type="hidden" name="id">
+      <div class="field-row">
+        <div class="field"><label>Título</label><input name="name" required placeholder="leer CSV"></div>
+        <div class="field"><label>Tipo</label><input name="tag" list="kinds" placeholder="snippet">
+          <datalist id="kinds">
+            <option>snippet</option><option>función</option><option>clase</option>
+            <option>plot</option><option>pip</option>
+          </datalist>
+        </div>
+      </div>
+      <div class="field"><label>Código Python</label>
+        <textarea name="code" id="snipTA" required spellcheck="false"></textarea>
+        <span class="hint"><code>$0</code> = cursor al insertar · Tab = sangría</span>
+      </div>
+    </div>
+    <div class="dlg-foot">
+      <button type="button" class="btn" data-close>Cancelar</button>
+      <button type="submit" class="btn btn-solid">Guardar</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="toasts"></div>
+
+<script>
+/* ═══ REGLA DE ORO ═════════════════════════════════════════
+   Dentro de este bloque NUNCA aparecen las secuencias literales
+   de cierre de script ni comentario HTML.                     ══ */
+const API_URL   = 'https://script.google.com/macros/s/AKfycbzSLoucR2yC7X7kKpbeDnQUCNd94-WuVuGyR55CMIrP4hq5f1tgynDDdHumc8iBj8gI9g/exec';
+const SHEET     = 'python';
+const LS_DB     = 'blocklab.db.v1';
+const LS_Q      = 'blocklab.queue.v1';
+const LS_DRAFT  = 'blocklab.draft.python.v1';
+const LS_DRAFT_T= 'blocklab.draft.python.t';
+const LS_FS     = 'blocklab.py.fs.v1';
+const LS_PKGS   = 'blocklab.py.pkgs.v1';
+const DRAFT_ID   = '__draft__';
+const DRAFT_NAME = 'BORRADOR · editor';
+const PYODIDE_BASE = 'https://cdn.jsdelivr.net/pyodide/v0.25.1/full/';
+
+/* Sin demo: el documento arranca VACÍO y el vacío se persiste. ══ */
+const STARTER = '';
+
+/* ═══ ESTADO ═══════════════════════════════════════════════ */
+let MODULES = [], BLOCKS = {}, queue = [], syncing = false;
+let sugItems = [], sugNew = null, sugActive = 0;
+let snipReturn = 'dict';
+let lastRows = {}, pushT = null;
+let compileT = null, draftT = null, resizeT = null;
+let view = 'code';                        // code | con
+
+let connected = false, connLabel = '', connDetail = '';
+let diagDone = false, diagRunning = false, dlgAutoShown = false;
+let lastPushedDraft = null;               // null fuerza el primer push (vacío incluido)
+
+let pyodide = null, pyLoading = false, pyWaiters = [], pyLibTries = 0;
+let FS = {};                              // nombre → {content, mtime}
+let installs = new Set();                 // paquetes pip instalados
+
+let __missing = {};
+const $ = s => {
+  const el = document.querySelector(s);
+  if(el) return el;
+  if(!__missing[s]){
+    __missing[s] = true;
+    showFatal('Falta el elemento ' + s + ' → tu copia de python.html está incompleta: re-copia el archivo completo.');
+  }
+  const noop = () => {};
+  return { addEventListener: noop, removeEventListener: noop, click: noop, focus: noop, blur: noop,
+    appendChild: noop, removeChild: noop, remove: noop, submit: noop, reset: noop,
+    setAttribute: noop, removeAttribute: noop, setSelectionRange: noop, setRangeText: noop,
+    scrollIntoView: noop, closest: () => null, querySelector: () => null, querySelectorAll: () => [],
+    classList: { toggle: noop, add: noop, remove: noop, contains: () => false },
+    style: {}, dataset: {}, contentWindow: null,
+    value: '', textContent: '', innerHTML: '', scrollTop: 0, scrollLeft: 0,
+    hidden: true, checked: false, disabled: false };
+};
+
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const nowISO = () => new Date().toISOString();
+const hora = iso => new Date(iso).toLocaleTimeString('es',{hour12:false});
+const isDraftOp = op => op.action==='saveBlock' && op.block && op.block.id===DRAFT_ID;
+const isTouch = window.matchMedia('(hover: none)').matches;
+
+const dict = () => (BLOCKS[SHEET] || (BLOCKS[SHEET] = [])).filter(b => b.id !== DRAFT_ID);
+const ed = $('#ed'), hl = $('#hl'), sug = $('#sug'), edWrap = $('#edWrap');
+const termMsgs = $('#termMsgs'), termOut = $('#termOut'), termIn = $('#termIn'),
+      termInput = $('#termInput'), termPrompt = $('#termPrompt'), keybar = $('#keybar');
+
+function showFatal(msg){
+  try{ toast('ERROR: ' + msg, 'err'); }catch(e){}
+  try{ console.error('[BLOCKLAB]', msg); }catch(e){}
+}
+window.addEventListener('error', e => showFatal(e.message + ' @' + (e.lineno||'?')));
+
+const ICON_FALLBACK = { 'play':'▶','book-open':'☰','rotate-ccw':'↺','refresh-cw':'⟳','trash-2':'🗑',
+  'save':'💾','x':'✕','wand-2':'✎','corner-down-left':'↵','edit':'✎','delete':'🗑',
+  'code-2':'❮❯','terminal':'▸','check-circle':'✓','alert-triangle':'⚠','plus':'+' };
+function refreshIcons(){
+  if(window.lucide){ try{ lucide.createIcons(); return; }catch(e){} }
+  document.querySelectorAll('i[data-lucide]').forEach(el => {
+    if(!el.textContent) el.textContent = ICON_FALLBACK[el.dataset.lucide] || '•';
+  });
+}
+
+/* ═══ CACHÉ / COLA / RED (patrón no-CORS del proyecto) ══════ */
+function saveCache(){ try{ localStorage.setItem(LS_DB, JSON.stringify({modules:MODULES, blocks:BLOCKS, ts:nowISO()})); }catch(e){} }
+function loadCache(){
+  try{
+    const d = JSON.parse(localStorage.getItem(LS_DB)||'null');
+    if(d){ MODULES = d.modules||[]; BLOCKS = d.blocks||{}; return true; }
+  }catch(e){}
+  return false;
+}
+const saveQueue = () => { try{ localStorage.setItem(LS_Q, JSON.stringify(queue)); }catch(e){} };
+const loadQueue = () => { try{ queue = JSON.parse(localStorage.getItem(LS_Q)||'[]'); }catch(e){ queue=[]; } };
+
+function renderConn(){
+  const pend = queue.filter(op => !isDraftOp(op)).length;
+  const qb = $('#qb');
+  qb.hidden = !pend; qb.textContent = '↑' + pend;
+  const dot = $('#stDot'), txt = $('#stTxt');
+  $('#stPill').title = connDetail || '';
+  if(connected){ txt.textContent='Conectado'; dot.className='dot ok'; return; }
+  if(syncing){ txt.textContent='Conectando…'; dot.className='dot busy'; return; }
+  txt.textContent = connLabel || 'En espera';
+  dot.className = 'dot ' + (connLabel ? 'err' : '');
+}
+function toast(msg, kind){
+  const t = document.createElement('div');
+  t.className = 'toast' + (kind==='err'?' err':'');
+  t.innerHTML = `<i data-lucide="${kind==='err'?'alert-triangle':'check-circle'}"></i><span>${esc(msg)}</span>`;
+  $('#toasts').appendChild(t); refreshIcons();
+  setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity .25s'; setTimeout(()=>t.remove(),260); }, 4200);
+}
+
+let jsonpSeq = 0, jsonpChain = Promise.resolve();
+function jsonpRaw(action, params, ms){
+  return new Promise((res, rej)=>{
+    const cb = '__bl_' + (++jsonpSeq) + '_' + Date.now();
+    const s  = document.createElement('script');
+    let settled = false;
+    const finish = (ok, val) => {
+      if(settled) return;
+      settled = true;
+      setTimeout(()=>{ try{ delete window[cb]; }catch(e){} s.remove(); }, 45000);
+      ok ? res(val) : rej(val);
+    };
+    window[cb] = d => finish(true, d);
+    const to = setTimeout(()=>finish(false, new Error('timeout')), ms);
+    s.onerror = () => finish(false, new Error('corb-o-red'));
+    const q = new URLSearchParams(Object.assign({ action, callback:cb, _:Date.now() }, params));
+    s.src = API_URL + '?' + q.toString();
+    document.head.appendChild(s);
+  });
+}
+function jsonpGet(action, params={}){
+  const run = () => jsonpRaw(action, params, 25000);
+  const p = jsonpChain.then(run, run);
+  jsonpChain = p.then(()=>{}, ()=>{});
+  return p;
+}
+async function sendNoCors(op){
+  op.lastTry = Date.now(); op.tries = (op.tries||0) + 1;
+  try{ await fetch(API_URL, { method:'POST', mode:'no-cors', body: JSON.stringify(op) }); return true; }
+  catch(e){ return false; }
+}
+let syncT = null;
+function scheduleSync(ms=3500){ clearTimeout(syncT); syncT = setTimeout(sync, ms); }
+function pushOp(op){
+  if(isDraftOp(op)) queue = queue.filter(q => !isDraftOp(q));
+  op.lastTry = 0;
+  queue.push(op); saveQueue(); renderConn();
+  sendNoCors(op).then(()=>scheduleSync(3500));
+}
+function retryPending(){
+  if(!queue.length) return;
+  const now = Date.now();
+  let re = false;
+  queue.forEach(op => { if(now - (op.lastTry||0) > 20000){ sendNoCors(op); re = true; } });
+  saveQueue();
+  if(re) scheduleSync(4000);
+}
+function isConfirmed(op, data){
+  const B = data.blocks || {};
+  if(op.action==='saveBlock'){
+    const arr = B[op.sheet]; if(!arr) return false;
+    const r = arr.find(b=>b.id===(op.block&&op.block.id));
+    return !!r && r.code === op.block.code;
+  }
+  if(op.action==='deleteBlock'){
+    const arr = B[op.sheet];
+    return !arr || !arr.some(b=>b.id===op.id);
+  }
+  return true;
+}
+function reconcileOps(data){
+  if(!queue.length) return;
+  const confirmedOps = queue.filter(op => isConfirmed(op, data));
+  if(!confirmedOps.length) return;
+  queue = queue.filter(op => !isConfirmed(op, data));
+  saveQueue();
+  if(confirmedOps.some(op => !isDraftOp(op))) toast('Guardado en Sheets ✓');
+  renderConn();
+}
+
+/* ═══ FS VIRTUAL (archivos .py en la PC simulada) ═══════════ */
+function readFS(){ try{ return JSON.parse(localStorage.getItem(LS_FS)||'null') || {}; }catch(e){ return {}; } }
+function writeFS(){ try{ localStorage.setItem(LS_FS, JSON.stringify(FS)); }catch(e){} }
+function saveFile(name, content){
+  FS[name] = { content, mtime: nowISO() };
+  writeFS();
+  schedulePush();
+  return name;
+}
+function delFile(name){
+  delete FS[name];
+  writeFS();
+  pushOp({ action:'deleteBlock', sheet:SHEET, id:'py:'+name });
+  schedulePush();
+}
+function loadFSLocal(){
+  try{ FS = JSON.parse(localStorage.getItem(LS_FS)||'null') || {}; }catch(e){ FS = {}; }
+}
+
+/* ═══ PAQUETES PIP ═════════════════════════════════════════ */
+function loadPkgsLocal(){ try{ installs = new Set(JSON.parse(localStorage.getItem(LS_PKGS)||'[]')); }catch(e){ installs = new Set(); } }
+function savePkgs(){ try{ localStorage.setItem(LS_PKGS, JSON.stringify([...installs])); }catch(e){} }
+
+/* ═══ SYNC ↔ Sheets ════════════════════════════════════════ */
+const normBlock = o => ({ id:String(o.id||''), name:String(o.name||''), tag:String(o.tag||''),
+  code:(o.code==null?'':String(o.code)), createdAt:String(o.createdAt||''), updatedAt:String(o.updatedAt||'') });
+
+function pyRows(){
+  const rows = {};
+  Object.keys(FS).sort().forEach(name => {
+    rows['py:'+name] = { name, tag:'archivo', code: FS[name].content || '', updated: FS[name].mtime || nowISO() };
+  });
+  installs.forEach(p => {
+    rows['pip:'+p] = { name: p, tag:'package', code: p, updated: nowISO() };
+  });
+  return rows;
+}
+function schedulePush(){ clearTimeout(pushT); pushT = setTimeout(pushPyDiffs, 1500); }
+function pushPyDiffs(){
+  const rows = pyRows();
+  for(const [rid, r] of Object.entries(rows)){
+    const sig = r.updated + '|' + r.code;
+    if(lastRows[rid] === sig) continue;
+    pushOp({ action:'saveBlock', sheet:SHEET,
+      block:{ id:rid, name:r.name, tag:r.tag, code:r.code, createdAt: lastRows[rid] ? undefined : r.updated, updatedAt: r.updated } });
+    lastRows[rid] = sig;
+  }
+  for(const rid of Object.keys(lastRows)){
+    if(!rows[rid]){ pushOp({ action:'deleteBlock', sheet:SHEET, id: rid }); delete lastRows[rid]; }
+  }
+}
+function rebuildLastRowsFromRemote(remoteBlocks){
+  lastRows = {};
+  for(const raw of (remoteBlocks||[])){
+    const b = normBlock(raw);
+    let rid = null;
+    if(b.tag === 'archivo')      rid = 'py:' + b.name;
+    else if(b.tag === 'package') rid = 'pip:' + b.name;
+    if(!rid) continue;
+    lastRows[rid] = b.updatedAt + '|' + b.code;
+  }
+}
+
+async function sync(){
+  if(syncing) return;
+  syncing = true; $('#btnSync').classList.add('spin');
+  if(!connected) renderConn();
+  try{
+    const data = await jsonpGet('bootstrap', { m: SHEET });
+    if(!data || !data.ok){
+      const e = new Error((data && data.error) || 'respuesta inválida'); e.srv = true; throw e;
+    }
+    connected = true; connLabel=''; connDetail=''; diagDone=false;
+    if(data.modules && data.modules.length) MODULES = data.modules;
+
+    const remote = ((data.blocks||{})[SHEET] || []).map(normBlock);
+    const merged = remote.slice();
+    for(const op of queue){
+      if(op.action==='saveBlock' && op.sheet===SHEET && op.block && !merged.some(r=>r.id===op.block.id))
+        merged.push(normBlock(op.block));
+    }
+    BLOCKS[SHEET] = merged.sort((a,b)=>a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+    saveCache();
+
+    /* Sheets → FS virtual (gana el más reciente) */
+    for(const b of merged){
+      if(b.id === DRAFT_ID) continue;
+      try{
+        if(b.tag === 'archivo' && b.name){
+          const local = FS[b.name];
+          if(!local || (b.updatedAt && b.updatedAt > local.mtime)){
+            FS[b.name] = { content: b.code, mtime: b.updatedAt || nowISO() };
+          }
+        } else if(b.tag === 'package' && b.name){
+          installs.add(b.name);
+        }
+      }catch(e){}
+    }
+    writeFS(); savePkgs();
+
+    rebuildLastRowsFromRemote(data.blocks);
+    schedulePush();          // sube lo local que falte en Sheets
+
+    /* paquetes pendientes de instalar (si el runtime ya está listo) */
+    if(pyodide) reinstallPkgs(true);
+
+    reconcileOps(data);
+    retryPending();
+    reconcileDraft();
+    renderDict();
+  }catch(err){
+    if(!connected){
+      if(err && err.srv){ connLabel='Error servidor'; connDetail='El script responde pero falla: ' + err.message; }
+      else if(!diagDone) diagnose();
+    }
+  }finally{
+    syncing = false; $('#btnSync').classList.remove('spin'); renderConn();
+  }
+}
+async function diagnose(){
+  if(diagRunning) return;
+  diagRunning = true; diagDone = true;
+  connLabel='Diagnosticando…'; connDetail=''; renderConn();
+  try{
+    const p = await jsonpGet('ping');
+    if(p && p.ok){ connLabel='Ajuste fino'; connDetail='El script responde; el bootstrap falló por otra causa.'; }
+    else { connLabel='Error servidor'; connDetail='Actualiza a Code.gs v2 y crea «Nueva versión».'; }
+  }catch(e){
+    connLabel = 'Login o versión vieja';
+    connDetail = 'La URL no devuelve JavaScript. Sigue los 4 pasos (Code.gs v2 + setup + acceso Cualquiera).';
+    if(!dlgAutoShown){ dlgAutoShown = true; toast(connDetail, 'err'); }
+  }
+  diagRunning = false; renderConn();
+}
+setInterval(()=>{ if(!connected) sync(); else retryPending(); }, 25000);
+setInterval(()=>{ if(connected) sync(); }, 5*60*1000);
+window.addEventListener('online', ()=>{ if(!connected) sync(); else { retryPending(); scheduleSync(500); } });
+
+/* ═══ BORRADOR (vacío también se persiste) ══════════════════ */
+const getDraftRemote = () => (BLOCKS[SHEET]||[]).find(b => b.id === DRAFT_ID);
+function saveDraftLocal(txt){
+  try{ localStorage.setItem(LS_DRAFT, txt); localStorage.setItem(LS_DRAFT_T, nowISO()); }catch(e){}
+}
+function pushDraftNow(){
+  const txt = ed.value;
+  if(txt === lastPushedDraft) return;
+  lastPushedDraft = txt;
+  const prev = getDraftRemote();
+  const row = { id:DRAFT_ID, name:DRAFT_NAME, tag:'sistema', code:txt,
+    createdAt:(prev && prev.createdAt) || nowISO(), updatedAt: nowISO() };
+  const arr = BLOCKS[SHEET] || (BLOCKS[SHEET] = []);
+  const i = arr.findIndex(x=>x.id===DRAFT_ID);
+  if(i<0) arr.push(normBlock(row)); else arr[i] = Object.assign({}, arr[i], row);
+  saveCache();
+  pushOp({action:'saveBlock', sheet:SHEET, block:row});
+}
+let pushDT = null;
+function pushDraftSoon(){ clearTimeout(pushDT); pushDT = setTimeout(pushDraftNow, 2500); }
+function reconcileDraft(){
+  const rem = getDraftRemote();
+  const localT = localStorage.getItem(LS_DRAFT_T) || '';
+  const typing = document.activeElement === ed;
+  if(rem && rem.code != null){
+    const remoteNewer = !localT || (rem.updatedAt && rem.updatedAt > localT);
+    if(!typing && remoteNewer && rem.code !== ed.value){
+      ed.value = rem.code;
+      lastPushedDraft = rem.code;
+      syncHL();
+      $('#draftInfo').textContent = 'desde Sheets ' + hora(rem.updatedAt||nowISO());
+    } else if(!remoteNewer && ed.value !== rem.code){
+      pushDraftSoon();
+    }
+  }
+}
+
+/* ═══ MUTACIONES del diccionario ═══════════════════════════ */
+function upsertSnipLocal(b){
+  b.updatedAt = nowISO();
+  const arr = BLOCKS[SHEET] || (BLOCKS[SHEET] = []);
+  const i = arr.findIndex(x=>x.id===b.id);
+  if(i<0){ b.createdAt = b.createdAt||nowISO(); arr.push(b); }
+  else arr[i] = Object.assign({}, arr[i], b);
+  arr.sort((a,c)=>a.name.toLowerCase().localeCompare(c.name.toLowerCase()));
+  saveCache(); renderDict();
+  pushOp({action:'saveBlock', sheet:SHEET, block:b});
+}
+function deleteSnip(id){
+  const b = dict().find(x=>x.id===id); if(!b) return;
+  BLOCKS[SHEET] = (BLOCKS[SHEET]||[]).filter(x=>x.id!==id);
+  saveCache(); renderDict();
+  toast('Entrada "'+b.name+'" eliminada');
+  pushOp({action:'deleteBlock', sheet:SHEET, id});
+}
+
+/* ═══ TERMINAL (salida) ═════════════════════════════════════ */
+function C(cls, t){ return '<span class="c-' + cls + '">' + esc(t) + '</span>'; }
+function tPrint(html){
+  const d = document.createElement('div');
+  d.className = 'tl';
+  d.innerHTML = html || '&nbsp;';
+  termMsgs.appendChild(d);
+  while(termMsgs.children.length > 500) termMsgs.firstChild.remove();
+  termOut.scrollTop = termOut.scrollHeight;
+}
+function tPrintText(text, cls){
+  String(text).split('\n').forEach(l => tPrint('<span class="c-' + (cls||'') + '">' + esc(l) + '</span>'));
+}
+function tFocus(){ termInput.focus(); }
+
+/* ═══ PYODIDE (runtime de Python) ═══════════════════════════ */
+function loadScript(src){
+  return new Promise((res, rej)=>{
+    const s = document.createElement('script');
+    s.src = src; s.onload = res; s.onerror = () => rej(new Error('no se pudo cargar ' + src));
+    document.head.appendChild(s);
+  });
+}
+async function ensurePy(){
+  if(pyodide) return pyodide;
+  if(pyLoading) return new Promise(r => pyWaiters.push(r));
+  pyLoading = true;
+  tPrintText('python: cargando runtime (Pyodide/CPython en WASM, ~10 MB la primera vez)…', 'dim');
+  try{
+    await loadScript(PYODIDE_BASE + 'pyodide.js');
+    pyodide = await loadPyodide({ indexURL: PYODIDE_BASE });
+    pyodide.setStdout({ batched: s => tPrintText(s) });
+    pyodide.setStderr({ batched: s => tPrintText(s, 'red') });
+    try{ await pyodide.runPythonAsync('import matplotlib; matplotlib.use("AGG")'); }catch(e){}
+    await pyodide.runPythonAsync(PY_SHIM);
+    const ver = pyodide.runPython('import sys; sys.version.split()[0]');
+    tPrintText('python: listo — CPython ' + ver + ' (Pyodide). pip install <paquete> para librerías.', 'green');
+    await reinstallPkgs(true);
+    pyWaiters.forEach(r => r(pyodide)); pyWaiters = [];
+  }catch(e){
+    if(++pyLibTries < 4){
+      tPrintText('python: reintentando carga…', 'dim');
+      setTimeout(()=>{ pyLoading = false; ensurePy(); }, 2500);
+      return new Promise(r => pyWaiters.push(r));
+    }
+    pyLoading = false;
+    tPrintText('python: no se pudo cargar Pyodide — ' + (e.message||e), 'red');
+    throw e;
+  }
+  return pyodide;
+}
+async function reinstallPkgs(silent){
+  if(!pyodide || !installs.size) return;
+  for(const p of installs){
+    tPrintText('pip: restaurando ' + p + '…', 'dim');
+    await pipInstall([p], silent);
+  }
+}
+async function pipInstall(pkgs, silent){
+  await ensurePy();
+  for(const p of pkgs){
+    if(!silent) tPrintText('pip: instalando ' + p + ' …', 'dim');
+    let ok = false, errm = '';
+    try{
+      await pyodide.loadPackage('micropip');
+      const micropip = pyodide.pyimport('micropip');
+      await micropip.install(p);
+      ok = true;
+    }catch(e){
+      try{ await pyodide.loadPackage(p); ok = true; }
+      catch(e2){ errm = (e2 && e2.message) || (e && e.message) || 'no disponible'; }
+    }
+    if(ok){
+      if(!installs.has(p)){
+        installs.add(p); savePkgs();
+        pushOp({ action:'saveBlock', sheet:SHEET,
+          block:{ id:'pip:'+p, name:p, tag:'package', code:p, createdAt:nowISO(), updatedAt:nowISO() } });
+      }
+      if(!silent) tPrintText('pip: ' + p + ' instalado ✓ (se restaurará en próximas sesiones)', 'green');
+    } else {
+      if(!silent) tPrintText('pip: no se pudo instalar ' + p + ' — ' + errm, 'red');
+    }
+  }
+}
+
+/* Captura de figuras matplotlib tras cada ejecución */
+const FIG_CAPTURE = [
+  'import sys as _s, json as _j',
+  '_out = []',
+  "if 'matplotlib.pyplot' in _s.modules:",
+  '    import matplotlib.pyplot as _plt',
+  '    import io as _io, base64 as _b64',
+  '    for _n in _plt.get_fignums():',
+  '        _b = _io.BytesIO()',
+  "        _plt.figure(_n).savefig(_b, format='png', dpi=110)",
+  "        _out.append('data:image/png;base64,' + _b64.b64encode(_b.getvalue()).decode())",
+  "    _plt.close('all')",
+  '_j.dumps(_out)'
+].join('\n');
+
+async function runCode(code, label){
+  let py;
+  try{ py = await ensurePy(); }
+  catch(e){ return false; }
+  tPrint(C('dim', '▶ ' + (label || 'documento') + ' — ejecutando…'));
+  try{ await py.loadPackagesFromImports(code); }
+  catch(e){ tPrintText('paquetes: ' + (e.message||e), 'dim'); }
+  let ok = true;
+  try{
+    const val = await py.runPythonAsync(code);
+    if(val !== undefined && val !== null){
+      try{ py.globals.set('_', val); const s = py.runPython('repr(_)'); if(s !== 'None') tPrintText(s); }catch(e){}
+    }
+  }catch(e){
+    ok = false;
+    const m = (e && e.message) ? e.message : String(e);
+    const clean = m.split('\n').filter(l => !/pyodide|File "<exec>|^\s*\^/.test(l) || /Error/.test(l)).join('\n');
+    tPrintText(clean.trim() || m, 'red');
+  }
+  /* figuras matplotlib → ventana flotante */
+  try{
+    const figs = JSON.parse(await py.runPythonAsync(FIG_CAPTURE));
+    figs.forEach((url, i) => {
+      const r = openFloatWin('Matplotlib' + (figs.length > 1 ? ' · figura ' + (i+1) : ''), 560);
+      r.body.innerHTML = '<img alt="figura" src="' + url + '">';
+    });
+  }catch(e){}
+  tPrintText(ok ? '✓ fin de ejecución' : '✗ ejecución con errores', ok ? 'green' : 'red');
+  return ok;
+}
+
+/* ═══ SHIMS pygame + turtle (Python sobre canvas flotante) ══ */
+const PY_SHIM = `
+import json as _json, math as _math, types as _types
+import js as _js
+
+def _col(c):
+    if isinstance(c, str):
+        return c
+    try:
+        return 'rgb(' + ','.join(str(int(v)) for v in c) + ')'
+    except Exception:
+        return '#000000'
+
+class Surface:
+    def __init__(self, wid, w, h):
+        self._id = wid; self._w = w; self._h = h
+    def fill(self, color):
+        _js.__blPy.draw(self._id, _json.dumps({'op':'fill','color':_col(color)}))
+    def get_width(self):
+        return _js.__blPy.wsize(self._id)[0]
+    def get_height(self):
+        return _js.__blPy.wsize(self._id)[1]
+
+class _Display:
+    def set_mode(self, size):
+        w, h = size
+        return Surface(int(_js.__blPy.win(int(w), int(h), 'Pygame')), w, h)
+    def set_caption(self, t):
+        _js.__blPy.title(str(t))
+    def flip(self):
+        _chk()
+    def update(self):
+        _chk()
+display = _Display()
+
+def _chk():
+    if _js.__blPy.anyClosed():
+        raise SystemExit(0)
+
+class _Draw:
+    def circle(self, surf, color, pos, r, width=0):
+        _js.__blPy.draw(surf._id, _json.dumps({'op':'circle','x':int(pos[0]),'y':int(pos[1]),'r':int(r),'color':_col(color),'width':int(width)}))
+    def rect(self, surf, color, rect, width=0):
+        _js.__blPy.draw(surf._id, _json.dumps({'op':'rect','x':int(rect[0]),'y':int(rect[1]),'w':int(rect[2]),'h':int(rect[3]),'color':_col(color),'width':int(width)}))
+    def line(self, surf, color, p1, p2, width=1):
+        _js.__blPy.draw(surf._id, _json.dumps({'op':'line','x1':int(p1[0]),'y1':int(p1[1]),'x2':int(p2[0]),'y2':int(p2[1]),'color':_col(color),'width':int(width)}))
+    def polygon(self, surf, color, points, width=0):
+        _js.__blPy.draw(surf._id, _json.dumps({'op':'poly','pts':[[int(p[0]),int(p[1])] for p in points],'color':_col(color),'width':int(width)}))
+    def ellipse(self, surf, color, rect, width=0):
+        _js.__blPy.draw(surf._id, _json.dumps({'op':'ellipse','x':int(rect[0]),'y':int(rect[1]),'w':int(rect[2]),'h':int(rect[3]),'color':_col(color),'width':int(width)}))
+draw = _Draw()
+
+MOUSEBUTTONDOWN = 1025
+QUIT = 256
+KEYDOWN = 768
+K_ESCAPE = 27; K_SPACE = 32; K_UP = 273; K_DOWN = 274; K_LEFT = 276; K_RIGHT = 275
+
+class Event:
+    def __init__(self, t, pos=None, key=None):
+        self.type = t; self.pos = pos; self.key = key
+    def __repr__(self):
+        return '<Event(' + str(self.type) + ')>'
+
+def event_get():
+    out = []
+    for e in _js.__blPy.events():
+        if e.get('t') == MOUSEBUTTONDOWN:
+            out.append(Event(MOUSEBUTTONDOWN, tuple(e.get('pos', [0, 0]))))
+    if _js.__blPy.anyClosed():
+        out.append(Event(QUIT))
+    return out
+
+class _Clock:
+    async def tick(self, fps=60):
+        _chk()
+        await _js.__blPy.wait(int(1000 / max(1, int(fps))))
+        return 33
+class time:
+    Clock = _Clock
+    def delay(self, ms):
+        pass
+
+def quit():
+    pass
+def init():
+    return 0
+
+_pm = _types.ModuleType('pygame')
+_pm.init = init; _pm.display = display; _pm.draw = draw; _pm.event = types_ = _types
+class _EventMod:
+    get = staticmethod(event_get)
+_pm.event = _EventMod()
+_pm.time = time; _pm.quit = quit
+_pm.MOUSEBUTTONDOWN = MOUSEBUTTONDOWN; _pm.QUIT = QUIT; _pm.KEYDOWN = KEYDOWN
+_pm.K_ESCAPE = K_ESCAPE; _pm.K_SPACE = K_SPACE; _pm.K_UP = K_UP; _pm.K_DOWN = K_DOWN
+_pm.K_LEFT = K_LEFT; _pm.K_RIGHT = K_RIGHT
+import sys as _sys
+_sys.modules['pygame'] = _pm
+
+class _Turtle:
+    def __init__(self):
+        self._wid = None; self._x = 240; self._y = 180
+        self._h = 0; self._down = True; self._col = '#1C1915'
+    def _w(self):
+        if self._wid is None:
+            wid = int(_js.__blPy.win(480, 360, 'Turtle'))
+            _js.__blPy.draw(wid, _json.dumps({'op':'fill','color':'#FFFFFF'}))
+            self._wid = wid
+        return self._wid
+    def forward(self, d):
+        wid = self._w()
+        a = _math.radians(self._h)
+        x2 = self._x + d * _math.cos(a)
+        y2 = self._y + d * _math.sin(a)
+        if self._down:
+            _js.__blPy.draw(wid, _json.dumps({'op':'line','x1':self._x,'y1':self._y,'x2':x2,'y2':y2,'color':self._col,'width':2}))
+        self._x, self._y = x2, y2
+    def backward(self, d):
+        self.right(180); self.forward(d); self.right(180)
+    def right(self, a):
+        self._h += a
+    def left(self, a):
+        self._h -= a
+    def penup(self):
+        self._down = False
+    def pendown(self):
+        self._down = True
+    def color(self, c):
+        self._col = _col(c)
+    def goto(self, x, y):
+        wid = self._w()
+        if self._down:
+            _js.__blPy.draw(wid, _json.dumps({'op':'line','x1':self._x,'y1':self._y,'x2':int(x),'y2':int(y),'color':self._col,'width':2}))
+        self._x, self._y = int(x), int(y)
+    def speed(self, s):
+        pass
+    def done(self):
+        pass
+
+_t = _Turtle()
+_tu = _types.ModuleType('turtle')
+_tu.forward = _t.forward; _tu.backward = _t.backward
+_tu.right = _t.right; _tu.left = _t.left
+_tu.penup = _t.penup; _tu.pendown = _t.pendown
+_tu.goto = _t.goto; _tu.color = _t.color
+_tu.speed = _t.speed; _tu.done = _t.done
+_tu.Turtle = _Turtle
+_sys.modules['turtle'] = _tu
+`;
+
+/* ═══ VENTANAS FLOTANTES (matplotlib/pygame/turtle) ═════════ */
+let winSeq = 0;
+const WINS = {};
+function openFloatWin(title, w){
+  const id = ++winSeq;
+  const el = document.createElement('div');
+  el.className = 'fwin';
+  el.style.left = (30 + (id % 6) * 26) + 'px';
+  el.style.top  = (24 + (id % 6) * 22) + 'px';
+  if(w) el.style.width = Math.min(w + 4, window.innerWidth - 24) + 'px';
+  el.innerHTML = '<div class="fwin-bar"><span class="fwin-title">' + esc(title) +
+    '</span><button class="fwin-x" title="Cerrar">✕</button></div><div class="fwin-body"></div>';
+  document.body.appendChild(el);
+  const rec = { id, el, body: el.querySelector('.fwin-body'), closed: false, events: [] };
+  WINS[id] = rec;
+  el.querySelector('.fwin-x').addEventListener('click', ()=>{ rec.closed = true; el.remove(); });
+  /* arrastrable */
+  const bar = el.querySelector('.fwin-bar');
+  bar.addEventListener('pointerdown', e=>{
+    if(e.target.classList.contains('fwin-x')) return;
+    const sx = e.clientX - el.offsetLeft, sy = e.clientY - el.offsetTop;
+    const mv = ev => { el.style.left = (ev.clientX - sx) + 'px'; el.style.top = (ev.clientY - sy) + 'px'; };
+    const up = () => { window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', up); };
+    window.addEventListener('pointermove', mv); window.addEventListener('pointerup', up);
+  });
+  refreshIcons();
+  return rec;
+}
+window.__blPy = {
+  win(w, h, title){
+    const r = openFloatWin(title || 'Pygame', w);
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    r.body.appendChild(c);
+    r.canvas = c; r.ctx = c.getContext('2d');
+    r.ctx.fillStyle = '#FFFFFF'; r.ctx.fillRect(0, 0, w, h);
+    /* eventos de mouse sobre el canvas */
+    c.addEventListener('pointerdown', e=>{
+      const rect = c.getBoundingClientRect();
+      r.events.push({ t: 1025, pos: [Math.round(e.clientX - rect.left), Math.round(e.clientY - rect.top)] });
+    });
+    return r.id;
+  },
+  title(t){ /* la ventana más reciente */
+    const list = Object.values(WINS).filter(x => !x.closed);
+    if(list.length) list[list.length-1].el.querySelector('.fwin-title').textContent = t;
+  },
+  wsize(id){ const r = WINS[id]; return r && r.canvas ? [r.canvas.width, r.canvas.height] : [0, 0]; },
+  draw(id, json){
+    const r = WINS[id]; if(!r || !r.ctx) return;
+    let o; try{ o = JSON.parse(json); }catch(e){ return; }
+    const ctx = r.ctx;
+    const col = o.color || '#000000';
+    ctx.fillStyle = col; ctx.strokeStyle = col; ctx.lineWidth = o.width || 1;
+    switch(o.op){
+      case 'fill':   ctx.fillRect(0, 0, r.canvas.width, r.canvas.height); break;
+      case 'rect':   (o.width > 0) ? ctx.strokeRect(o.x, o.y, o.w, o.h) : ctx.fillRect(o.x, o.y, o.w, o.h); break;
+      case 'circle': ctx.beginPath(); ctx.arc(o.x, o.y, Math.abs(o.r), 0, 6.2832);
+                     (o.width > 0) ? ctx.stroke() : ctx.fill(); break;
+      case 'line':   ctx.beginPath(); ctx.moveTo(o.x1, o.y1); ctx.lineTo(o.x2, o.y2); ctx.stroke(); break;
+      case 'poly':   ctx.beginPath();
+                     o.pts.forEach((p, i) => i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]));
+                     ctx.closePath(); (o.width > 0) ? ctx.stroke() : ctx.fill(); break;
+      case 'ellipse':ctx.beginPath(); ctx.ellipse(o.x + o.w/2, o.y + o.h/2, Math.abs(o.w/2), Math.abs(o.h/2), 0, 0, 6.2832);
+                     (o.width > 0) ? ctx.stroke() : ctx.fill(); break;
+      case 'text':   ctx.font = (o.size || 14) + 'px monospace'; ctx.fillText(o.text, o.x, o.y); break;
+    }
+  },
+  events(){
+    const list = Object.values(WINS).filter(x => !x.closed);
+    const out = [];
+    list.forEach(r => { out.push(...r.events); r.events = []; });
+    return JSON.parse(JSON.stringify(out));
+  },
+  anyClosed(){ return Object.values(WINS).some(x => x.closed); },
+  wait(ms){ return new Promise(r => setTimeout(r, Math.max(0, ms))); }
+};
+
+/* ═══ TERMINAL PC SIMULADA ══════════════════════════════════ */
+const Term = { hist: [], histIdx: -1, pending: null, repl: null };
+
+function promptHTML(){
+  if(Term.repl !== null)
+    return C('blue', (Term.repl.buf ? '... ' : '>>> '));
+  return C('green', '~') + C('dim', '$ ');
+}
+function tPrint(html){
+  const d = document.createElement('div');
+  d.className = 'tl';
+  d.innerHTML = html || '&nbsp;';
+  termMsgs.appendChild(d);
+  while(termMsgs.children.length > 600) termMsgs.firstChild.remove();
+  termOut.scrollTop = termOut.scrollHeight;
+}
+function tPrintText(text, cls){ String(text).split('\n').forEach(l => tPrint('<span class="c-' + (cls||'') + '">' + esc(l) + '</span>')); }
+function showPrompt(){ termPrompt.innerHTML = promptHTML(); termOut.scrollTop = termOut.scrollHeight; }
+function termFocus(){ termInput.focus(); }
+
+function tTokenize(str){
+  const toks = []; let cur = '', q = null;
+  for(const ch of str){
+    if(q){ if(ch === q) q = null; else cur += ch; }
+    else if(ch === '"' || ch === "'") q = ch;
+    else if(/\s/.test(ch)){ if(cur){ toks.push(cur); cur=''; } }
+    else cur += ch;
+  }
+  if(cur) toks.push(cur);
+  return toks;
+}
+
+/* REPL interactivo real (runPythonAsync soporta await top-level) */
+let replBusy = false;
+async function replLine(v){
+  if(replBusy){ tPrintText('…espera, se está ejecutando algo', 'dim'); return; }
+  const t = v.trim();
+  if(t === 'exit()' || t === 'quit()'){
+    Term.repl = null; tPrintText('salida del REPL', 'dim'); showPrompt(); return;
+  }
+  if(t === '' && Term.repl.buf.length === 0){ showPrompt(); return; }
+  if(t !== '') Term.repl.buf.push(v);
+  const code = Term.repl.buf.join('\n');
+  const opens = countOpen(code);
+  if(t === '' ){
+    if(opens > 0){ tPrintText('…bloque incompleto (faltan cierres)','dim'); Term.repl.buf = []; showPrompt(); return; }
+    Term.repl.buf = [];
+  } else if(opens > 0 || /:\s*$/.test(v)){
+    showPrompt(); return;   // continúa el bloque
+  } else {
+    Term.repl.buf = [];
+  }
+  replBusy = true;
+  try{
+    const py = await ensurePy();
+    let val;
+    try{ val = await py.runPythonAsync(code); }
+    catch(e){
+      replBusy = false;
+      tPrintText((e && e.message ? e.message : String(e)).trim(), 'red');
+      showPrompt(); return;
+    }
+    if(val !== undefined && val !== null){
+      try{ py.globals.set('_', val); const s = py.runPython('repr(_)'); if(s !== 'None') tPrintText(s); }catch(e){}
+    }
+  } finally { replBusy = false; }
+  showPrompt();
+}
+function countOpen(code){
+  let d = 0, i = 0, st = 'norm';
+  while(i < code.length){
+    const c = code[i];
+    if(st === 'norm'){
+      if(c === "'") st = 'sq';
+      else if(c === '"') st = 'dq';
+      else if(c === '#'){ while(i < code.length && code[i] !== '\n') i++; }
+      else if(c === '(' || c === '[' || c === '{') d++;
+      else if(c === ')' || c === ']' || c === '}') d--;
+    } else if(st === 'sq'){ if(c === '\\') i++; else if(c === "'") st = 'norm'; }
+    else { if(c === '\\') i++; else if(c === '"') st = 'norm'; }
+    i++;
+  }
+  return d;
+}
+
+/* ═══ COMANDOS de la PC simulada ════════════════════════════ */
+const TCMDS = {
+  help(){
+    return C('yellow','── PC SIMULADA · Python ──────────────────────') + '\n' +
+      C('blue','ejecutar:  ') + 'python (REPL) · python archivo.py · run archivo.py' + '\n' +
+      C('blue','archivos:  ') + 'ls · cat archivo.py · nano archivo.py · rm archivo.py · echo "…" > archivo.py' + '\n' +
+      C('blue','librerías: ') + 'pip install <pkg> · pip list · pip uninstall <pkg>' + '\n' +
+      '<span class="c-blue">sistema:   </span>neofetch · uname · date · whoami · history · clear · help' + '\n' +
+      '<span class="c-dim">· el editor de la izquierda también ejecuta con el botón Run (Ctrl+Enter)</span>\n' +
+      '<span class="c-dim">· gráficas matplotlib y ventanas pygame/turtle se abren flotantes</span>\n' +
+      '<span class="c-dim">· todo (archivos y paquetes) se guarda en la hoja «python» de Sheets</span>';
+  },
+  ls(){ 
+    const names = Object.keys(FS).sort();
+    if(!names.length) return C('dim','(sin archivos — nano main.py para crear uno)');
+    return names.map(n => (n.endsWith('.py') ? C('blue', n) : esc(n)) + '  ' + C('dim', (FS[n].content.length) + 'B')).join('\n');
+  },
+  cat(args){
+    if(!args[0]) return C('red','cat: indica un archivo');
+    const f = FS[args[0]];
+    if(!f) return C('red','cat: ' + args[0] + ': no existe');
+    return esc(f.content);
+  },
+  async nano(args){
+    const name = args[0];
+    if(!name) return C('red','nano: indica un nombre · ej.: nano main.py');
+    if(!/^[A-Za-z0-9_.-]+$/.test(name)) return C('red','nano: nombre inválido');
+    const f = FS[name];
+    openNano(name, f ? f.content : '');
+    return undefined;
+  },
+  rm(args){
+    if(!args[0]) return C('red','rm: indica un archivo');
+    if(!FS[args[0]]) return C('red','rm: ' + args[0] + ': no existe');
+    delFile(args[0]);
+    return C('dim','eliminado ' + args[0] + ' (también en Sheets)');
+  },
+  async python(args){
+    if(!args.length){
+      Term.repl = { buf: [] };
+      tPrint(C('green','Python REPL (Pyodide)') + C('dim',' · exit() para salir · soporta await en top-level'));
+      showPrompt();
+      return undefined;
+    }
+    const name = args[0];
+    const f = FS[name];
+    if(!f) return C('red','python: no se encontró el archivo: ' + name);
+    await runCode(f.content, name);
+    return undefined;
+  },
+  async run(args){ return await TCMDS.python(args); },
+  async pip(args){
+    const sub = args[0];
+    if(sub === 'install'){
+      if(!args[1]) return C('red','pip install: indica el paquete');
+      await pipInstall(args.slice(1).filter(x => !x.startsWith('-')));
+      return undefined;
+    }
+    if(sub === 'list'){
+      await ensurePy();
+      return [...installs].sort().map(p => C('green', p)).join('\n') || C('dim','(sin paquetes propios — numpy, matplotlib, etc. se cargan solos al importar)');
+    }
+    if(sub === 'uninstall'){
+      const p = args[1];
+      if(!p) return C('red','pip uninstall: indica el paquete');
+      installs.delete(p); savePkgs();
+      pushOp({ action:'deleteBlock', sheet:SHEET, id:'pip:'+p });
+      return C('dim', p + ' desinstalado de la lista (también en Sheets)');
+    }
+    return C('red','pip: usa install · list · uninstall');
+  },
+  echo(args, raw){
+    return { out: args.join(' ') };
+  },
+  clear(){ termMsgs.innerHTML = ''; return undefined; },
+  history(){ return Term.hist.map((h,i) => String(i+1).padStart(4) + '  ' + esc(h)).join('\n'); },
+  date(){ return new Date().toLocaleString('es'); },
+  whoami(){ return 'blocklab'; },
+  uname(){ return 'Pyodide/CPython (WebAssembly) · blocklab-sim'; },
+  neofetch(){
+    const logo = ['    __│  __',' __│  __│  __','│  __│  __│ ','│ __│  __│  ','│__│  __│ __','│  __│  __│ '];
+    const info = [
+      C('green','blocklab@python'),
+      C('dim','───────────────────────'),
+      C('green','OS') + ': Pyodide / CPython (WASM)',
+      C('green','Versión') + ': ' + (pyodide ? pyodide.runPython('import sys; sys.version.split()[0]') : 'cargando…'),
+      C('green','Archivos') + ': ' + Object.keys(FS).length,
+      C('green','Paquetes') + ': ' + installs.size,
+      C('green','Sheets') + ': hoja «' + SHEET + '»'
+    ];
+    const rows = Math.max(logo.length, info.length);
+    const lines = [];
+    for(let i = 0; i < rows; i++) lines.push((logo[i] || '             ').padEnd(14) + (info[i] || ''));
+    return lines.join('\n');
+  }
+};
+async function tExec(raw){
+  tPrint(C('green','~') + C('dim','$ ') + esc(raw));
+  const line = raw.trim();
+  if(!line) return;
+  Term.hist.push(raw);
+  Term.histIdx = Term.hist.length;
+  /* redirección: echo "…" > archivo.py */
+  const toks = tTokenize(line);
+  const cmd = toks[0];
+  const gi = toks.indexOf('>');
+  if(cmd === 'echo' && gi > 0){
+    const text = toks.slice(1, gi).join(' ');
+    const file = toks[gi + 1];
+    if(!file){ tPrintText('echo: falta el archivo destino', 'red'); return; }
+    saveFile(file, text + '\n');
+    tPrint('<span class="c-dim">→ escrito ' + esc(file) + '</span>');
+    return;
+  }
+  if(!(cmd in TCMDS)){
+    const keys = Object.keys(TCMDS);
+    const hit = keys.find(k => k.startsWith(cmd.slice(0,2)));
+    tPrint(C('red', cmd + ': orden no encontrada') + C('dim', ' · ¿' + (hit || 'help') + '?'));
+    return;
+  }
+  try{
+    const r = await TCMDS[cmd](toks.slice(1), line);
+    if(r && r.err) tPrintText(r.err, 'red');
+    else if(typeof r === 'string' && r !== '') tPrintText(r);
+    else if(r && typeof r.out === 'string' && r.out !== '') tPrintText(r.out);
+  }catch(e){
+    tPrintText('error interno: ' + (e.message||e), 'red');
+  }
+}
+function termKeydown(e){
+  if(Term.pending){
+    if(e.key === 'Enter'){
+      e.preventDefault();
+      const v = termInput.value; termInput.value = '';
+      const cb = Term.pending; Term.pending = null;
+      cb(v);
+    }
+    return;
+  }
+  if(e.key === 'Enter'){
+    e.preventDefault();
+    const v = termInput.value; termInput.value = '';
+    if(Term.repl !== null){ replLine(v).then(showPrompt); }
+    else { tExec(v).then(showPrompt); }
+    return;
+  }
+  if(e.key === 'ArrowUp'){
+    e.preventDefault();
+    if(Term.histIdx > 0){ Term.histIdx--; termInput.value = Term.hist[Term.histIdx] || ''; }
+    return;
+  }
+  if(e.key === 'ArrowDown'){
+    e.preventDefault();
+    if(Term.histIdx < Term.hist.length - 1){ Term.histIdx++; termInput.value = Term.hist[Term.histIdx] || ''; }
+    else { Term.histIdx = Term.hist.length; termInput.value = ''; }
+    return;
+  }
+  if(e.key === 'Tab'){ e.preventDefault(); tTabComplete(); return; }
+  if(e.ctrlKey && e.key === 'l'){ e.preventDefault(); termMsgs.innerHTML = ''; return; }
+  if(e.ctrlKey && e.key === 'c'){
+    e.preventDefault();
+    tPrint(C('green','~') + C('dim','$ ') + esc(termInput.value) + C('red','^C'));
+    termInput.value = '';
+    if(Term.repl !== null && Term.repl.buf){ Term.repl.buf = []; }
+    showPrompt();
+  }
+}
+termInput.addEventListener('keydown', termKeydown);
+function tTabComplete(){
+  const val = termInput.value;
+  const before = val.slice(0, termInput.selectionStart);
+  const m = before.match(/(\S*)$/);
+  const word = m ? m[1] : '';
+  const isFirst = before.trim().split(/\s+/).length <= 1 && !before.endsWith(' ');
+  let cands = [];
+  if(isFirst){
+    cands = Object.keys(TCMDS).concat(['python']).filter(c => c.startsWith(word)).sort();
+  } else {
+    cands = Object.keys(FS).concat(Object.keys(installs)).filter(c => c.startsWith(word)).sort();
+  }
+  if(!cands.length) return;
+  const common = cands.reduce((a,b)=>{ let i=0; while(i<a.length&&i<b.length&&a[i]===b[i]) i++; return a.slice(0,i); });
+  if(common.length > word.length){
+    termInput.value = val.slice(0, termInput.selectionStart - word.length) + common + val.slice(termInput.selectionStart);
+    return;
+  }
+  if(cands.length === 1){
+    termInput.value = val.slice(0, termInput.selectionStart - word.length) + cands[0] + ' ' + val.slice(termInput.selectionStart);
+    return;
+  }
+  tPrint(C('green','~') + C('dim','$ ') + esc(val));
+  tPrintText(cands.join('  '), 'dim');
+  termInput.value = val;
+}
+const sticky = { none:false };
+function tInsert(t){
+  const s = termInput.selectionStart, epos = termInput.selectionEnd;
+  termInput.value = termInput.value.slice(0, s) + t + termInput.value.slice(epos);
+  termInput.setSelectionRange(s + t.length, s + t.length);
+}
+keybar.addEventListener('click', e=>{
+  const b = e.target.closest('.kbtn'); if(!b) return;
+  const act = b.dataset.act;
+  if(act === 'enter'){
+    const v = termInput.value; termInput.value = '';
+    if(Term.pending){ const cb = Term.pending; Term.pending = null; cb(v); }
+    else if(Term.repl !== null){ replLine(v).then(showPrompt); }
+    else { tExec(v).then(showPrompt); }
+  }
+  else if(act === 'tab') tTabComplete();
+  else if(act === 'up'){ if(Term.histIdx > 0){ Term.histIdx--; termInput.value = Term.hist[Term.histIdx] || ''; } }
+  else if(act === 'down'){
+    if(Term.histIdx < Term.hist.length - 1){ Term.histIdx++; termInput.value = Term.hist[Term.histIdx] || ''; }
+    else { Term.histIdx = Term.hist.length; termInput.value = ''; }
+  }
+  else if(act === 'space') tInsert(' ');
+  else if(b.dataset.ch !== undefined) tInsert(b.dataset.ch.replace('&quot;','"').replace('&gt;','>'));
+  termInput.focus();
+});
+function termWelcome(){
+  tPrint('<span class="c-green">PC simulada · Python (Pyodide/CPython en WebAssembly)</span>');
+  tPrintText('Sin usuario ni contraseña. Los archivos y paquetes se guardan en la hoja «python» de Sheets.', 'dim');
+  tPrintText('Prueba: help · python (REPL) · pip install matplotlib · neofetch', 'dim');
+  tPrintText('Escribe código en la pestaña Código y pulsa Run — matplotlib y pygame abren ventanas flotantes.', 'dim');
+  tPrint('');
+}
+
+/* ═══ NANO (editor de archivos de la PC) ════════════════════ */
+let nanoTarget = null, nanoDirty = false, nanoAsking = false;
+function openNano(name, content){
+  nanoTarget = name;
+  $('#nanoTitle').textContent = 'nano · ' + name;
+  $('#nanoTA').value = content;
+  nanoDirty = false; nanoAsking = false;
+  $('#nanoStatus').textContent = 'Ctrl+O guardar · Ctrl+X salir · o los botones (también en móvil)';
+  $('#nano').hidden = false;
+  $('#nanoTA').focus();
+}
+function closeNano(){
+  $('#nano').hidden = true;
+  nanoTarget = null;
+  nanoAsking = false;
+  setView('con');
+  tFocus();
+}
+function nanoSave(){
+  if(!nanoTarget) return;
+  saveFile(nanoTarget, $('#nanoTA').value);
+  nanoDirty = false;
+  $('#nanoStatus').textContent = 'Guardado ' + nanoTarget + ' — subiendo a Sheets…';
+  toast('Archivo guardado: ' + nanoTarget);
+}
+function nanoCut(){
+  const ta = $('#nanoTA');
+  const v = ta.value, pos = ta.selectionStart;
+  let ls = v.lastIndexOf('\n', pos - 1) + 1;
+  let le = v.indexOf('\n', pos); if(le < 0) le = v.length; else le += 1;
+  ta.value = v.slice(0, ls) + v.slice(le);
+  ta.selectionStart = ta.selectionEnd = ls;
+  nanoDirty = true;
+}
+async function nanoRun(){
+  if(nanoDirty) nanoSave();
+  const code = $('#nanoTA').value;
+  $('#nano').hidden = true;
+  setView('con');
+  await runCode(code, nanoTarget);
+  tFocus();
+}
+function nanoExit(){
+  if(nanoDirty && !nanoAsking){
+    nanoAsking = true;
+    $('#nanoStatus').innerHTML = '¿Guardar antes de salir? <b>S</b> = sí · <b>N</b> = no · <b>Esc</b> = seguir';
+    const askKey = ev => {
+      if(ev.key.toLowerCase() === 's'){ nanoSave(); nanoAsking = false; document.removeEventListener('keydown', askKey); closeNano(); }
+      else if(ev.key.toLowerCase() === 'n'){ nanoAsking = false; document.removeEventListener('keydown', askKey); closeNano(); }
+      else if(ev.key === 'Escape'){ nanoAsking = false; document.removeEventListener('keydown', askKey); $('#nanoStatus').textContent = 'Continúa editando'; }
+    };
+    document.addEventListener('keydown', askKey);
+  } else closeNano();
+}
+ $('#nanoTA').addEventListener('keydown', e => {
+  if(e.key === 'Tab'){
+    e.preventDefault();
+    const ta = e.target;
+    ta.setRangeText('    ', ta.selectionStart, ta.selectionEnd, 'end');
+    nanoDirty = true;
+    return;
+  }
+  if(e.ctrlKey && (e.key === 'o' || e.key === 'O')){ e.preventDefault(); if(!nanoAsking) nanoSave(); return; }
+  if(e.ctrlKey && (e.key === 'k' || e.key === 'K')){ e.preventDefault(); nanoCut(); return; }
+  if(e.ctrlKey && (e.key === 'x' || e.key === 'X')){ e.preventDefault(); nanoExit(); return; }
+});
+document.querySelectorAll('.nano-bar .nbtn').forEach(b => {
+  b.addEventListener('click', ()=>{
+    if(nanoAsking) return;
+    const a = b.dataset.n;
+    if(a === 'save') nanoSave();
+    else if(a === 'cut') nanoCut();
+    else if(a === 'run') nanoRun();
+    else if(a === 'exit') nanoExit();
+    $('#nanoTA').focus();
+  });
+});
+ $('#nanoTA').addEventListener('input', () => { nanoDirty = true; });
+
+/* ═══ RESALTADO PYTHON (con triples entre líneas) ═══════════ */
+const PY_KW = new Set(['def','class','import','from','as','if','elif','else','for','while','try','except','finally','with','lambda','return','yield','global','nonlocal','pass','break','continue','raise','assert','del','in','is','not','and','or','async','await','None','True','False']);
+const PY_BI = new Set(['print','range','len','str','int','float','bool','list','dict','set','tuple','sum','min','max','abs','sorted','reversed','enumerate','zip','map','filter','input','open','type','isinstance','issubclass','super','round','any','all','repr','getattr','setattr','hasattr','id','hash','iter','next','callable','ord','chr','bin','hex','oct','divmod','pow','format','frozenset','bytes','bytearray','complex','self','__init__','__name__','__main__']);
+function hledPy(src){
+  const lines = src.split('\n');
+  let inTpl = null;   // "'''" o '"""'
+  return lines.map(line => {
+    let out = '';
+    let i = 0;
+    if(inTpl){
+      const end = line.indexOf(inTpl);
+      if(end < 0){ return '<span class="s">' + esc(line) + '</span>'; }
+      out += '<span class="s">' + esc(line.slice(0, end + 3)) + '</span>';
+      i = end + 3; inTpl = null;
+    }
+    while(i < line.length){
+      const rest = line.slice(i);
+      const tri = rest.startsWith("'''") || rest.startsWith('"""');
+      if(tri){
+        const q = rest.slice(0, 3);
+        const end = rest.indexOf(q, 3);
+        if(end < 0){ out += '<span class="s">' + esc(rest) + '</span>'; inTpl = q; i = line.length; break; }
+        out += '<span class="s">' + esc(rest.slice(0, end + 3)) + '</span>';
+        i += end + 3; continue;
+      }
+      const c = line[i];
+      if(c === '#'){ out += '<span class="c">' + esc(line.slice(i)) + '</span>'; break; }
+      if(c === '"' || c === "'"){
+        let j = i + 1;
+        while(j < line.length){
+          if(line[j] === '\\'){ j += 2; continue; }
+          if(line[j] === c) break;
+          j++;
+        }
+        out += '<span class="s">' + esc(line.slice(i, Math.min(j + 1, line.length))) + '</span>';
+        i = j + 1; continue;
+      }
+      if(c === '@'){
+        const m = /^@[\w.]+/.exec(rest);
+        if(m){ out += '<span class="k">' + esc(m[0]) + '</span>'; i += m[0].length; continue; }
+      }
+      if(/[0-9]/.test(c) && !/[\w]/.test(line[i-1] || '')){
+        const m = /^\d[\d_]*(?:\.\d+)?/.exec(rest);
+        out += '<span class="n">' + esc(m[0]) + '</span>';
+        i += m[0].length; continue;
+      }
+      if(/[A-Za-z_]/.test(c)){
+        const m = /^[A-Za-z_]\w*/.exec(rest);
+        const w = m[0];
+        const after = rest.slice(w.length);
+        let cls = '';
+        if(PY_KW.has(w)) cls = 'p';
+        else if(PY_BI.has(w)) cls = 'e';
+        else if(/^\s*\(/.test(after) && /^(def|class)\s+\w+$/.test(line.slice(0, i) + w)) cls = 'e';
+        out += cls ? '<span class="' + cls + '">' + esc(w) + '</span>' : esc(w);
+        i += w.length; continue;
+      }
+      if(/[{}\[\]()]/.test(c)){ out += '<span class="b">' + esc(c) + '</span>'; i++; continue; }
+      out += esc(c); i++;
+    }
+    return out;
+  }).join('\n');
+}
+function syncHL(){
+  hl.innerHTML = hledPy(ed.value) + '\u200b';
+  hl.scrollTop = ed.scrollTop; hl.scrollLeft = ed.scrollLeft;
+}
+
+/* ═══ AUTOCOMPLETADO (builtins + métodos + diccionario + buffer) ══ */
+const AC_PY = [
+  ...PY_KW,
+  ...PY_BI,
+  'append','extend','insert','pop','remove','clear','copy','count','index','sort','reverse',
+  'keys','values','items','get','update','setdefault','popitem',
+  'split','rsplit','join','strip','lstrip','rstrip','replace','find','rfind','startswith','endswith',
+  'upper','lower','title','capitalize','format','encode','decode','isdigit','isalpha','splitlines','zfill','ljust','rjust',
+  'group','groups','search','match','sub','findall','compile',
+  'mean','sum','median','std','read_csv','DataFrame','Series','head','describe','plot','scatter','hist','bar','xlabel','ylabel','legend','show','title','grid','savefig','figure','subplot','imshow',
+  'array','arange','linspace','zeros','ones','reshape','shape','dot','random','seed','sqrt','exp','sin','cos','pi',
+  'simplify','solve','Symbol','symbols','diff','integrate','factor','expand',
+  'load','dump','dumps','loads','path','join','exists','mkdir','getcwd','listdir',
+  'sleep','randint','choice','shuffle','uniform','sample',
+  'import math','import random','import json','import sys','import os','import statistics',
+  'from collections import','import numpy as np','import matplotlib.pyplot as plt','import pandas as pd'
+].map(x => ({ name: x }));
+function acContext(){
+  const before = ed.value.slice(0, ed.selectionStart);
+  const m = before.match(/[A-Za-z0-9_]+$/);
+  return { word: m ? m[0] : '' };
+}
+function caretXY(){
+  const div = document.createElement('div');
+  const cs = getComputedStyle(ed);
+  ['fontFamily','fontSize','fontWeight','lineHeight','letterSpacing','tabSize',
+   'paddingTop','paddingRight','paddingBottom','paddingLeft','boxSizing'].forEach(p=>div.style[p]=cs[p]);
+  div.style.cssText += ';position:absolute;visibility:hidden;white-space:pre-wrap;word-wrap:break-word;width:'+ed.clientWidth+'px';
+  div.textContent = ed.value.slice(0, ed.selectionStart);
+  const sp = document.createElement('span'); sp.textContent='\u200b'; div.appendChild(sp);
+  document.body.appendChild(div);
+  const r = { x:sp.offsetLeft, y:sp.offsetTop, lh:parseFloat(cs.lineHeight)||22 };
+  div.remove(); return r;
+}
+function showSug(){
+  const w = acContext().word;
+  if(!w || w.length < 2){ hideSug(); return; }
+  const lw = w.toLowerCase();
+  const bufferNames = new Set();
+  (ed.value.match(/[A-Za-z_]\w*/g) || []).forEach(n => { if(n.length > 2) bufferNames.add(n); });
+  let list = [];
+  dict().forEach(e => { if(e.name.toLowerCase().startsWith(lw) || e.name.toLowerCase().split(/\s+/).some(t=>t.startsWith(lw))) list.push(e); });
+  const seen = new Set(list.map(e => e.name));
+  bufferNames.forEach(n => { if(n.toLowerCase().startsWith(lw) && !seen.has(n)){ seen.add(n); list.push({ name:n, tag:'def' }); } });
+  AC_PY.forEach(x => { if(x.name.toLowerCase().startsWith(lw) && !seen.has(x.name)){ seen.add(x.name); list.push({ name:x.name, tag:'py' }); } });
+  list = list.slice(0, 8);
+  if(!list.length){ hideSug(); return; }
+  sugItems = list; sugNew = null; sugActive = 0;
+  sug.innerHTML = list.map((e,i)=>
+      `<button type="button" data-i="${i}" class="${i===0?'on':''}"><b>${esc(e.name)}</b>${e.tag?`<span class="tag">${esc(e.tag)}</span>`:''}</button>`
+    ).join('');
+  sug.hidden = false;
+  const c = caretXY();
+  let left = c.x - ed.scrollLeft + 2;
+  let top  = c.y - ed.scrollTop + c.lh + 3;
+  sug.style.left = left+'px'; sug.style.top = top+'px';
+  const maxX = edWrap.clientWidth  - sug.offsetWidth  - 8;
+  const maxY = edWrap.clientHeight - sug.offsetHeight - 8;
+  if(left > maxX) left = Math.max(8, maxX);
+  if(top  > maxY) top  = Math.max(8, c.y - ed.scrollTop - sug.offsetHeight - c.lh - 6);
+  sug.style.left = left+'px'; sug.style.top = top+'px';
+}
+function hideSug(){ sug.hidden = true; sugItems=[]; sugNew=null; sugActive=0; }
+function markActive(){
+  sug.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('on', i===sugActive));
+  const el = sug.querySelectorAll('button')[sugActive];
+  if(el) el.scrollIntoView({block:'nearest'});
+}
+function moveActive(d){
+  const n = sug.querySelectorAll('button').length;
+  if(!n) return;
+  sugActive = (sugActive + d + n) % n;
+  markActive();
+}
+function insertSnippet(sn){
+  const pos = ed.selectionStart, selEnd = ed.selectionEnd;
+  const before = ed.value.slice(0, pos);
+  const m = before.match(/[A-Za-z0-9_]+$/);
+  const start = m ? pos - m[0].length : pos;
+  const lineStart = ed.value.lastIndexOf('\n', start - 1) + 1;
+  const baseIndent = (ed.value.slice(lineStart, start).match(/^[ \t]*/) || [''])[0];
+  let code = String(sn.code || '');
+  code = code.split('\n').map((l, idx) => (idx === 0 || !l.trim()) ? l : baseIndent + l).join('\n');
+  let off = code.length;
+  const i0 = code.indexOf('$0');
+  if(i0 >= 0){ code = code.slice(0, i0) + code.slice(i0 + 2); off = i0; }
+  const i1 = code.indexOf('$1');
+  if(i1 >= 0){ code = code.slice(0, i1) + code.slice(i1 + 2); }
+  ed.setRangeText(code, start, selEnd, 'end');
+  ed.selectionStart = ed.selectionEnd = start + off;
+  hideSug(); ed.focus(); onEdInput();
+}
+function acceptActive(){
+  const btns = sug.querySelectorAll('button');
+  const el = btns[sugActive];
+  if(!el) return;
+  insertSnippet(sugItems[sugActive]);
+}
+sug.addEventListener('pointerdown', e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  e.preventDefault();
+  insertSnippet(sugItems[+b.dataset.i]);
+});
+document.addEventListener('pointerdown', e=>{
+  if(!e.target.closest('#sug') && e.target!==ed) hideSug();
+});
+
+/* ═══ PESTAÑAS (Código | Consola) ═══════════════════════════ */
+function setView(v){
+  view = v;
+  document.body.classList.toggle('view-code', v==='code');
+  document.body.classList.toggle('view-con', v==='con');
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on', b.dataset.v===v));
+  hideSug();
+  if(v === 'con'){ tFocus(); }
+  else { ed.focus(); }
+}
+ $('#tabs').addEventListener('click', e=>{
+  const b = e.target.closest('button[data-v]'); if(b) setView(b.dataset.v);
+});
+
+/* ═══ ENTER INTELIGENTE PYTHON ══════════════════════════════ */
+function smartEnter(){
+  const val  = ed.value;
+  const s    = ed.selectionStart, epos = ed.selectionEnd;
+  const lineStart = val.lastIndexOf('\n', s - 1) + 1;
+  const lineBefore = val.slice(lineStart, s);
+  const indent = (lineBefore.match(/^[ \t]*/) || [''])[0];
+  const trimmed = lineBefore.trim();
+  let ins, caret;
+  if(/:\s*$/.test(trimmed) || countOpen(lineBefore) > 0){
+    ins = '\n' + indent + '    ';
+    caret = ins.length;
+  } else if(/^(return|pass|break|continue|raise|yield)\b/.test(trimmed)){
+    ins = '\n' + indent.replace(/ {4}$/, '');
+    caret = ins.length;
+  } else {
+    ins = '\n' + indent;
+    caret = ins.length;
+  }
+  ed.setSelectionRange(s, epos);
+  let ok = false;
+  try{ ok = document.execCommand && document.execCommand('insertText', false, ins); }catch(e){ ok = false; }
+  if(!ok) ed.setRangeText(ins, s, epos, 'end');
+  ed.selectionStart = ed.selectionEnd = s + caret;
+  onEdInput();
+}
+const indentOne = l => l.trim() ? '    ' + l : l;
+const dedentOne = l => /^ {1,4}/.test(l) ? l.replace(/^ {1,4}/,'') : (l.charAt(0)==='\t' ? l.slice(1) : l);
+function mapSelectedLines(fn){
+  const s = ed.selectionStart, epos = ed.selectionEnd;
+  const start = ed.value.lastIndexOf('\n', s - 1) + 1;
+  let end = ed.value.indexOf('\n', epos); if(end < 0) end = ed.value.length;
+  const nb = ed.value.slice(start, end).split('\n').map(fn).join('\n');
+  ed.setRangeText(nb, start, end, 'end');
+  ed.setSelectionRange(start, start + nb.length);
+  onEdInput();
+}
+
+/* ═══ INPUT DEL EDITOR ══════════════════════════════════════ */
+function onEdInput(){
+  syncHL(); saveDraftSoon(); pushDraftSoon(); showSug();
+}
+function saveDraftSoon(){
+  clearTimeout(draftT);
+  draftT = setTimeout(()=>{
+    saveDraftLocal(ed.value);
+    $('#draftInfo').textContent = ed.value.trim() ? 'guardado ' + hora(nowISO()) : 'vacío guardado ' + hora(nowISO());
+  }, 700);
+}
+ed.addEventListener('keydown', e=>{
+  if(e.key === 'Enter' && (e.ctrlKey || e.metaKey)){ e.preventDefault(); runEditor(); return; }
+  if(e.shiftKey && e.altKey && e.code === 'KeyF'){ e.preventDefault(); /* sin formateo en python */ toast('Python: usa Run para ejecutar'); return; }
+  if(!sug.hidden){
+    if(e.key==='ArrowDown'){ e.preventDefault(); moveActive(1); return; }
+    if(e.key==='ArrowUp'){   e.preventDefault(); moveActive(-1); return; }
+    if(e.key==='Tab'){ e.preventDefault(); acceptActive(); return; }
+    if(e.key==='Enter'){ e.preventDefault(); acceptActive(); return; }
+    if(e.key==='Escape'){ e.preventDefault(); hideSug(); return; }
+  }
+  if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); smartEnter(); return; }
+  if(e.key==='Tab'){
+    e.preventDefault();
+    const multi = ed.selectionStart !== ed.selectionEnd &&
+                  ed.value.slice(ed.selectionStart, ed.selectionEnd).includes('\n');
+    if(e.shiftKey)      mapSelectedLines(dedentOne);
+    else if(multi)      mapSelectedLines(indentOne);
+    else { ed.setRangeText('    ', ed.selectionStart, ed.selectionEnd, 'end'); onEdInput(); }
+  }
+});
+ed.addEventListener('input', onEdInput);
+ed.addEventListener('click', hideSug);
+ed.addEventListener('scroll', ()=>{ hl.scrollTop = ed.scrollTop; hl.scrollLeft = ed.scrollLeft; hideSug(); });
+ $('#snipTA').addEventListener('keydown', e=>{
+  if(e.key==='Tab'){ e.preventDefault(); e.target.setRangeText('    ', e.target.selectionStart, e.target.selectionEnd, 'end'); }
+});
+
+/* ═══ BOTONES ═══════════════════════════════════════════════ */
+async function runEditor(){
+  setView('con');
+  const code = ed.value;
+  if(!code.trim()){ tPrintText('El documento está vacío — escribe código Python primero', 'yellow'); return; }
+  await runCode(code, 'documento');
+}
+ $('#btnRun').addEventListener('click', runEditor);
+ $('#btnSave').addEventListener('click', ()=>{
+  saveDraftLocal(ed.value);
+  pushDraftNow();
+  toast('Documento guardado en Sheets');
+});
+ $('#btnDict').addEventListener('click', ()=>{ renderDict(); $('#dlgDict').showModal(); refreshIcons(); });
+ $('#btnRestart').addEventListener('click', async ()=>{
+  toast('Reiniciando Python…');
+  pyodide = null; pyLoading = false; pyWaiters = [];
+  try{ await ensurePy(); toast('Python reiniciado'); }catch(e){ showFatal('reiniciar: ' + (e.message||e)); }
+});
+function manualSync(){
+  diagDone = false;
+  sync().then(()=>{
+    if(!connected && connDetail) toast(connDetail, 'err');
+    else if(connected){ toast('Sincronizado con Sheets'); if(pyodide) reinstallPkgs(true); }
+  });
+}
+ $('#btnSync').addEventListener('click', manualSync);
+ $('#stPill').addEventListener('click', ()=>{ if(!connected) manualSync(); });
+ $('#btnWipe').addEventListener('click', e=>{
+  armConfirm(e.currentTarget, ()=>{
+    for(const rid of Object.keys(lastRows)) pushOp({ action:'deleteBlock', sheet:SHEET, id: rid });
+    lastRows = {};
+    FS = {}; writeFS();
+    installs = new Set(); savePkgs();
+    pyodide = null; pyLoading = false; pyWaiters = [];
+    termMsgs.innerHTML = '';
+    termWelcome();
+    toast('Archivos y paquetes borrados (también en Sheets)');
+  });
+});
+ $('#btnReset').addEventListener('click', e=>{
+  armConfirm(e.currentTarget, ()=>{
+    ed.value = '';
+    saveDraftLocal('');
+    lastPushedDraft = '';
+    pushDraftNow();
+    onEdInput();
+    toast('Documento vacío — el vacío se guarda en Sheets');
+  });
+});
+document.querySelectorAll('dialog').forEach(d=>{
+  d.addEventListener('click', e => { if(e.target===d) d.close(); });
+  d.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', ()=>d.close()));
+});
+ $('#q2').addEventListener('input', renderDict);
+window.addEventListener('resize', ()=>{
+  clearTimeout(resizeT);
+  resizeT = setTimeout(syncHL, 300);
+});
+
+/* ═══ DICCIONARIO ═══════════════════════════════════════════ */
+function renderDict(){
+  const q = ($('#q2').value||'').trim().toLowerCase();
+  let arr = dict().slice().sort((a,b)=>a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+  if(q) arr = arr.filter(e => (e.name+' '+(e.tag||'')).toLowerCase().includes(q));
+  const pend = new Set(queue.filter(o=>o.action==='saveBlock' && o.sheet===SHEET && o.block && o.block.id!==DRAFT_ID).map(o=>o.block.id));
+  $('#dictCount').textContent = dict().length + ' entradas · hoja ' + SHEET +
+    (pend.size ? ' · ↑' + pend.size + ' por subir' : (connected ? ' · todo en Sheets' : ''));
+  let html = '', letter = null;
+  for(const e of arr){
+    const L = (e.name.charAt(0)||'#').toUpperCase();
+    if(L!==letter){ letter = L; html += `<div class="dl-l">${esc(L)}</div>`; }
+    const one = String(e.code||'').replace(/\s+/g,' ').slice(0,52);
+    html += `<div class="drow" data-id="${esc(e.id)}">
+      <div class="d-main">
+        <div class="t"><strong>${esc(e.name)}</strong>${e.tag?`<span class="tag">${esc(e.tag)}</span>`:''}${pend.has(e.id)?'<span class="tag pend">↑</span>':''}</div>
+        <code class="d-c">${esc(one)}${String(e.code||'').length>52?'…':''}</code>
+      </div>
+      <div class="d-acts">
+        <button class="iconbtn sm" data-a="ins" title="Insertar"><i data-lucide="corner-down-left"></i></button>
+        <button class="iconbtn sm" data-a="edit" title="Editar"><i data-lucide="edit"></i></button>
+        <button class="iconbtn sm danger" data-a="del" title="Eliminar"><i data-lucide="delete"></i></button>
+      </div>
+    </div>`;
+  }
+  $('#dictList').innerHTML = html || '<div class="d-empty">Nada coincide.</div>';
+  refreshIcons();
+}
+ $('#dictList').addEventListener('click', e=>{
+  const btn = e.target.closest('[data-a]'); if(!btn) return;
+  const row = btn.closest('.drow'); const b = dict().find(x=>x.id===row.dataset.id);
+  if(!b) return;
+  const a = btn.dataset.a;
+  if(a==='ins'){ setView('code'); $('#dlgDict').close(); insertSnippet(b); }
+  else if(a==='edit') openSnip(b, {ret:'dict'});
+  else if(a==='del') armConfirm(btn, ()=>deleteSnip(b.id));
+});
+function openSnip(entry, opts={}){
+  snipReturn = opts.ret || 'dict';
+  $('#snipTitle').textContent = entry ? 'Editar entrada' : 'Nueva entrada';
+  const f = $('#fmSnip');
+  f.id.value   = entry ? entry.id : '';
+  f.name.value = entry ? entry.name : (opts.name || '');
+  f.tag.value  = entry ? (entry.tag||'') : '';
+  f.code.value = entry ? (entry.code||'') : '';
+  $('#dlgDict').close();
+  $('#dlgSnip').showModal(); refreshIcons();
+  setTimeout(()=>f.name.focus(), 60);
+}
+ $('#btnNewSnip').addEventListener('click', ()=>openSnip(null, {ret:'dict'}));
+ $('#fmSnip').addEventListener('submit', e=>{
+  e.preventDefault();
+  const f = e.target;
+  const b = {
+    id:   f.id.value || 'p-'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),
+    name: f.name.value.trim(), tag: f.tag.value.trim() || 'snippet', code: f.code.value
+  };
+  upsertSnipLocal(b);
+  toast('"' + b.name + '" guardada — ' + (connected ? 'subiendo a Sheets' : 'en cola'));
+  f.closest('dialog').close();
+  if(snipReturn==='insert' && !f.id.value) insertSnippet(b);
+});
+function armConfirm(btn, fn){
+  if(btn.dataset.armed){ delete btn.dataset.armed; fn(); return; }
+  btn.dataset.armed='1'; btn.dataset.html = btn.innerHTML;
+  btn.classList.add('armed'); btn.textContent='¿Seguro?';
+  setTimeout(()=>{
+    if(!btn.isConnected || !btn.dataset.armed) return;
+    delete btn.dataset.armed; btn.classList.remove('armed');
+    btn.innerHTML = btn.dataset.html; refreshIcons();
+  }, 2600);
+}
+
+/* ═══ ARRANQUE (defensivo) ══════════════════════════════════ */
+(function init(){
+  try{ loadQueue(); }catch(e){ showFatal('cola: ' + e.message); }
+  try{ loadCache(); }catch(e){ showFatal('caché: ' + e.message); }
+  try{ loadFSLocal(); }catch(e){ showFatal('fs: ' + e.message); }
+  try{ loadPkgsLocal(); }catch(e){ showFatal('pkgs: ' + e.message); }
+
+  const hadDraft = (()=>{ try{ return localStorage.getItem(LS_DRAFT) !== null; }catch(e){ return false; } })();
+  let draft = '';
+  try{ draft = localStorage.getItem(LS_DRAFT) || ''; }catch(e){}
+  ed.value = draft;
+  lastPushedDraft = hadDraft ? draft : null;
+  if(!hadDraft){
+    saveDraftLocal('');
+    pushDraftNow();   // el vacío también viaja a Sheets
+  }
+
+  try{ syncHL(); }catch(e){ showFatal('resaltado: ' + e.message); }
+  refreshIcons(); renderConn();
+
+  try{ reconcileDraft(); }catch(e){ showFatal('reconciliar: ' + e.message); }
+  try{ termWelcome(); }catch(e){}
+  ensurePy().catch(e => showFatal('pyodide: ' + (e.message||e)));   // runtime en segundo plano
+  sync();
+})();
+</script>
+</body>
+</html>

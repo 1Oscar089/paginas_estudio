@@ -119,6 +119,8 @@ body.view-con .pv-con{display:flex}
 .sug button.on,.sug button:hover{background:var(--ink);color:var(--bg)}
 .sug button.on .tag,.sug button:hover .tag{background:var(--bg);color:var(--ink)}
 .tag{font:700 8.5px/1 var(--mono);letter-spacing:.07em;text-transform:uppercase;padding:3px 6px;background:var(--ink);color:var(--bg);flex:none}
+.sug .newrow{color:var(--acc);font-weight:700;border-top:1px solid var(--line)}
+.sug .newrow:hover{background:var(--acc);color:var(--bg)}
 
 .pv-con{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--term);color:var(--tpaper)}
 .term-head{flex:none;display:flex;justify-content:space-between;align-items:center;padding:8px 12px;
@@ -362,7 +364,7 @@ let MODULES = [], BLOCKS = {}, queue = [], syncing = false;
 let sugItems = [], sugActive = 0;
 let snipReturn = 'dict';
 let lastRows = {}, pushT = null;
-let draftT = null, resizeT = null, pyTries = 0;
+let draftT = null, resizeT = null;
 let view = 'code';
 
 let connected = false, connLabel = '', connDetail = '';
@@ -372,6 +374,7 @@ let lastPushedDraft = null;
 let pyodide = null, pyLoading = false, pyWaiters = [];
 let FS = {};
 let installs = new Set();
+let PYODIDE_PKGS = null;   // lista oficial de paquetes del runtime
 
 let __missing = {};
 const $ = s => {
@@ -770,20 +773,67 @@ async function reinstallPkgs(silent){
     await pipInstall([p], silent);
   }
 }
+
+/* ═══ LISTA OFICIAL DE PAQUETES DEL RUNTIME ════════════════
+   Pyodide publica package.json con TODOS los paquetes que tiene
+   precompilados para WebAssembly (numpy, matplotlib, pandas,
+   scikit-learn, sympy, scipy, Pillow, requests, regex…). Con esa
+   lista: pip install elige la vía binaria, pip search busca, y los
+   paquetes imposibles reciben un mensaje educativo.          ══ */
+let PKGLIST = null, PKGLIST_TRY = false;
+async function loadPkgList(){
+  if(PKGLIST) return PKGLIST;
+  if(PKGLIST_TRY) return new Set();
+  PKGLIST_TRY = true;
+  try{
+    const r = await fetch(PYODIDE_BASE + 'package.json');
+    const j = await r.json();
+    PKGLIST = new Set((j.packages || []).map(p => p.name.toLowerCase()));
+  }catch(e){ PKGLIST = new Set(); }
+  return PKGLIST;
+}
+/* nombres «import» → nombre de paquete Pyodide (casos conocidos) */
+const IMPORT_MAP = { 'cv2':'opencv-python', 'sklearn':'scikit-learn', 'PIL':'pillow',
+  'bs4':'beautifulsoup4', 'yaml':'pyyaml', 'dateutil':'python-dateutil' };
+
+/* ═══ PIP INSTALL con tres vías + mensajes educativos ═══════ */
 async function pipInstall(pkgs, silent){
   await ensurePy();
+  const avail = await loadPkgList();
   for(const p of pkgs){
+    const lp = p.toLowerCase();
     if(!silent) tPrintText('pip: instalando ' + p + ' …', 'dim');
     let ok = false, errm = '';
-    try{
-      await pyodide.loadPackage('micropip');
-      const micropip = pyodide.pyimport('micropip');
-      await micropip.install(p);
-      ok = true;
-    }catch(e){
-      try{ await pyodide.loadPackage(p); ok = true; }
-      catch(e2){ errm = (e2 && e2.message) || (e && e.message) || 'no disponible'; }
+
+    /* VÍA 1: binario precompilado por Pyodide (la mejor) */
+    if(avail.has(lp)){
+      try{ await pyodide.loadPackage(p); ok = true; }catch(e){ errm = (e && e.message) || ''; }
     }
+    /* VÍA 2: wheel pure-Python desde PyPI (micropip) */
+    if(!ok){
+      try{
+        await pyodide.loadPackage('micropip');
+        const micropip = pyodide.pyimport('micropip');
+        await micropip.install(p);
+        ok = true;
+      }catch(e){
+        errm = (e && e.message) || (e && String(e)) || 'no disponible';
+        /* micropip dice con precisión por qué falló */
+        if(/pure python 3 wheel/i.test(errm)) errm = 'requires C++/Fortran binaries not available for WebAssembly';
+        else if(/Can't find a pure Python/i.test(errm)) errm = 'requires C++/Fortran binaries not available for WebAssembly';
+      }
+    }
+    /* VÍA 3: reintento binario si el nombre está en la lista oficial
+       pero con mayúsculas/guiones distintos (opencv-python, etc.) */
+    if(!ok && !avail.has(lp)){
+      for(const cand of avail){
+        if(cand.replace(/[-_]/g,'') === lp.replace(/[-_]/g,'')){
+          try{ await pyodide.loadPackage(cand); ok = true; }catch(e){}
+          break;
+        }
+      }
+    }
+
     if(ok){
       if(!installs.has(p)){
         installs.add(p); savePkgs();
@@ -792,10 +842,28 @@ async function pipInstall(pkgs, silent){
       }
       if(!silent) tPrintText('pip: ' + p + ' instalado ✓ (se restaurará en próximas sesiones)', 'green');
     } else {
-      if(!silent) tPrintText('pip: no se pudo instalar ' + p + ' — ' + errm, 'red');
+      /* Mensaje educativo: distinguir binario imposible de no encontrado */
+      const binaryBlocked = /WebAssembly|wheel/i.test(errm);
+      if(!silent){
+        if(binaryBlocked){
+          tPrintText('pip: ' + p + ' NO puede instalarse aquí — sus binarios C++ están compilados para CPython nativo, y este runtime corre en WebAssembly.', 'red');
+          tPrintText('   Alternativas en este IDE: ' + ALTERNATIVAS[p.toLowerCase()] || '', 'dim');
+          tPrintText('   Alternativas en este IDE: scikit-learn (ML clásico), numpy, pandas, scipy, sympy. Para deep learning pesado usa Google Colab y pega aquí los resultados.', 'dim');
+        } else {
+          tPrintText('pip: no se pudo instalar ' + p + ' — ' + errm, 'red');
+        }
+      }
     }
   }
 }
+const ALTERNATIVAS = {
+  'tensorflow':'scikit-learn · numpy',
+  'torch':'scikit-learn · numpy',
+  'pytorch':'scikit-learn · numpy',
+  'transformers':'scikit-learn · numpy',
+  'opencv':'(prueba: pip install opencv-python — si falla, Pillow)',
+  'tkinter':'(no aplica en navegador)'
+};
 
 /* Captura de figuras matplotlib tras cada ejecución */
 const FIG_CAPTURE = [
@@ -817,7 +885,7 @@ async function runCode(code, label){
   try{ py = await ensurePy(); }
   catch(e){ return false; }
   tPrint(C('dim', '▶ ' + (label || 'documento') + ' — ejecutando…'));
-  /* magia: líneas «!comando» van a la terminal; «pip install x» solo también */
+  /* magia: «!comando» va a la terminal; «pip install …» solo también */
   const magic = [];
   const pyLines = [];
   code.split('\n').forEach(l => {
@@ -1173,7 +1241,7 @@ const TCMDS = {
     return C('yellow','── PC SIMULADA · Python ──────────────────────') + '\n' +
       C('blue','ejecutar:  ') + 'python (REPL) · python archivo.py · run archivo.py' + '\n' +
       C('blue','archivos:  ') + 'ls · cat archivo.py · nano archivo.py · rm archivo.py · echo "…" > archivo.py' + '\n' +
-      C('blue','librerías: ') + 'pip install <pkg> · pip list · pip uninstall <pkg>' + '\n' +
+      C('blue','librerías: ') + 'pip install <pkg> · pip search <texto> · pip list · pip uninstall <pkg>' + '\n' +
       '<span class="c-blue">sistema:   </span>neofetch · uname · date · whoami · history · clear · help' + '\n' +
       '<span class="c-dim">· el editor de la izquierda ejecuta con Run (Ctrl+Enter)</span>\n' +
       '<span class="c-dim">· si el documento son solo líneas «pip install …», se instalan</span>\n' +
@@ -1227,9 +1295,19 @@ const TCMDS = {
       await pipInstall(args.slice(1).filter(x => !x.startsWith('-')));
       return undefined;
     }
+    if(sub === 'search'){
+      const q = (args[1] || '').toLowerCase();
+      if(!q) return C('red','pip search: indica un texto');
+      const avail = await loadPkgList();
+      const hits = [...avail].filter(p => p.includes(q)).sort().slice(0, 20);
+      if(!hits.length) return C('dim','(sin coincidencias en los paquetes del runtime)');
+      return hits.map(p => C('green', p) + (installs.has(p) ? C('dim',' [instalado]') : '')).join('\n');
+    }
     if(sub === 'list'){
       await ensurePy();
-      return [...installs].sort().map(p => C('green', p)).join('\n') || C('dim','(sin paquetes propios — numpy, matplotlib, etc. se cargan solos al importar)');
+      const lines = [];
+      if(installs.size) [...installs].sort().forEach(p => lines.push(C('green', p) + C('dim',' (propio)')));
+      return lines.join('\n') || C('dim','(sin paquetes propios — numpy, matplotlib, pandas, scikit-learn, scipy, sympy, Pillow… se cargan solos al importar)');
     }
     if(sub === 'uninstall'){
       const p = args[1];
@@ -1238,7 +1316,7 @@ const TCMDS = {
       pushOp({ action:'deleteBlock', sheet:SHEET, id:'pip:'+p });
       return C('dim', p + ' desinstalado de la lista (también en Sheets)');
     }
-    return C('red','pip: usa install · list · uninstall');
+    return C('red','pip: usa install · search · list · uninstall');
   },
   echo(args){
     return { out: args.join(' ') };
@@ -1389,7 +1467,7 @@ keybar.addEventListener('click', e=>{
 function termWelcome(){
   tPrint('<span class="c-green">PC simulada · Python (Pyodide/CPython en WebAssembly)</span>');
   tPrintText('Sin usuario ni contraseña. Los archivos y paquetes se guardan en la hoja «python» de Sheets.', 'dim');
-  tPrintText('Prueba: help · python (REPL) · pip install matplotlib · neofetch', 'dim');
+  tPrintText('Prueba: help · python (REPL) · pip search pandas · pip install matplotlib · neofetch', 'dim');
   tPrintText('Escribe código en la pestaña Código y pulsa Run — matplotlib y pygame abren ventanas flotantes.', 'dim');
   tPrint('');
 }
@@ -1542,13 +1620,7 @@ function syncHL(){
   hl.scrollTop = ed.scrollTop; hl.scrollLeft = ed.scrollLeft;
 }
 
-/* ═══ AUTOCOMPLETADO ════════════════════════════════════════ */
-/* Autocompletado: SOLO funciones del diccionario (hoja «python» en
-   Sheets, cacheadas en localStorage). Nada embebido en el HTML.
-   Para añadir funciones: botón «+ Nueva» del diccionario, o escribir
-   una palabra nueva en el editor y elegir «＋ guardar». */
-
-
+/* ═══ AUTOCOMPLETADO (SOLO diccionario de Sheets) ═══════════ */
 function acWord(){
   const before = ed.value.slice(0, ed.selectionStart);
   const m = before.match(/[A-Za-z0-9_]+$/);
@@ -1570,14 +1642,14 @@ function showSug(){
   const w = acWord();
   if(!w || w.length < 2){ hideSug(); return; }
   const lw = w.toLowerCase();
-  /* ÚNICA fuente: el diccionario (Sheets/localStorage) */
+  /* ÚNICA fuente: el diccionario (hoja «python» en Sheets + caché local) */
   let list = [];
   dict().forEach(e => {
     if(e.name.toLowerCase().startsWith(lw) ||
        e.name.toLowerCase().split(/\s+/).some(t => t.startsWith(lw))) list.push(e);
   });
   const exact = list.some(e => e.name.toLowerCase() === w.toLowerCase());
-  const canNew = !exact;   // no existe → ofrecer «＋ guardar» (va a Sheets)
+  const canNew = !exact;
   if(!list.length && !canNew){ hideSug(); return; }
   sugItems = list; sugNew = canNew ? w : null; sugActive = 0;
   sug.innerHTML = list.map((e,i)=>
@@ -1594,7 +1666,6 @@ function showSug(){
   if(top  > maxY) top  = Math.max(8, c.y - ed.scrollTop - sug.offsetHeight - c.lh - 6);
   sug.style.left = left+'px'; sug.style.top = top+'px';
 }
-
 function hideSug(){ sug.hidden = true; sugItems=[]; sugActive=0; }
 function markActive(){
   sug.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('on', i===sugActive));
@@ -1619,6 +1690,8 @@ function insertSnippet(sn){
   let off = code.length;
   const i0 = code.indexOf('$0');
   if(i0 >= 0){ code = code.slice(0, i0) + code.slice(i0 + 2); off = i0; }
+  const i1 = code.indexOf('$1');
+  if(i1 >= 0){ code = code.slice(0, i1) + code.slice(i1 + 2); }
   ed.setRangeText(code, start, selEnd, 'end');
   ed.selectionStart = ed.selectionEnd = start + off;
   hideSug(); ed.focus(); onEdInput();
@@ -1636,7 +1709,6 @@ sug.addEventListener('pointerdown', e=>{
   if(b.dataset.new) openSnip(null, {name:sugNew, ret:'insert'});
   else insertSnippet(sugItems[+b.dataset.i]);
 });
-
 document.addEventListener('pointerdown', e=>{
   if(!e.target.closest('#sug') && e.target!==ed) hideSug();
 });
@@ -1825,7 +1897,8 @@ function renderDict(){
       </div>
     </div>`;
   }
-    $('#dictList').innerHTML = html || '<div class="d-empty">Sin entradas todavía.<br>Crea la primera con «+ Nueva» — se guardará en la hoja «python» de Sheets y aparecerá en el autocompletado.</div>';
+  $('#dictList').innerHTML = html || '<div class="d-empty">Sin entradas todavía.<br>Crea la primera con «+ Nueva» — se guardará en la hoja «python» de Sheets y aparecerá en el autocompletado.</div>';
+  refreshIcons();
 }
  $('#dictList').addEventListener('click', e=>{
   const btn = e.target.closest('[data-a]'); if(!btn) return;
@@ -1874,7 +1947,7 @@ function armConfirm(btn, fn){
 
 /* ═══ ARRANQUE (defensivo + autochequeo) ════════════════════ */
 (function init(){
-  /* AUTOCHQUEO: esta lista DEBE reflejar exactamente los ids del HTML */
+  /* AUTOCHQUEO: esta lista refleja exactamente los ids del HTML */
   const CRITICAL = ['#ed','#hl','#sug','#edWrap','#termOut','#termMsgs','#termIn',
     '#termInput','#termPrompt','#keybar','#termClear','#nano','#nanoTA','#nanoTitle',
     '#nanoStatus','#nanoCloseBtn','#btnRun','#btnDict','#btnSync','#btnWipe',

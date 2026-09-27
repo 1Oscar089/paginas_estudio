@@ -847,7 +847,8 @@ const ALTERNATIVAS = {
 };
 
 /* lista oficial de paquetes del runtime */
-let PKGLIST = null, PKGLIST_TRY = false;
+let PKGLIST = null;
+PKGLIST_TRY = false;
 async function loadPkgList(){
   if(PKGLIST) return PKGLIST;
   if(PKGLIST_TRY) return new Set();

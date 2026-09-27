@@ -395,6 +395,9 @@ const PYODIDE_BASE = 'https://cdn.jsdelivr.net/pyodide/v0.25.1/full/';
 const STARTER = '';
 
 /* ═══ ESTADO ═══════════════════════════════════════════════ */
+let PKGLIST = null;
+let PKGLIST_TRY = false;
+let pyTries = 0;
 let MODULES = [], BLOCKS = {}, queue = [], syncing = false;
 let sugItems = [], sugActive = 0;
 let snipReturn = 'dict';
@@ -410,7 +413,6 @@ let pyodide = null, pyLoading = false, pyWaiters = [];
 let FS = {};
 let installs = new Set();
 let PYODIDE_PKGS = null;
-let PKGLIST_TRY = false;
 let pyStdinQueue = [];      // valores de input() recolectados por el modal
 
 let __missing = {};
@@ -776,7 +778,10 @@ function loadScript(src){
   });
 }
 async function ensurePy(){
-  if(pyodide) return pyodide;
+  if(pyodide){
+    if(pyWaiters.length){ pyWaiters.forEach(r => r(pyodide)); pyWaiters = []; }
+    return pyodide;
+  }
   if(pyLoading) return new Promise(r => pyWaiters.push(r));
   pyLoading = true;
   tPrintText('python: cargando runtime (Pyodide/CPython en WASM, ~10 MB la primera vez)…', 'dim');
@@ -800,11 +805,9 @@ async function ensurePy(){
     await pyodide.runPythonAsync(PY_SHIM);
     const ver = pyodide.runPython('import sys; sys.version.split()[0]');
     tPrintText('python: listo — CPython ' + ver + ' (Pyodide). input() usa un modal. pip install <paquete> para librerías.', 'green');
-    await reinstallPkgs(true);
-    pyWaiters.forEach(r => r(pyodide)); pyWaiters = [];
   }catch(e){
     if(++pyTries < 4){
-      tPrintText('python: reintentando carga…', 'dim');
+      tPrintText('python: reintentando carga (' + pyTries + '/3)…', 'dim');
       setTimeout(()=>{ pyLoading = false; ensurePy(); }, 2500);
       return new Promise(r => pyWaiters.push(r));
     }
@@ -812,8 +815,15 @@ async function ensurePy(){
     tPrintText('python: no se pudo cargar Pyodide — ' + (e.message||e), 'red');
     throw e;
   }
+  /* Carga OK: los fallos de pip NUNCA relanzan la carga ni cuelgan waiters */
+  pyLoading = false;
+  pyTries = 0;
+  try{ await reinstallPkgs(true); }
+  catch(e){ tPrintText('pip: aviso al restaurar paquetes — ' + (e.message||e), 'yellow'); }
+  pyWaiters.forEach(r => r(pyodide)); pyWaiters = [];
   return pyodide;
 }
+
 async function reinstallPkgs(silent){
   if(!pyodide || !installs.size) return;
   const lista = [...installs];
